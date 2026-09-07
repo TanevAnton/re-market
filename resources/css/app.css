@@ -87,6 +87,14 @@
     color-scheme: dark;
 }
 
+/* The theme toggle cycles system -> light -> dark, and shows which one is on.
+   Driven by the attribute the SERVER renders, so the right icon is correct in
+   the first paint rather than corrected afterwards. */
+.theme-icon { display: none; }
+html[data-theme='system'] .theme-icon-system,
+html[data-theme='light']  .theme-icon-light,
+html[data-theme='dark']   .theme-icon-dark { display: block; }
+
 /* ---------------------------------------------------------------------------
    Base
 --------------------------------------------------------------------------- */

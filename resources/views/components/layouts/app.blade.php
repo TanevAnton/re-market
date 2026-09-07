@@ -1,22 +1,66 @@
+@php
+    /*
+     * The theme is decided on the SERVER, from a cookie, so the very first byte
+     * of HTML already carries it. It used to live in localStorage, which cannot
+     * be read until the page is running - by which point the server has already
+     * committed to a guess, and any disagreement shows up as a flip on refresh.
+     *
+     * Three states. Null means "follow the operating system", which is not the
+     * same as light and has to stay tellable apart from it.
+     */
+    $theme = in_array($cookie = request()->cookie('theme'), ['dark', 'light'], true)
+        ? $cookie
+        : 'system';
+@endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}"
+      class="h-full{{ $theme === 'dark' ? ' dark' : '' }}"
+      data-theme="{{ $theme }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-    <meta name="theme-color" content="#0a0a0c" media="(prefers-color-scheme: dark)">
     <title>{{ isset($title) ? $title.' · '.config('app.name') : config('app.name') }}</title>
 
-    {{-- Runs before paint. Without it the page flashes light before the class
-         lands, which looks broken every single load in dark mode. --}}
+    {{-- The page background, before any stylesheet has loaded. In dev, Vite
+         injects the CSS with JavaScript, so without this the first paint is a
+         white rectangle no matter what class <html> carries. --}}
+    <style>html{background:#fff}html.dark{background:#0a0a0c}</style>
+
     <script>
         (function () {
-            try {
-                var saved = localStorage.getItem('theme');
-                var dark = saved ? saved === 'dark'
-                    : window.matchMedia('(prefers-color-scheme: dark)').matches;
-                document.documentElement.classList.toggle('dark', dark);
-            } catch (e) { /* private mode - fall through to light */ }
+            var root = document.documentElement;
+            var mq   = window.matchMedia('(prefers-color-scheme: dark)');
+
+            function apply() {
+                var mode = root.dataset.theme;
+                root.classList.toggle('dark', mode === 'dark' || (mode === 'system' && mq.matches));
+            }
+
+            // Only "system" needs resolving here: an explicit choice was already
+            // rendered onto <html> above, before this script and before paint.
+            if (root.dataset.theme === 'system') {
+                apply();
+            }
+
+            // Someone flipping their OS theme while the tab is open, or a laptop
+            // crossing sunset, should not need a refresh.
+            mq.addEventListener('change', apply);
+
+            window.__cycleTheme = function () {
+                root.dataset.theme = ({
+                    system: 'light',
+                    light:  'dark',
+                    dark:   'system',
+                })[root.dataset.theme] ?? 'light';
+
+                apply();
+
+                // A cookie, not localStorage: the server has to be able to read
+                // it. Deleting it is how "follow the system" is expressed.
+                document.cookie = root.dataset.theme === 'system'
+                    ? 'theme=; path=/; max-age=0; samesite=lax'
+                    : 'theme=' + root.dataset.theme + '; path=/; max-age=31536000; samesite=lax';
+            };
         })();
     </script>
 
@@ -83,17 +127,30 @@
 
         <div class="flex-1"></div>
 
+        {{-- Three states, not two. "Follow the system" has to be reachable
+             again after someone has picked a fixed theme, or the only way back
+             is clearing site data. The icon shows which state is active - the
+             CSS rules live in app.css and key off <html data-theme>. --}}
         <button type="button"
-                onclick="window.__toggleTheme()"
+                onclick="window.__cycleTheme()"
                 aria-label="Смени темата"
+                title="Тема: системна / светла / тъмна"
                 class="btn-ghost btn-sm h-8 w-8 px-0!">
-            <svg class="h-4 w-4 dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="1.7" stroke-linecap="round">
+            {{-- system: half-filled --}}
+            <svg class="theme-icon theme-icon-system h-4 w-4" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.7">
+                <circle cx="12" cy="12" r="8"/>
+                <path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor" stroke="none"/>
+            </svg>
+            {{-- light: sun --}}
+            <svg class="theme-icon theme-icon-light h-4 w-4" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
                 <circle cx="12" cy="12" r="4"/>
                 <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/>
             </svg>
-            <svg class="hidden h-4 w-4 dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            {{-- dark: moon --}}
+            <svg class="theme-icon theme-icon-dark h-4 w-4" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
             </svg>
         </button>
@@ -140,13 +197,6 @@
         </p>
     </div>
 </footer>
-
-<script>
-    window.__toggleTheme = function () {
-        var dark = document.documentElement.classList.toggle('dark');
-        try { localStorage.setItem('theme', dark ? 'dark' : 'light'); } catch (e) {}
-    };
-</script>
 
 @livewireScripts
 </body>

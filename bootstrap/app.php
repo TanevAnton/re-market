@@ -17,6 +17,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'phone.verified' => App\Http\Middleware\EnsurePhoneIsVerified::class,
         ]);
+
+        // The theme cookie is written by JavaScript, so it cannot be encrypted:
+        // an undecryptable cookie is silently read as null, which would mean the
+        // server rendering the wrong theme on every single request.
+        //
+        // Nothing here is a secret - it says "this browser prefers dark".
+        $middleware->encryptCookies(except: ['theme']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
