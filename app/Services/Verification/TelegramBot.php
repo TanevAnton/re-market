@@ -2,8 +2,10 @@
 
 namespace App\Services\Verification;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Thin wrapper over the Telegram Bot API.
@@ -78,6 +80,46 @@ class TelegramBot
     public function getMe(): ?array
     {
         return $this->call('getMe')['result'] ?? null;
+    }
+
+    private const USERNAME_KEY = 'telegram:bot:username';
+
+    /**
+     * The @name the deep link points at.
+     *
+     * Telegram will tell us this for the price of one getMe, so a configured
+     * TELEGRAM_BOT_USERNAME is an optimisation, not a requirement. It used to
+     * be required, and a deployment that set the token but not the username
+     * got a page with the Telegram button silently missing and no error
+     * anywhere - the worst kind of misconfiguration, because everything looks
+     * fine. One value that can be wrong is better than two.
+     *
+     * Cached because this is on the path of a user pressing a button, and
+     * because a bot's username changes roughly never.
+     */
+    public function username(): ?string
+    {
+        if (filled($configured = config('remarket.verify.telegram_bot_username'))) {
+            return Str::of((string) $configured)->ltrim('@')->toString();
+        }
+
+        if (! $this->isConfigured()) {
+            return null;
+        }
+
+        $cached = Cache::get(self::USERNAME_KEY);
+
+        if (filled($cached)) {
+            return $cached;
+        }
+
+        $username = $this->getMe()['username'] ?? null;
+
+        if (filled($username)) {
+            Cache::put(self::USERNAME_KEY, $username, now()->addDay());
+        }
+
+        return $username;
     }
 
     /**

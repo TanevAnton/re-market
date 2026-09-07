@@ -10,6 +10,7 @@ use App\Services\Verification\TelegramBotVerifier;
 use Database\Seeders\CitySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -31,6 +32,16 @@ class TelegramBotVerificationTest extends TestCase
     private const CHAT = 555001;
     private const TG_USER = 999001;
 
+    /**
+     * What getMe answers. A property rather than a per-test Http::fake because
+     * fakes MERGE and the first matching stub wins - a catch-all registered
+     * here would quietly beat anything more specific a test added later, which
+     * is a way for a test to pass without exercising what it names.
+     *
+     * Null means Telegram refuses us: bad token, or no outbound network.
+     */
+    private ?array $botIdentity = ['id' => 42, 'username' => 'remarket23bot'];
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -42,7 +53,20 @@ class TelegramBotVerificationTest extends TestCase
             'remarket.verify.telegram_bot_username' => 'remarket_bot',
         ]);
 
-        Http::fake(['*' => Http::response(['ok' => true, 'result' => []])]);
+        Http::fake(function (Request $request) {
+            if (str_contains($request->url(), '/getMe')) {
+                return $this->botIdentity
+                    ? Http::response(['ok' => true, 'result' => $this->botIdentity])
+                    : Http::response(['ok' => false, 'description' => 'Unauthorized'], 401);
+            }
+
+            return Http::response(['ok' => true, 'result' => []]);
+        });
+
+        // The bot's @name is cached for a day, and the array driver outlives a
+        // single test - without this, one test's discovered name answers the
+        // next test's lookup.
+        Cache::flush();
 
         $this->user     = User::factory()->unverified()->create(['phone_hash' => null]);
         $this->verifier = new TelegramBotVerifier(new TelegramBot());
@@ -211,6 +235,41 @@ class TelegramBotVerificationTest extends TestCase
         $this->actingAs($this->user);
 
         Livewire::test(VerifyPhone::class)->assertDontSee('Потвърди с Telegram');
+    }
+
+    /**
+     * A token with no username used to make the button vanish from the page
+     * with nothing logged anywhere - the token is the only value we cannot
+     * work out for ourselves, so it alone decides whether we offer this.
+     */
+    public function test_the_username_is_discovered_when_it_is_not_configured(): void
+    {
+        config(['remarket.verify.telegram_bot_username' => null]);
+
+        $this->actingAs($this->user);
+
+        // @remarket23bot is what getMe answers - nothing in config says it.
+        Livewire::test(VerifyPhone::class)
+            ->assertSee('Потвърди с Telegram')
+            ->call('startTelegram')
+            ->assertHasNoErrors()
+            ->assertSet('telegramUrl', fn ($url) => str_contains($url, 'https://t.me/remarket23bot?start='));
+    }
+
+    public function test_an_unreachable_telegram_says_so_instead_of_handing_out_a_broken_link(): void
+    {
+        config(['remarket.verify.telegram_bot_username' => null]);
+
+        // Token set, but Telegram will not tell us who we are. A link to
+        // https://t.me/?start=... is worse than an honest error.
+        $this->botIdentity = null;
+
+        $this->actingAs($this->user);
+
+        Livewire::test(VerifyPhone::class)
+            ->call('startTelegram')
+            ->assertHasErrors('telegram')
+            ->assertSet('telegramUrl', null);
     }
 
     public function test_the_page_moves_on_once_the_listener_has_verified(): void

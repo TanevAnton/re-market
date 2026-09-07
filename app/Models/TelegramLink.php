@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Verification\TelegramBot;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -55,11 +56,18 @@ class TelegramLink extends Model
         return $q->whereNull('consumed_at')->where('expires_at', '>', now());
     }
 
-    /** The link the user actually clicks. */
-    public function deepLink(): string
+    /**
+     * The link the user actually clicks.
+     *
+     * The caller passes the bot's @name because resolving it may cost a call
+     * to Telegram, and this method is also reached from places where that
+     * would be a surprise. Null means we could not work out which bot to point
+     * at, and a link to https://t.me/?start=... is worse than no link at all.
+     */
+    public function deepLink(?string $botUsername = null): ?string
     {
-        $bot = Str::of((string) config('remarket.verify.telegram_bot_username'))->ltrim('@');
+        $bot = Str::of((string) ($botUsername ?? app(TelegramBot::class)->username()))->ltrim('@');
 
-        return "https://t.me/{$bot}?start={$this->nonce}";
+        return $bot->isEmpty() ? null : "https://t.me/{$bot}?start={$this->nonce}";
     }
 }

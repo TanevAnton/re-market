@@ -26,10 +26,16 @@ class VerifyPhone extends Component
         }
     }
 
+    /**
+     * The token alone decides whether we offer this, because it is the only
+     * part we cannot work out for ourselves - the bot's @name comes from
+     * Telegram when we ask. Deliberately no network call here: this runs on
+     * every render of the page, and a slow or unreachable api.telegram.org
+     * must not turn into a slow verification page.
+     */
     public function telegramAvailable(): bool
     {
-        return filled(config('remarket.verify.telegram_bot_token'))
-            && filled(config('remarket.verify.telegram_bot_username'));
+        return filled(config('remarket.verify.telegram_bot_token'));
     }
 
     /**
@@ -43,10 +49,19 @@ class VerifyPhone extends Component
             return;
         }
 
-        $this->telegramUrl = TelegramLink::issueFor(
+        $link = TelegramLink::issueFor(
             auth()->user(),
             (int) config('remarket.verify.telegram_link_ttl', 15),
-        )->deepLink();
+        );
+
+        $this->telegramUrl = $link->deepLink();
+
+        if ($this->telegramUrl === null) {
+            // Token set but Telegram would not tell us the bot's name - almost
+            // always a bad token or no outbound network. Say so, rather than
+            // handing out a link that goes nowhere.
+            $this->addError('telegram', 'Telegram не отговаря в момента. Използвай кода по-долу.');
+        }
     }
 
     /**
