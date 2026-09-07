@@ -210,6 +210,8 @@
     </div>
 </footer>
 
+@stack('scripts')
+
 @livewireScripts
 </body>
 </html>

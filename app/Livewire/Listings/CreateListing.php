@@ -11,16 +11,20 @@ use App\Models\Listing;
 use App\Models\ListingImage;
 use App\Models\Part;
 use App\Services\Images\ImageProcessor;
+use App\Services\Moderation\ListingScreener;
 use App\Services\Moderation\ModerationService;
 use App\Support\SpecFilter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use App\Livewire\Concerns\ChecksTurnstile;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
 class CreateListing extends Component
 {
+    use ChecksTurnstile;
+
     use WithFileUploads;
 
     public int $step = 1;
@@ -279,6 +283,10 @@ class CreateListing extends Component
 
     public function publish()
     {
+        if (! $this->passesTurnstile()) {
+            return null;
+        }
+
         $this->processPendingPhotos();
 
         foreach (range(1, self::LAST_STEP) as $s) {
@@ -358,6 +366,15 @@ class CreateListing extends Component
 
             return $listing;
         });
+
+        /*
+         * The automated screens run after the transaction: they read the images
+         * back and compare them against every other listing, and a listing that
+         * fails to publish should not have left a queue entry behind. Neither
+         * check decides anything - both put it in front of a person.
+         */
+        $flagged  = app(ListingScreener::class)->screen($listing);
+        $reviewed = $reviewed || $flagged !== [];
 
         session()->flash('status', $reviewed
             ? 'Обявата е изпратена за преглед. Първите обяви от нов профил се проверяват ръчно.'

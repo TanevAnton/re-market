@@ -16,6 +16,15 @@ return [
     // telling them how to appeal, so this stops being optional at launch.
     'support_email' => env('SUPPORT_EMAIL'),
 
+    // Cloudflare Turnstile. Cookieless, so it needs no consent-banner entry
+    // under ЗЕС, and free at any volume. With either key missing the challenge
+    // disables itself entirely - which is what keeps local and LAN testing
+    // working, and what must be checked before launch.
+    'turnstile' => [
+        'site_key'   => env('TURNSTILE_SITE_KEY'),
+        'secret_key' => env('TURNSTILE_SECRET_KEY'),
+    ],
+
     'verify' => [
         // Cheapest channel first. Telegram ~$0.01, Viber ~EUR 0.017, SMS ~EUR 0.04.
         // The same volume on Twilio Verify would be roughly 10x the SMS price.
@@ -87,6 +96,11 @@ return [
         'phash_distance'      => (int) env('PHASH_DISTANCE_THRESHOLD', 8),
         'price_outlier_low'   => (int) env('PRICE_OUTLIER_LOW_PCT', 40),
         'price_outlier_high'  => (int) env('PRICE_OUTLIER_HIGH_PCT', 250),
+        // A median over two listings is not a median. Below this the price
+        // check says nothing rather than guessing - flagging every third
+        // listing of a new catalogue part would train the moderator to approve
+        // without looking, which is worse than not checking.
+        'price_sample_minimum' => (int) env('PRICE_SAMPLE_MINIMUM', 5),
     ],
     'phash_distance_threshold' => (int) env('PHASH_DISTANCE_THRESHOLD', 8),
 

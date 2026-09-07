@@ -19,6 +19,9 @@
             Запомни ме
         </label>
 
+        <x-turnstile />
+        @error('turnstile') <p class="error">{{ $message }}</p> @enderror
+
         <button type="submit"
                 class="w-full rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white
                        transition hover:bg-neutral-700 disabled:opacity-50"

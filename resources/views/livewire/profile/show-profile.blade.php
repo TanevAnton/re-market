@@ -138,4 +138,10 @@
             @endforeach
         </div>
     @endif
+
+    {{-- Notice and action, DSA Art. 16 - a user, not only a listing, can be
+         the thing that is wrong. --}}
+    @if (auth()->id() !== $user->id)
+        @livewire('reports.report-form', ['subject' => $user], key('report-user-'.$user->id))
+    @endif
 </div>

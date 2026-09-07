@@ -95,6 +95,10 @@ class ModerationService
                 'decided_at' => now(),
             ])->save();
 
+            // Anyone who reported this is owed the outcome - Art. 16(5) - even
+            // when the outcome is "we looked and left it up".
+            $this->reports()->settle($item, 'approved', null, $moderator);
+
             Log::info('[moderation] approved', [
                 'item' => $item->id, 'by' => $moderator->id,
             ]);
@@ -134,6 +138,19 @@ class ModerationService
                 $subject->forceFill(['status' => ListingStatus::Removed])->save();
             }
 
+            /*
+             * A report can be about a person rather than a listing, and if
+             * rejecting one did nothing the queue would quietly accumulate
+             * decisions with no effect. The statement is kept as the ban reason
+             * so the record of what they were told travels with the account.
+             */
+            if ($subject instanceof User) {
+                $subject->forceFill([
+                    'banned_at'  => now(),
+                    'ban_reason' => $statement,
+                ])->save();
+            }
+
             $item->forceFill([
                 'status'               => 'rejected',
                 'decided_by'           => $moderator->id,
@@ -141,6 +158,8 @@ class ModerationService
                 'statement_of_reasons' => $statement,
                 'decided_at'           => now(),
             ])->save();
+
+            $this->reports()->settle($item, 'rejected', $statement, $moderator);
 
             Log::info('[moderation] rejected', [
                 'item' => $item->id, 'by' => $moderator->id, 'reason' => $reason->value,
@@ -158,7 +177,12 @@ class ModerationService
     private function statementOfReasons(ModerationItem $item, RejectionReason $reason, string $facts): string
     {
         $subject = $item->subject;
-        $title   = $subject instanceof Listing ? $subject->title : '—';
+
+        [$title, $measure] = match (true) {
+            $subject instanceof Listing => [$subject->title, 'обявата „%s“ е премахната от платформата'],
+            $subject instanceof User    => [$subject->username, 'профилът „%s“ е ограничен'],
+            default                     => ['—', 'съдържанието „%s“ е премахнато'],
+        };
 
         // Art. 17(3)(c): whether automation was involved. The DETECTION often
         // is; the decision never is. Saying so plainly is the honest answer and
@@ -184,7 +208,7 @@ class ModerationService
             : 'Повторно публикуване на същия артикул ще доведе до ограничаване на профила.';
 
         return implode("\n\n", [
-            'Решение: обявата „'.$title.'“ е премахната от платформата. '
+            'Решение: '.sprintf($measure, $title).'. '
                 .'Ограничението важи за всички потребители и е безсрочно.',
             'Причина: '.$reason->label(),
             'Установени факти: '.$facts,
@@ -202,6 +226,15 @@ class ModerationService
      * otherwise both act on the same listing, and the second decision would
      * silently overwrite the first - including its statement of reasons.
      */
+    /**
+     * Resolved on demand rather than injected: ReportService depends on this
+     * class, and constructor-injecting it back would be a container loop.
+     */
+    private function reports(): ReportService
+    {
+        return app(ReportService::class);
+    }
+
     private function lockPending(ModerationItem $item, User $moderator): ModerationItem
     {
         $fresh = ModerationItem::whereKey($item->getKey())->lockForUpdate()->firstOrFail();
@@ -213,8 +246,17 @@ class ModerationService
         $subject = $fresh->subject;
 
         // An admin approving their own listing is the check reviewing itself.
-        if ($subject instanceof Listing && $subject->user_id === $moderator->id) {
-            throw new RuntimeException('Не можеш да прегледаш собствената си обява.');
+        $isOwn = ($subject instanceof Listing && $subject->user_id === $moderator->id)
+              || ($subject instanceof User && $subject->id === $moderator->id);
+
+        if ($isOwn) {
+            throw new RuntimeException('Не можеш да прегледаш собственото си съдържание.');
+        }
+
+        // Moderators banning moderators is a fight this code should not be able
+        // to start. Revoke the rights first, deliberately, from the console.
+        if ($subject instanceof User && $subject->is_admin) {
+            throw new RuntimeException('Профилът е на модератор. Отнеми правата през конзолата първо.');
         }
 
         return $fresh;

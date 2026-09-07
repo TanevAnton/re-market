@@ -5,6 +5,7 @@ namespace App\Livewire\Moderation;
 use App\Enums\RejectionReason;
 use App\Models\Listing;
 use App\Models\ModerationItem;
+use App\Models\User;
 use App\Services\Moderation\ModerationService;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Livewire\Attributes\Layout;
@@ -122,6 +123,7 @@ class Queue extends Component
         $items = ModerationItem::queue()
             ->with(['subject' => fn (MorphTo $morphTo) => $morphTo->morphWith([
                 Listing::class => ['user', 'images', 'city', 'part'],
+                User::class    => [],
             ])])
             ->paginate(10);
 

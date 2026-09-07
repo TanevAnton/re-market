@@ -8,6 +8,7 @@ use App\Models\Offer;
 use App\Services\Offers\OfferException;
 use App\Services\Offers\OfferService;
 use Livewire\Attributes\Locked;
+use App\Livewire\Concerns\ChecksTurnstile;
 use Livewire\Component;
 
 /**
@@ -17,6 +18,8 @@ use Livewire\Component;
  */
 class MakeOffer extends Component
 {
+    use ChecksTurnstile;
+
     #[Locked]
     public Listing $listing;
 
@@ -57,6 +60,10 @@ class MakeOffer extends Component
 
     public function submit(OfferService $offers): void
     {
+        if (! $this->passesTurnstile()) {
+            return;
+        }
+
         $data = $this->validate([
             // Two decimals, because a price is money. Bulgarians type both
             // "1200,50" and "1200.50"; normalise before the rule sees it.

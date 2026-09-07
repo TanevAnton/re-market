@@ -339,6 +339,9 @@
         @if ($step < 4)
             <button type="button" wire:click="next" class="btn-primary">Продължи</button>
         @else
+            <x-turnstile />
+            @error('turnstile') <p class="error">{{ $message }}</p> @enderror
+
             <button type="button" wire:click="publish" class="btn-primary" wire:loading.attr="disabled">
                 <span wire:loading.remove wire:target="publish">Публикувай обявата</span>
                 <span wire:loading wire:target="publish">Публикуваме…</span>

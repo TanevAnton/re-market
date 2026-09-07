@@ -17,15 +17,19 @@
 
     <div class="mt-6 space-y-4">
         @foreach ($items as $item)
-            @php $listing = $item->subject; @endphp
+            @php
+                $subject = $item->subject;
+                $listing = $subject instanceof \App\Models\Listing ? $subject : null;
+                $person  = $subject instanceof \App\Models\User ? $subject : null;
+            @endphp
 
             <div class="card-pad" wire:key="item-{{ $item->id }}">
 
-                @if (! $listing)
+                @if (! $subject)
                     {{-- The listing was hard-deleted under us. Nothing to judge,
                          but the row must not become an invisible blocker. --}}
                     <p class="text-sm text-ink-muted">
-                        Обявата е изтрита. Няма какво да се прегледа.
+                        Съдържанието е изтрито. Няма какво да се прегледа.
                     </p>
                     <button type="button" wire:click="approve({{ $item->id }})"
                             class="btn-ghost btn-sm mt-3">Затвори</button>
@@ -37,6 +41,52 @@
                         </span>
                     </div>
 
+                    {{-- The notices themselves. Three independent "this is my
+                         photo" reports mean something one does not, so they are
+                         all shown rather than collapsed to a count. --}}
+                    @foreach ($item->context['reports'] ?? [] as $report)
+                        <div class="mt-3 rounded-md border border-line bg-warn-soft p-3">
+                            <p class="text-xs font-medium text-warn">
+                                {{ $report['label'] ?? $report['reason'] }} — {{ $report['by'] ?? 'анонимен' }}
+                            </p>
+                            <p class="mt-1 text-xs leading-relaxed text-warn">{{ $report['detail'] ?? '' }}</p>
+                        </div>
+                    @endforeach
+
+                    {{-- A duplicate photo names the listing it collided with:
+                         the judgement is which of the two is the original. --}}
+                    @if ($match = ($item->context['matched_listing_uuid'] ?? null))
+                        <p class="mt-3 text-xs text-warn">
+                            Снимка съвпада с
+                            <a href="/obiava/{{ $match }}" target="_blank" rel="noopener" class="link">друга обява</a>
+                            (разстояние {{ $item->context['distance'] ?? '?' }}).
+                        </p>
+                    @endif
+
+                    @if (isset($item->context['median_cents']))
+                        <p class="mt-3 text-xs text-warn">
+                            Цената е {{ $item->context['percent_of_median'] ?? '?' }}% от медианата за този модел
+                            ({{ number_format($item->context['median_cents'] / 100, 2, ',', ' ') }} лв,
+                            {{ $item->context['sample_size'] ?? '?' }} обяви).
+                        </p>
+                    @endif
+
+                    @if ($person)
+                        <div class="mt-3">
+                            <a href="{{ route('profile', $person->username) }}" target="_blank"
+                               rel="noopener" class="link font-medium">{{ $person->username }}</a>
+                            <p class="mt-1 text-xs text-ink-muted">
+                                профил от {{ $person->created_at->diffForHumans() }} ·
+                                {{ $person->deals_completed }} сделки ·
+                                {{ $person->listings()->count() }} обяви
+                            </p>
+                            <p class="mt-2 text-xs text-ink-faint">
+                                Отхвърлянето ограничава профила. Обявите му остават — премахни ги поотделно.
+                            </p>
+                        </div>
+                    @endif
+
+                    @if ($listing)
                     <div class="mt-3 flex gap-4">
                         {{-- Photos are most of the judgement: stock images, a
                              missing handwritten note, a card that does not match
@@ -93,6 +143,7 @@
                         </span>
                         <span>{{ $listing->user->seller_type->label() }}</span>
                     </div>
+                    @endif
 
                     @if ($rejecting === $item->id)
                         <div class="mt-4 border-t border-line pt-4">

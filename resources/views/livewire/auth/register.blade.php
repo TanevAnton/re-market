@@ -66,6 +66,9 @@
         </label>
         @error('terms') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
+        <x-turnstile />
+        @error('turnstile') <p class="error">{{ $message }}</p> @enderror
+
         <button type="submit"
                 class="w-full rounded-lg bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white
                        transition hover:bg-neutral-700 disabled:opacity-50"

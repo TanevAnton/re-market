@@ -11,10 +11,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Livewire\Attributes\Layout;
+use App\Livewire\Concerns\ChecksTurnstile;
 use Livewire\Component;
 
 class Register extends Component
 {
+    use ChecksTurnstile;
+
     public string $username = '';
     public string $email = '';
     public string $password = '';
@@ -65,6 +68,12 @@ class Register extends Component
     public function register()
     {
         $data = $this->validate();
+
+        // Before the account exists, not after: a bot that gets a row written
+        // and then an error has still cost us a username.
+        if (! $this->passesTurnstile()) {
+            return null;
+        }
 
         $user = DB::transaction(fn () => User::create([
             'name'        => $data['username'],

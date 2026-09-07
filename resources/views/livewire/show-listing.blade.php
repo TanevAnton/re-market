@@ -228,6 +228,13 @@
             Публикувана {{ $listing->published_at?->diffForHumans() }} ·
             <span class="font-mono tabular">{{ $listing->view_count }}</span> преглеждания
         </p>
+
+        {{-- Notice and action, DSA Art. 16. Not behind a login: the person most
+             likely to recognise a stolen photograph is the seller it was taken
+             from, who has no account here. --}}
+        @if (auth()->id() !== $listing->user_id)
+            @livewire('reports.report-form', ['subject' => $listing], key('report-listing-'.$listing->id))
+        @endif
     </aside>
 </div>
 </div>

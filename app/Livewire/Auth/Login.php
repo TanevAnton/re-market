@@ -6,10 +6,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
+use App\Livewire\Concerns\ChecksTurnstile;
 use Livewire\Component;
 
 class Login extends Component
 {
+    use ChecksTurnstile;
+
     public string $login = '';      // email OR username
     public string $password = '';
     public bool $remember = true;
@@ -22,6 +25,10 @@ class Login extends Component
         ]);
 
         $this->ensureIsNotRateLimited();
+
+        if (! $this->passesTurnstile()) {
+            return null;
+        }
 
         // One field for both, because nobody remembers which they used.
         $field = filter_var($this->login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';

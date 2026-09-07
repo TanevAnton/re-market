@@ -104,6 +104,9 @@
         </div>
 
         <div class="flex gap-2">
+            <x-turnstile />
+            @error('turnstile') <p class="error">{{ $message }}</p> @enderror
+
             <button type="submit" class="btn-primary flex-1">
                 <span wire:loading.remove wire:target="submit">Изпрати</span>
                 <span wire:loading wire:target="submit">Изпращам…</span>
