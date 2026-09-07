@@ -80,6 +80,24 @@ class TelegramBot
         return $this->call('getMe')['result'] ?? null;
     }
 
+    /**
+     * A bot cannot use getUpdates while a webhook is registered - Telegram
+     * answers 409 Conflict and hands the poller nothing, forever, in silence.
+     * Worth checking explicitly, because the symptom is indistinguishable from
+     * "nobody has messaged the bot".
+     */
+    public function webhookUrl(): ?string
+    {
+        $url = $this->call('getWebhookInfo')['result']['url'] ?? '';
+
+        return $url !== '' ? $url : null;
+    }
+
+    public function deleteWebhook(): bool
+    {
+        return ($this->call('deleteWebhook', ['drop_pending_updates' => false])['ok'] ?? false) === true;
+    }
+
     private function call(string $method, array $payload = [], int $httpTimeout = 15): array
     {
         if (! $this->isConfigured()) {
