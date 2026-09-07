@@ -5,7 +5,13 @@
 @source '../../app/Livewire/**/*.php';
 
 /* Manual theme switching. Without this, dark: would follow the OS only and the
-   header toggle could not override it. */
+   header toggle could not override it.
+
+   Dark is now the DEFAULT, but it is still expressed as the .dark class rather
+   than by inverting :root - because every dark: utility in the views keys off
+   this selector, and flipping the tokens without flipping the variant would
+   put the two silently out of step. The server just renders the class by
+   default instead. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ---------------------------------------------------------------------------
@@ -16,11 +22,23 @@
    site re-themes from the two blocks below rather than from 40 files.
 --------------------------------------------------------------------------- */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+    /*
+     * Manrope, not Instrument Sans.
+     *
+     * Instrument Sans ships latin and latin-ext ONLY - no Cyrillic subset at
+     * all. On a site whose every word is Bulgarian that meant the webfont
+     * rendered nothing and every character fell back to the system UI font.
+     * Manrope and JetBrains Mono both carry cyrillic and cyrillic-ext.
+     *
+     * Both are self-hosted: vite.config.js downloads them at build time, so no
+     * request ever leaves for a font CDN. The privacy page says we embed no
+     * external fonts, and that has to stay true.
+     */
+    --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji';
     /* Specs, prices and dimensions are tabular data. Monospace makes columns
        line up and makes 8 vs 3 unmistakable at a glance. */
-    --font-mono: ui-monospace, 'JetBrains Mono', 'Cascadia Mono', 'SF Mono',
+    --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', 'SF Mono',
         Menlo, Consolas, monospace;
 
     --color-canvas:      var(--canvas);
@@ -40,49 +58,78 @@
     --color-warn-soft:   var(--warn-soft);
     --color-bad:         var(--bad);
     --color-bad-soft:    var(--bad-soft);
+
 }
 
+/* LIGHT. Still has to be good - plenty of people browse a marketplace in
+   daylight on a phone - but it is no longer the one tuned first. */
 :root {
-    --canvas:      #ffffff;
+    --canvas:      #fbfcfb;
     --surface:     #ffffff;
-    --surface-alt: #f7f7f8;
-    --ink:         #0a0a0b;
-    --ink-muted:   #5c5c66;
-    --ink-faint:   #9a9aa5;
-    --line:        #e6e6ea;
-    --line-strong: #d0d0d8;
-    --accent:      #0040ff;
+    --surface-alt: #f2f5f4;
+    --ink:         #0a0f0d;
+    --ink-muted:   #55605c;
+    --ink-faint:   #8c9a95;
+    --line:        #e3e9e6;
+    --line-strong: #cbd5d0;
+
+    /* Emerald 400 is unreadable on white - drop to 700 rather than reuse it. */
+    --accent:      #047857;
     --accent-ink:  #ffffff;
-    --accent-soft: #edf2ff;
-    --good:        #067647;
-    --good-soft:   #e7f6ee;
-    --warn:        #8a5300;
-    --warn-soft:   #fdf3e2;
+    --accent-soft: #e6f4ee;
+
+    /*
+     * good IS the accent. Two greens a shade apart read as a bug rather than a
+     * distinction, so success and brand share one hue and badges are told
+     * apart by TREATMENT - solid accent versus soft good - not by colour.
+     */
+    --good:        #047857;
+    --good-soft:   #e6f4ee;
+    --warn:        #92400e;
+    --warn-soft:   #fdf4e6;
     --bad:         #b3261e;
     --bad-soft:    #fdeceb;
+
+    --shadow-card: 0 1px 2px rgb(16 24 20 / 0.06);
+    --shadow-lift: 0 10px 28px -8px rgb(16 24 20 / 0.18);
 
     color-scheme: light;
 }
 
+/*
+ * DARK - the default, and the one designed first.
+ *
+ * Not pure black: #0a0d0c carries a trace of green, so the emerald accent sits
+ * in the same world as the background instead of glowing on top of a neutral
+ * grey. Surfaces step up in lightness rather than relying on borders, which is
+ * what makes a dark interface read as layered rather than flat.
+ */
 .dark {
-    --canvas:      #0a0a0c;
-    --surface:     #131317;
-    --surface-alt: #1b1b21;
-    --ink:         #f2f2f5;
-    --ink-muted:   #a0a0ad;
-    --ink-faint:   #6b6b78;
-    --line:        #26262e;
-    --line-strong: #35353f;
-    /* Pure #0040ff is unreadable on near-black; lift it rather than reuse it. */
-    --accent:      #6c8fff;
-    --accent-ink:  #06060a;
-    --accent-soft: #171d33;
-    --good:        #4ade80;
-    --good-soft:   #10261a;
+    --canvas:      #0a0d0c;
+    --surface:     #121614;
+    --surface-alt: #1a201d;
+    --ink:         #e9efec;
+    --ink-muted:   #97a5a0;
+    --ink-faint:   #64726d;
+    --line:        #212926;
+    --line-strong: #2f3a36;
+
+    --accent:      #34d399;
+    --accent-ink:  #04140e;
+    --accent-soft: #102b22;
+
+    --good:        #34d399;
+    --good-soft:   #102b22;
     --warn:        #fbbf24;
-    --warn-soft:   #2a1f07;
+    --warn-soft:   #2a2007;
     --bad:         #f87171;
-    --bad-soft:    #2a1212;
+    --bad-soft:    #2a1414;
+
+    /* Dark UI gets its depth from shadow far less than light does - a black
+       shadow on a near-black ground is invisible. Most of the layering here
+       comes from the surface steps above; these just soften the edges. */
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-lift: 0 10px 30px -8px rgb(0 0 0 / 0.55);
 
     color-scheme: dark;
 }
@@ -175,28 +222,37 @@ html[data-theme='dark']   .theme-icon-dark { display: block; }
     .tabular { font-variant-numeric: tabular-nums; }
 
     .btn {
-        @apply inline-flex select-none items-center justify-center gap-2 rounded-md px-4 py-2
-               text-sm font-medium transition
+        @apply inline-flex select-none items-center justify-center gap-2 rounded-lg px-4 py-2.5
+               text-sm font-semibold transition-all duration-150
                disabled:cursor-not-allowed disabled:opacity-40;
     }
 
+    /*
+     * The accent is the loudest thing on the site, so it appears on exactly one
+     * control per screen. Lifting on hover rather than fading is what makes a
+     * dark interface feel responsive - opacity changes read as "disabled".
+     */
     .btn-primary {
-        @apply inline-flex select-none items-center justify-center gap-2 rounded-md px-4 py-2
-               text-sm font-medium transition
+        @apply inline-flex select-none items-center justify-center gap-2 rounded-lg px-4 py-2.5
+               text-sm font-semibold transition-all duration-150
                disabled:cursor-not-allowed disabled:opacity-40
-               bg-accent text-[var(--accent-ink)] hover:opacity-90;
+               bg-accent text-[var(--accent-ink)]
+               hover:brightness-110 active:brightness-95
+               disabled:hover:brightness-100;
+        box-shadow: 0 1px 2px rgb(0 0 0 / 0.15);
     }
 
     .btn-secondary {
-        @apply inline-flex select-none items-center justify-center gap-2 rounded-md px-4 py-2
-               text-sm font-medium transition
+        @apply inline-flex select-none items-center justify-center gap-2 rounded-lg px-4 py-2.5
+               text-sm font-semibold transition-all duration-150
                disabled:cursor-not-allowed disabled:opacity-40
-               border border-line-strong bg-surface text-ink hover:bg-surface-alt;
+               border border-line-strong bg-surface text-ink
+               hover:border-accent hover:text-accent;
     }
 
     .btn-ghost {
-        @apply inline-flex select-none items-center justify-center gap-2 rounded-md px-4 py-2
-               text-sm font-medium transition
+        @apply inline-flex select-none items-center justify-center gap-2 rounded-lg px-3 py-2
+               text-sm font-medium transition-all duration-150
                disabled:cursor-not-allowed disabled:opacity-40
                text-ink-muted hover:bg-surface-alt hover:text-ink;
     }
@@ -204,24 +260,44 @@ html[data-theme='dark']   .theme-icon-dark { display: block; }
     /* Declared after the variants so its padding wins when both are present. */
     .btn-sm { @apply px-3 py-1.5 text-xs; }
 
-    .card     { @apply rounded-lg border border-line bg-surface; }
-    .card-pad { @apply rounded-lg border border-line bg-surface p-4; }
+    .card {
+        @apply rounded-xl border border-line bg-surface;
+        box-shadow: var(--shadow-card);
+    }
+    .card-pad {
+        @apply rounded-xl border border-line bg-surface p-5;
+        box-shadow: var(--shadow-card);
+    }
 
-    .label { @apply block text-xs font-medium uppercase tracking-wider text-ink-muted; }
-    .hint  { @apply mt-1 text-xs text-ink-faint; }
-    .error { @apply mt-1 text-sm text-bad; }
+    /* A card you can click. The lift is small on purpose - twelve of these on a
+       browse page, all bouncing, is a fairground rather than a marketplace. */
+    .card-interactive {
+        @apply rounded-xl border border-line bg-surface transition-all duration-200;
+        box-shadow: var(--shadow-card);
+    }
+    .card-interactive:hover {
+        @apply -translate-y-0.5 border-line-strong;
+        box-shadow: var(--shadow-lift);
+    }
 
-    .badge         { @apply inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium; }
-    .badge-neutral { @apply inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium bg-surface-alt text-ink-muted; }
-    .badge-good    { @apply inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium bg-good-soft text-good; }
-    .badge-warn    { @apply inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium bg-warn-soft text-warn; }
-    .badge-bad     { @apply inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium bg-bad-soft text-bad; }
-    .badge-accent  { @apply inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium bg-accent-soft text-accent; }
+    .label { @apply block text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-muted; }
+    .hint  { @apply mt-1.5 text-xs leading-relaxed text-ink-faint; }
+    .error { @apply mt-1.5 text-sm text-bad; }
+
+    /* Badges are pills now, and the accent one is SOLID while good is soft.
+       That treatment split is what distinguishes them, because since the accent
+       became emerald they share a hue. */
+    .badge         { @apply inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold; }
+    .badge-neutral { @apply inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-surface-alt text-ink-muted; }
+    .badge-good    { @apply inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-good-soft text-good; }
+    .badge-warn    { @apply inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-warn-soft text-warn; }
+    .badge-bad     { @apply inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold bg-bad-soft text-bad; }
+    .badge-accent  { @apply inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold bg-accent text-[var(--accent-ink)]; }
 
     /* The spec sheet. Monospace values, dotted leaders, aligned columns - the
        single strongest visual signal that this site knows what a GPU is. */
     .spec-row {
-        @apply flex items-baseline justify-between gap-3 border-b border-dashed border-line py-1.5 text-sm;
+        @apply flex items-baseline justify-between gap-3 border-b border-dashed border-line py-2 text-sm;
     }
     .spec-key { @apply shrink-0 text-ink-muted; }
     .spec-value {
@@ -229,10 +305,20 @@ html[data-theme='dark']   .theme-icon-dark { display: block; }
         font-variant-numeric: tabular-nums;
     }
 
+    /* The number people came for. Accent-coloured, because on a marketplace the
+       price IS the call to action. */
     .price {
-        @apply font-mono font-semibold tracking-tight;
+        @apply font-mono font-bold tracking-tight text-accent;
         font-variant-numeric: tabular-nums;
     }
 
     .link { @apply text-ink underline-offset-2 hover:text-accent hover:underline; }
+
+    /* The header. Translucent over the canvas so content scrolling underneath
+       is felt rather than hidden behind a solid bar. */
+    .site-header {
+        @apply sticky top-0 z-30 border-b border-line;
+        background: color-mix(in oklab, var(--canvas) 82%, transparent);
+        backdrop-filter: saturate(140%) blur(12px);
+    }
 }

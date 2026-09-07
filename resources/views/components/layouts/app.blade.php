@@ -5,12 +5,16 @@
      * be read until the page is running - by which point the server has already
      * committed to a guess, and any disagreement shows up as a flip on refresh.
      *
-     * Three states. Null means "follow the operating system", which is not the
-     * same as light and has to stay tellable apart from it.
+     * Three states, and DARK IS THE DEFAULT - no cookie means dark, not
+     * "whatever the operating system says". That is a deliberate product
+     * choice rather than a technical one: the palette is designed dark first,
+     * and a first-time visitor should see the site as it was meant to look.
+     * "Follow the system" stays reachable as the third position on the toggle,
+     * so nobody is trapped in a theme they did not pick.
      */
-    $theme = in_array($cookie = request()->cookie('theme'), ['dark', 'light'], true)
+    $theme = in_array($cookie = request()->cookie('theme'), ['dark', 'light', 'system'], true)
         ? $cookie
-        : 'system';
+        : 'dark';
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}"
@@ -23,8 +27,9 @@
 
     {{-- The page background, before any stylesheet has loaded. In dev, Vite
          injects the CSS with JavaScript, so without this the first paint is a
-         white rectangle no matter what class <html> carries. --}}
-    <style>html{background:#fff}html.dark{background:#0a0a0c}</style>
+         bare rectangle no matter what class <html> carries. Dark first, to
+         match the default. --}}
+    <style>html{background:#0a0d0c}html[data-theme="light"]{background:#fbfcfb}</style>
 
     <script>
         (function () {
@@ -48,34 +53,40 @@
 
             window.__cycleTheme = function () {
                 root.dataset.theme = ({
-                    system: 'light',
-                    light:  'dark',
-                    dark:   'system',
+                    dark:   'light',
+                    light:  'system',
+                    system: 'dark',
                 })[root.dataset.theme] ?? 'light';
 
                 apply();
 
-                // A cookie, not localStorage: the server has to be able to read
-                // it. Deleting it is how "follow the system" is expressed.
-                document.cookie = root.dataset.theme === 'system'
-                    ? 'theme=; path=/; max-age=0; samesite=lax'
-                    : 'theme=' + root.dataset.theme + '; path=/; max-age=31536000; samesite=lax';
+                // A cookie, not localStorage: the server has to be able to
+                // read it. "system" is now stored explicitly rather than being
+                // the absence of a cookie, because the absence means dark.
+                document.cookie = 'theme=' + root.dataset.theme
+                    + '; path=/; max-age=31536000; samesite=lax';
             };
         })();
     </script>
+
+    {{-- Vite::fonts() is NOT emitted by @vite - it is a separate call that
+         renders the preload links and inlines the @font-face rules. Without
+         it the font files are built and self-hosted and then never referenced
+         by anything, which is exactly what was happening. --}}
+    {{ Vite::fonts() }}
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 </head>
 <body class="flex min-h-full flex-col">
 
-<header class="sticky top-0 z-30 border-b border-line bg-canvas/85 backdrop-blur">
-    <div class="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
+<header class="site-header">
+    <div class="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3.5">
 
         <a href="{{ route('browse') }}" wire:navigate class="flex items-center gap-2">
-            <span class="grid h-7 w-7 place-items-center rounded bg-accent font-mono text-[11px]
+            <span class="grid h-8 w-8 place-items-center rounded-lg bg-accent font-mono text-[11px]
                          font-bold text-[var(--accent-ink)]">RM</span>
-            <span class="hidden font-semibold tracking-tight sm:inline">{{ config('app.name') }}</span>
+            <span class="hidden text-[15px] font-extrabold tracking-tight sm:inline">{{ config('app.name') }}</span>
         </a>
 
         <nav class="ml-2 hidden items-center gap-1 md:flex">

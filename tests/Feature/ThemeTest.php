@@ -25,11 +25,25 @@ class ThemeTest extends TestCase
         $this->seed(CitySeeder::class);
     }
 
-    public function test_no_cookie_means_follow_the_operating_system(): void
+    /**
+     * Dark is the default, and it is a product decision rather than a technical
+     * one: the palette is designed dark first, so a first-time visitor should
+     * see the site as it was meant to look rather than whatever their laptop
+     * happens to be set to.
+     */
+    public function test_no_cookie_means_dark(): void
     {
         $response = $this->get(route('browse'));
 
-        // Not "light" - the OS may well say dark, and only the browser knows.
+        $response->assertSee('data-theme="dark"', false);
+        $response->assertSee('class="h-full dark"', false);
+    }
+
+    /** Nobody is trapped in a theme they did not pick. */
+    public function test_following_the_system_is_an_explicit_stored_choice(): void
+    {
+        $response = $this->withUnencryptedCookie('theme', 'system')->get(route('browse'));
+
         $response->assertSee('data-theme="system"', false);
         $response->assertDontSee('class="h-full dark"', false);
     }
@@ -57,12 +71,12 @@ class ThemeTest extends TestCase
      * user input. It reaches an HTML attribute, and only these three values may
      * ever get there.
      */
-    public function test_an_unrecognised_cookie_value_falls_back_to_system(): void
+    public function test_an_unrecognised_cookie_value_falls_back_to_the_default(): void
     {
         $response = $this->withUnencryptedCookie('theme', '" onload="alert(1)')
             ->get(route('browse'));
 
-        $response->assertSee('data-theme="system"', false);
+        $response->assertSee('data-theme="dark"', false);
         $response->assertDontSee('onload=', false);
     }
 }
