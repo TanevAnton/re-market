@@ -7,6 +7,8 @@ use App\Livewire\Auth\VerifyPhone;
 use App\Livewire\BrowseListings;
 use App\Livewire\Listings\CreateListing;
 use App\Livewire\Deals\MyDeals;
+use App\Livewire\Messages\Inbox;
+use App\Livewire\Messages\ShowThread;
 use App\Livewire\Offers\OfferInbox;
 use App\Livewire\Profile\EditProfile;
 use App\Livewire\Profile\ShowProfile;
@@ -62,6 +64,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/nastroyki', EditProfile::class)->name('profile.edit');
     Route::get('/oferti', OfferInbox::class)->name('offers');
     Route::get('/sdelki', MyDeals::class)->name('deals');
+
+    Route::get('/sabshteniya', Inbox::class)->name('messages');
+    Route::get('/sabshteniya/{thread}', ShowThread::class)->name('thread');
+    // Entry point from a listing: opens the thread if it does not exist yet,
+    // then redirects to its own URL.
+    Route::get('/obiava/{listing}/pisha', ShowThread::class)->name('listing.message');
 
     // NOTE: 'phone.verified' middleware is deliberately NOT applied yet, so the
     // posting flow can be built and tested without a verification round trip.

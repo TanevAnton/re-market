@@ -125,7 +125,19 @@
                  across a wire:navigate to a different ad. --}}
             @livewire('offers.make-offer', ['listing' => $listing], key('offer-'.$listing->id))
 
-            <button type="button" disabled class="btn-secondary mt-2 w-full">Съобщение до продавача</button>
+            @auth
+                @if (auth()->id() !== $listing->user_id)
+                    <a href="{{ route('listing.message', $listing) }}" wire:navigate
+                       class="btn-secondary mt-2 block w-full text-center">
+                        Съобщение до продавача
+                    </a>
+                @endif
+            @else
+                <a href="{{ route('login') }}" wire:navigate
+                   class="btn-secondary mt-2 block w-full text-center">
+                    Съобщение до продавача
+                </a>
+            @endauth
         </div>
 
         @if ($listing->accepts_inspect_test)

@@ -1,7 +1,10 @@
 # Deploying RE-MARKET to an Ubuntu server on your LAN
 
-Assumes a clean Ubuntu 22.04 or 24.04 box you can SSH into, and that the code
-is on GitHub at `TanevAnton/re-market`.
+Assumes an Ubuntu box you can SSH into and that the code is on GitHub at
+`TanevAnton/re-market`.
+
+Verified on Ubuntu 25.10 (questing) with PHP 8.4, PostgreSQL 17 and nginx,
+serving on port 2323 at `http://192.168.1.75:2323`.
 
 Everything below is run **on the server** unless it says otherwise.
 
@@ -28,14 +31,28 @@ git push -u origin main
 
 ## 1. Packages
 
-Ubuntu ships PHP 8.3; this project wants 8.4, so add the PPA.
+**Check what you already have first** - it decides whether the next step is
+one command or four:
 
 ```bash
-sudo apt update
+lsb_release -a; php -v | head -1; node -v; psql --version
+```
+
+Ubuntu 25.04 and newer ship **PHP 8.4 natively**, so no PPA is needed - and the
+ondrej PPA has no build for those releases, so adding it only produces a 404 on
+every `apt update`. On 22.04 and 24.04, which ship 8.3, you do need it:
+
+```bash
+# ONLY on 22.04 / 24.04 - skip entirely on 25.x
 sudo apt install -y software-properties-common
 sudo add-apt-repository -y ppa:ondrej/php
 sudo apt update
+```
 
+Then, on any release:
+
+```bash
+sudo apt update
 sudo apt install -y nginx git unzip curl \
   php8.4-fpm php8.4-cli php8.4-pgsql php8.4-gd php8.4-mbstring \
   php8.4-xml php8.4-curl php8.4-zip php8.4-intl php8.4-bcmath \
@@ -44,10 +61,19 @@ sudo apt install -y nginx git unzip curl \
 # Composer
 curl -sS https://getcomposer.org/installer | php
 sudo mv composer.phar /usr/local/bin/composer
+```
 
-# Node 22 (only needed to build assets)
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs
+Node is only needed to build CSS and JS. Anything from **20.19** up works
+(Vite 8's floor), so Ubuntu's own `nodejs` package is usually fine:
+
+```bash
+node -v || sudo apt install -y nodejs
+```
+
+Confirm before going on - this must print ten lines:
+
+```bash
+php -m | grep -E '^(pdo_pgsql|gd|exif|mbstring|xml|curl|zip|intl|bcmath|fileinfo)$' | sort
 ```
 
 `deploy.sh` verifies every extension it needs and names any that are missing,
@@ -173,22 +199,65 @@ on every profile silently stops being true.
 ## 8. Open the port
 
 ```bash
-sudo ufw allow 80/tcp
+sudo ufw allow 2323/tcp        # or 80, whichever you configured
 sudo ufw allow OpenSSH
 sudo ufw enable
 ```
 
-Then browse to `http://<server-ip>` from any machine on the network.
+Test locally before blaming the network - this separates three failures that
+look identical from another machine:
+
+```bash
+curl -I http://127.0.0.1:2323
+```
+
+`200` means the app is fine and anything still broken is firewall or routing.
+`502` means nginx cannot reach php-fpm (wrong socket path). `500` means the
+app - `tail -5 storage/logs/laravel.log`.
+
+Then browse to `http://<server-ip>:2323` from any machine on the network.
 
 ---
 
-## Updating
+## The development loop
+
+Develop and test on Windows, then:
+
+```powershell
+php artisan test                     # on Windows, before pushing
+git add -A
+git commit -m "what changed"
+git push
+```
 
 ```bash
-cd /var/www/remarket
+cd /var/www/remarket                 # on the server
 git pull
 ./deploy.sh
 ```
+
+`deploy.sh` re-caches config and routes every time, so you never have to
+remember `config:cache` after a deploy - only after editing `.env` by hand.
+
+Two things the server needs that git does not carry: `.env` (deliberately not
+in the repo) and the nginx port edit (see step 5).
+
+## Phone verification on a test server
+
+With `APP_ENV=production` and no SMS credentials, the log channel refuses to
+run and you get "В момента не можем да изпратим код" - a channel that reports
+success while delivering nothing would let anyone who can read the log verify
+anyone's number. On a LAN box with no real accounts, opt in explicitly:
+
+```bash
+echo "VERIFY_ALLOW_LOG_CHANNEL=true" >> .env
+php artisan config:cache
+grep '\[verification\]' storage/logs/laravel.log | tail -3
+```
+
+Every send then also logs a warning saying this is on. **Unset it before real
+users exist** - the code lives only in a log file, so the account is only as
+safe as read access to that file.
 
 ## First admin account
 

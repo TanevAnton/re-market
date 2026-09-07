@@ -66,6 +66,18 @@
                         <span class="badge-accent ml-1 font-mono">{{ $openDeals }}</span>
                     @endif
                 </a>
+
+                @php
+                    // One query, not one per thread - this badge renders on
+                    // every page in the site.
+                    $unread = \App\Models\Thread::unreadTotalFor(auth()->id());
+                @endphp
+                <a href="{{ route('messages') }}" wire:navigate class="btn-ghost btn-sm">
+                    Съобщения
+                    @if ($unread)
+                        <span class="badge-accent ml-1 font-mono">{{ $unread }}</span>
+                    @endif
+                </a>
             @endauth
         </nav>
 

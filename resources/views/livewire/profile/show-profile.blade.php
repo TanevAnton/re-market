@@ -52,6 +52,9 @@
                 <dt class="text-xs text-ink-muted">Оценка</dt>
                 <dd class="mt-0.5 font-mono text-lg font-semibold tabular">
                     {{ $user->rating_avg ?? '—' }}
+                    @if ($user->rating_count)
+                        <span class="text-xs font-normal text-ink-muted">({{ $user->rating_count }})</span>
+                    @endif
                 </dd>
             </div>
             <div class="bg-surface p-3">
@@ -72,5 +75,67 @@
             @endforeach
         </div>
         <div class="mt-6">{{ $listings->links() }}</div>
+    @endif
+
+    {{-- ------------------------------------------------------- ratings --}}
+    @if ($ratings->isNotEmpty())
+        <h2 class="mt-10 text-sm font-semibold uppercase tracking-wider text-ink-muted">
+            Оценки
+        </h2>
+
+        <div class="mt-3 space-y-3">
+            @foreach ($ratings as $rating)
+                <article class="card-pad">
+                    <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                        <span class="font-mono text-sm text-accent">
+                            {{ str_repeat('★', $rating->score) }}<span
+                                class="text-ink-faint">{{ str_repeat('★', 5 - $rating->score) }}</span>
+                        </span>
+
+                        {{-- Which side they were. Being reliable as a seller
+                             says little about being reliable as a buyer. --}}
+                        <span class="badge-neutral">
+                            {{ $rating->role === 'seller' ? 'като продавач' : 'като купувач' }}
+                        </span>
+
+                        <a href="{{ route('profile', $rating->rater->username) }}" wire:navigate
+                           class="link text-xs">{{ $rating->rater->username }}</a>
+
+                        <span class="ml-auto text-xs text-ink-faint">
+                            {{ $rating->created_at->diffForHumans() }}
+                        </span>
+                    </div>
+
+                    @if ($rating->comment)
+                        <p class="mt-2 text-sm leading-relaxed">{{ $rating->comment }}</p>
+                    @endif
+
+                    @if ($rating->reply)
+                        <div class="mt-3 border-l-2 border-line pl-3">
+                            <p class="text-xs text-ink-muted">Отговор от {{ $user->username }}</p>
+                            <p class="mt-0.5 text-sm leading-relaxed">{{ $rating->reply }}</p>
+                        </div>
+                    @elseif (auth()->id() === $user->id)
+                        @if ($replyingId === $rating->id)
+                            <form wire:submit="submitReply" class="mt-3 space-y-2">
+                                <input type="text" wire:model="replyBody" maxlength="1000"
+                                       placeholder="Твоят отговор — само един, публичен" autofocus>
+                                @error('replyBody') <p class="error">{{ $message }}</p> @enderror
+                                <div class="flex gap-2">
+                                    <button type="submit" class="btn-primary btn-sm">Отговори</button>
+                                    <button type="button" wire:click="$set('replyingId', null)"
+                                            class="btn-ghost btn-sm">Откажи</button>
+                                </div>
+                            </form>
+                        @else
+                            <button type="button" wire:click="startReply({{ $rating->id }})"
+                                    class="btn-ghost btn-sm mt-2">
+                                Отговори
+                            </button>
+                        @endif
+                    @endif
+                </article>
+            @endforeach
+        </div>
     @endif
 </div>

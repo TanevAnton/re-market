@@ -145,6 +145,13 @@
                         </button>
                     </div>
 
+                @elseif ($deal->status === \App\Enums\DealStatus::Completed)
+                    {{-- Its own component so rating one deal re-renders that
+                         box, not the whole list. --}}
+                    @livewire('ratings.rate-deal', ['deal' => $deal], key('rate-'.$deal->id))
+                @endif
+
+                @if ($open)
                     @if ($cancellingId === $deal->id)
                         <form wire:submit="cancel" class="mt-3 space-y-2 rounded-md bg-surface-alt p-3">
                             <label class="label" for="reason-{{ $deal->id }}">Защо?</label>
