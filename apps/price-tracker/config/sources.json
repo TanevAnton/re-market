@@ -1,0 +1,50 @@
+{
+  "olx": {
+    "enabled": true,
+    "hosts": [
+      "www.olx.bg",
+      "olx.bg"
+    ],
+    "search_url": "https://www.olx.bg/ads/q-{slug}/",
+    "market": "classifieds",
+    "delivery": "Only listings with the OLX delivery badge enter benchmarks; other listings remain in review.",
+    "validation": "Live DOM parser verified 2026-09-07; automated runner access must be verified."
+  },
+  "desktop": {
+    "enabled": true,
+    "hosts": [
+      "desktop.bg",
+      "www.desktop.bg"
+    ],
+    "search_url": "https://desktop.bg/search?q={query}",
+    "market": "retail",
+    "delivery": "Nationwide Bulgaria; courier price varies by order and destination.",
+    "delivery_evidence": "https://laptop.bg/pages/delivery",
+    "delivery_verified_on": "2026-09-07",
+    "validation": "Live search microdata parser verified 2026-09-07."
+  },
+  "pazaruvaj": {
+    "enabled": true,
+    "hosts": [
+      "www.pazaruvaj.com",
+      "pazaruvaj.com"
+    ],
+    "search_url": "https://www.pazaruvaj.com/?st={query}",
+    "market": "comparison",
+    "delivery": "Retailer dependent. Aggregate prices never enter independent-offer benchmarks.",
+    "validation": "Security challenge in cloud browser on 2026-09-07. JSON-LD adapter is provisional; source fails visibly if structured offers are absent."
+  },
+  "ardes": {
+    "enabled": false,
+    "hosts": [
+      "ardes.bg",
+      "www.ardes.bg"
+    ],
+    "search_url": "https://ardes.bg/",
+    "market": "retail",
+    "delivery": "Nationwide Bulgaria, verified from official retailer page.",
+    "delivery_evidence": "https://ardes.bg/periferiya/slushalki/steelseries",
+    "delivery_verified_on": "2026-09-07",
+    "validation": "Disabled: security verification prevents parser validation. Set exact product source_urls and verify before enabling."
+  }
+}
