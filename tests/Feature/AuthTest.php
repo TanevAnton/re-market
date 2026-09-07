@@ -258,6 +258,26 @@ class AuthTest extends TestCase
         $this->assertSame('expired', $result['reason']);
     }
 
+    /**
+     * The log channel must stay shut in production unless someone explicitly
+     * opens it. Getting this backwards would mean a live site silently issuing
+     * codes that only ever appear in a log file.
+     */
+    public function test_the_log_channel_is_refused_in_production_by_default(): void
+    {
+        $channel = new \App\Services\Verification\Channels\LogChannel();
+
+        $this->assertTrue($channel->isAvailable());
+
+        app()['env'] = 'production';
+        config(['remarket.verify.allow_log_channel_in_production' => false]);
+        $this->assertFalse($channel->isAvailable());
+
+        // ...and opens only on an explicit, named opt-in.
+        config(['remarket.verify.allow_log_channel_in_production' => true]);
+        $this->assertTrue($channel->isAvailable());
+    }
+
     // --- gating ----------------------------------------------------------
 
     public function test_browsing_stays_open_to_guests(): void

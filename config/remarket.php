@@ -21,6 +21,12 @@ return [
 
         // With none of these set, PhoneVerifier falls back to the log channel
         // so local signup works with no credentials and no spend.
+        // Escape hatch for a staging or LAN box with no SMS credentials.
+        // Writes the code to storage/logs/laravel.log instead of sending it -
+        // which also means anyone who can read that log can verify anyone's
+        // number. Never set this where real accounts exist.
+        'allow_log_channel_in_production' => (bool) env('VERIFY_ALLOW_LOG_CHANNEL', false),
+
         'telegram_token'    => env('TELEGRAM_GATEWAY_TOKEN'),
         'bulkgate_app_id'   => env('BULKGATE_APP_ID'),
         'bulkgate_token'    => env('BULKGATE_APP_TOKEN'),
