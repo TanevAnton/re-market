@@ -32,6 +32,21 @@ Route::get('/', BrowseListings::class)->name('browse');
 Route::get('/obiava/{listing}', ShowListing::class)->name('listing');
 Route::get('/profil/{username}', ShowProfile::class)->name('profile');
 
+/*
+ * The legal pages. Public and unauthenticated on purpose: DSA Art. 11 and 12
+ * contact points behind a login would not be published at all, and someone
+ * whose photographs were stolen has to be able to read how to report it
+ * without first creating an account here.
+ *
+ * Static views rather than components - no state, no interaction, and they
+ * should keep rendering if every other part of the site is broken.
+ */
+Route::view('/usloviya', 'legal.terms')->name('legal.terms');
+Route::view('/poveritelnost', 'legal.privacy')->name('legal.privacy');
+Route::view('/biskvitki', 'legal.cookies')->name('legal.cookies');
+Route::view('/kontakti', 'legal.contacts')->name('legal.contacts');
+Route::view('/signali', 'legal.notice')->name('legal.notice');
+
 // --- guests ---------------------------------------------------------------
 Route::middleware('guest')->group(function () {
     Route::get('/registraciya', Register::class)->name('register');

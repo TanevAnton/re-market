@@ -207,6 +207,20 @@
             Сделките се уговарят пряко между потребителите. Платформата не обработва плащания
             и не е страна по договора.
         </p>
+
+        {{-- Reachable from every page: the DSA contact points are only
+             "published" if someone can actually find them. --}}
+        <nav class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            <a href="{{ route('legal.terms') }}" wire:navigate class="text-ink-muted hover:text-ink">Общи условия</a>
+            <a href="{{ route('legal.privacy') }}" wire:navigate class="text-ink-muted hover:text-ink">Поверителност</a>
+            <a href="{{ route('legal.cookies') }}" wire:navigate class="text-ink-muted hover:text-ink">Бисквитки</a>
+            <a href="{{ route('legal.notice') }}" wire:navigate class="text-ink-muted hover:text-ink">Сигнали</a>
+            <a href="{{ route('legal.contacts') }}" wire:navigate class="text-ink-muted hover:text-ink">Контакти</a>
+        </nav>
+
+        <p class="mt-4 text-xs text-ink-faint">
+            {{ config('legal.entity.name') }}@if (config('legal.entity.eik')), ЕИК {{ config('legal.entity.eik') }}@endif
+        </p>
     </div>
 </footer>
 

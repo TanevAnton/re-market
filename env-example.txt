@@ -119,7 +119,11 @@ PHASH_DISTANCE_THRESHOLD=8
 PRICE_OUTLIER_LOW_PCT=40
 PRICE_OUTLIER_HIGH_PCT=250
 
-# Cloudflare Turnstile - free, no cookies, no consent banner. Not wired yet.
+# Cloudflare Turnstile - free, no cookies, so no consent-banner entry needed.
+# Wired into signup, login, listing creation, offers and reports. With EITHER
+# key blank the challenge disables itself entirely - which is what keeps local
+# and LAN testing working, and also means a production deployment with blank
+# keys silently has no bot defence. Fill both before launch.
 TURNSTILE_SITE_KEY=
 TURNSTILE_SECRET_KEY=
 
@@ -138,3 +142,23 @@ SPEEDY_USERNAME=
 SPEEDY_PASSWORD=
 
 VITE_APP_NAME="${APP_NAME}"
+
+# --- Legal pages ------------------------------------------------------------
+# These appear on /kontakti, /usloviya and /poveritelnost. Until they are filled
+# the pages render a visible red placeholder rather than a blank - an invented
+# company number on a legal page is worse than an obviously missing one.
+LEGAL_ENTITY_NAME="КОМПНЕТ СОЛЮШЪНС ООД"
+LEGAL_ENTITY_EIK=
+LEGAL_ENTITY_VAT=
+LEGAL_ENTITY_ADDRESS=
+LEGAL_ENTITY_MANAGER=
+
+# DSA Art. 12 (users) and Art. 11 (authorities) are two separate published
+# contact points. They may be the same mailbox; both must be published.
+LEGAL_CONTACT_USERS=
+LEGAL_CONTACT_AUTHORITIES=
+LEGAL_CONTACT_PRIVACY=
+LEGAL_CONTACT_PHONE=
+
+# Bump when the terms change - users are entitled to know they moved.
+LEGAL_UPDATED_AT=2026-09-07

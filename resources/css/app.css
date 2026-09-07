@@ -87,6 +87,26 @@
     color-scheme: dark;
 }
 
+/* Legal pages. Long prose, read once, under duress - so: a comfortable measure,
+   generous line height, and headings that actually break the wall of text up.
+   Nobody reads terms they cannot scan. */
+.legal h1 { @apply text-2xl font-semibold tracking-tight; }
+.legal h2 { @apply mt-10 border-t border-line pt-6 text-lg font-semibold tracking-tight; }
+.legal h3 { @apply mt-6 text-sm font-semibold uppercase tracking-wider text-ink-muted; }
+.legal p  { @apply mt-3 text-sm leading-relaxed text-ink-muted; }
+.legal .lead { @apply mt-3 text-base leading-relaxed text-ink; }
+.legal ul { @apply mt-3 space-y-2 text-sm leading-relaxed text-ink-muted; }
+.legal li { @apply relative pl-5; }
+.legal li::before { @apply absolute left-1 top-2 h-1 w-1 rounded-full bg-ink-faint content-['']; }
+.legal dl { @apply mt-3 grid gap-x-4 gap-y-2 text-sm sm:grid-cols-[200px_1fr]; }
+.legal dt { @apply text-ink-muted; }
+.legal dd { @apply text-ink; }
+.legal a:not(.link) { @apply text-ink underline underline-offset-2 hover:text-accent; }
+.legal table { @apply mt-3 w-full text-sm; }
+.legal th { @apply border-b border-line py-2 text-left text-xs font-medium uppercase tracking-wider text-ink-muted; }
+.legal td { @apply border-b border-line py-2 align-top text-ink-muted; }
+.legal .callout { @apply mt-4 rounded-lg border border-line bg-surface-alt p-4 text-sm leading-relaxed text-ink; }
+
 /* The theme toggle cycles system -> light -> dark, and shows which one is on.
    Driven by the attribute the SERVER renders, so the right icon is correct in
    the first paint rather than corrected afterwards. */
