@@ -1,0 +1,3414 @@
+{
+  "run_id": "cd40f500-cec9-4fcb-9cc0-3ac38ec43cb3",
+  "started_at": "2026-09-07T09:18:35.458014+00:00",
+  "mode": "live",
+  "jobs": [
+    {
+      "source": "olx",
+      "model_id": "rtx-2060-6gb",
+      "status": "error",
+      "detail": "robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-2060-super-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-2070-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-2070-super-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-2080-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-2080-super-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-2080-ti-11gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-3050-6gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-3050-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-3060-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-3060-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-3060-ti-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-3070-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-3070-ti-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-3080-10gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-3080-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-3080-ti-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-3090-24gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-3090-ti-24gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-4060-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-4060-ti-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-4060-ti-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-4070-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-4070-super-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-4070-ti-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-4070-ti-super-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-4080-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-4080-super-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-4090-24gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-5060-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-5060-ti-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-5060-ti-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-5070-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-5070-ti-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-5080-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rtx-5090-32gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-6600-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-6600-xt-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-6650-xt-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-6700-xt-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-6750-xt-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-6800-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-6800-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-6900-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-6950-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-7600-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-7600-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-7700-xt-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-7800-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-7900-gre-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-7900-xt-20gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-7900-xtx-24gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-9060-xt-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-9060-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-9070-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "rx-9070-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "arc-a750-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "arc-a770-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "arc-b580-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "ryzen-5-3600",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "ryzen-5-5500",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "ryzen-5-5600",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "ryzen-5-5600x",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "ryzen-7-5700x",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "ryzen-7-5700x3d",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "ryzen-7-5800x3d",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "ryzen-5-7500f",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "ryzen-5-7600",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "ryzen-5-7600x",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "ryzen-7-7700",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "ryzen-7-7800x3d",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "ryzen-9-7950x",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "ryzen-5-9600x",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "ryzen-7-9700x",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "ryzen-7-9800x3d",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "ryzen-9-9900x",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "ryzen-9-9950x",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "ryzen-9-9950x3d",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "intel-core-i3-12100f",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "intel-core-i5-12400f",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "intel-core-i5-13400f",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "intel-core-i5-13600k",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "intel-core-i5-14400f",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "intel-core-i5-14600k",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "intel-core-i7-14700k",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "intel-core-i9-14900k",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "intel-core-ultra-5-245k",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "intel-core-ultra-7-265k",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "intel-core-ultra-9-285k",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "msi-b650-gaming-plus-wifi",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "msi-b550-tomahawk",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "gigabyte-b650-eagle-ax",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "asus-tuf-gaming-b760-plus-wifi-ddr5",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "kingston-fury-beast-32gb-ddr5-6000-cl30",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "corsair-vengeance-32gb-ddr5-6000-cl30",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "kingston-fury-beast-16gb-ddr4-3200-cl16",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "samsung-990-pro-1tb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "samsung-990-pro-2tb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "wd-black-sn850x-2tb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "kingston-nv3-1tb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "team-mp33-pro-2tb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "seagate-barracuda-st2000dm008",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "wd-blue-wd20ezbx",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "corsair-rm750e-750w",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "corsair-rm850e-850w",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "be-quiet-pure-power-12-m-750w",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "msi-mag-a750gl-pcie5",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "corsair-4000d-airflow",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "nzxt-h5-flow",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "deepcool-cc560",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "deepcool-ak400",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "thermalright-peerless-assassin-120-se",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "noctua-nh-d15",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "arctic-liquid-freezer-iii-360",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "arctic-p12-pwm-pst",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "noctua-nf-a12x25-pwm",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "tp-link-archer-tx3000e",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "intel-x550-t2",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "creative-sound-blaster-ae-5-plus",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "asus-drw-24d5mt",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "aoc-24g4x",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "dell-g2724d",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "logitech-g413-se",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "logitech-g502-hero",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "hyperx-cloud-iii",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "olx",
+      "model_id": "apc-bx750mi",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-2060-6gb",
+      "status": "error",
+      "detail": "robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-2060-super-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-2070-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-2070-super-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-2080-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-2080-super-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-2080-ti-11gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-3050-6gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-3050-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-3060-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-3060-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-3060-ti-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-3070-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-3070-ti-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-3080-10gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-3080-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-3080-ti-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-3090-24gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-3090-ti-24gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-4060-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-4060-ti-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-4060-ti-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-4070-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-4070-super-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-4070-ti-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-4070-ti-super-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-4080-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-4080-super-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-4090-24gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-5060-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-5060-ti-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-5060-ti-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-5070-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-5070-ti-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-5080-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rtx-5090-32gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-6600-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-6600-xt-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-6650-xt-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-6700-xt-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-6750-xt-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-6800-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-6800-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-6900-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-6950-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-7600-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-7600-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-7700-xt-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-7800-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-7900-gre-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-7900-xt-20gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-7900-xtx-24gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-9060-xt-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-9060-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-9070-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "rx-9070-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "arc-a750-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "arc-a770-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "arc-b580-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "ryzen-5-3600",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "ryzen-5-5500",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "ryzen-5-5600",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "ryzen-5-5600x",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "ryzen-7-5700x",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "ryzen-7-5700x3d",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "ryzen-7-5800x3d",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "ryzen-5-7500f",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "ryzen-5-7600",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "ryzen-5-7600x",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "ryzen-7-7700",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "ryzen-7-7800x3d",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "ryzen-9-7950x",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "ryzen-5-9600x",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "ryzen-7-9700x",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "ryzen-7-9800x3d",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "ryzen-9-9900x",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "ryzen-9-9950x",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "ryzen-9-9950x3d",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "intel-core-i3-12100f",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "intel-core-i5-12400f",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "intel-core-i5-13400f",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "intel-core-i5-13600k",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "intel-core-i5-14400f",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "intel-core-i5-14600k",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "intel-core-i7-14700k",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "intel-core-i9-14900k",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "intel-core-ultra-5-245k",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "intel-core-ultra-7-265k",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "intel-core-ultra-9-285k",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "msi-b650-gaming-plus-wifi",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "msi-b550-tomahawk",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "gigabyte-b650-eagle-ax",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "asus-tuf-gaming-b760-plus-wifi-ddr5",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "kingston-fury-beast-32gb-ddr5-6000-cl30",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "corsair-vengeance-32gb-ddr5-6000-cl30",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "kingston-fury-beast-16gb-ddr4-3200-cl16",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "samsung-990-pro-1tb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "samsung-990-pro-2tb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "wd-black-sn850x-2tb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "kingston-nv3-1tb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "team-mp33-pro-2tb",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "seagate-barracuda-st2000dm008",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "wd-blue-wd20ezbx",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "corsair-rm750e-750w",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "corsair-rm850e-850w",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "be-quiet-pure-power-12-m-750w",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "msi-mag-a750gl-pcie5",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "corsair-4000d-airflow",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "nzxt-h5-flow",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "deepcool-cc560",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "deepcool-ak400",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "thermalright-peerless-assassin-120-se",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "noctua-nh-d15",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "arctic-liquid-freezer-iii-360",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "arctic-p12-pwm-pst",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "noctua-nf-a12x25-pwm",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "tp-link-archer-tx3000e",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "intel-x550-t2",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "creative-sound-blaster-ae-5-plus",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "asus-drw-24d5mt",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "aoc-24g4x",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "dell-g2724d",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "logitech-g413-se",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "logitech-g502-hero",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "hyperx-cloud-iii",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "desktop",
+      "model_id": "apc-bx750mi",
+      "status": "skipped",
+      "detail": "source_circuit_open: robots_http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-2060-6gb",
+      "status": "error",
+      "detail": "http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-2060-super-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-2070-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-2070-super-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-2080-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-2080-super-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-2080-ti-11gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-3050-6gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-3050-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-3060-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-3060-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-3060-ti-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-3070-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-3070-ti-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-3080-10gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-3080-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-3080-ti-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-3090-24gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-3090-ti-24gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-4060-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-4060-ti-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-4060-ti-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-4070-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-4070-super-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-4070-ti-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-4070-ti-super-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-4080-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-4080-super-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-4090-24gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-5060-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-5060-ti-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-5060-ti-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-5070-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-5070-ti-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-5080-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rtx-5090-32gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-6600-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-6600-xt-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-6650-xt-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-6700-xt-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-6750-xt-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-6800-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-6800-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-6900-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-6950-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-7600-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-7600-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-7700-xt-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-7800-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-7900-gre-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-7900-xt-20gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-7900-xtx-24gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-9060-xt-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-9060-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-9070-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "rx-9070-xt-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "arc-a750-8gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "arc-a770-16gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "arc-b580-12gb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "ryzen-5-3600",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "ryzen-5-5500",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "ryzen-5-5600",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "ryzen-5-5600x",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "ryzen-7-5700x",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "ryzen-7-5700x3d",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "ryzen-7-5800x3d",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "ryzen-5-7500f",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "ryzen-5-7600",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "ryzen-5-7600x",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "ryzen-7-7700",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "ryzen-7-7800x3d",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "ryzen-9-7950x",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "ryzen-5-9600x",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "ryzen-7-9700x",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "ryzen-7-9800x3d",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "ryzen-9-9900x",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "ryzen-9-9950x",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "ryzen-9-9950x3d",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "intel-core-i3-12100f",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "intel-core-i5-12400f",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "intel-core-i5-13400f",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "intel-core-i5-13600k",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "intel-core-i5-14400f",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "intel-core-i5-14600k",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "intel-core-i7-14700k",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "intel-core-i9-14900k",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "intel-core-ultra-5-245k",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "intel-core-ultra-7-265k",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "intel-core-ultra-9-285k",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "msi-b650-gaming-plus-wifi",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "msi-b550-tomahawk",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "gigabyte-b650-eagle-ax",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "asus-tuf-gaming-b760-plus-wifi-ddr5",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "kingston-fury-beast-32gb-ddr5-6000-cl30",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "corsair-vengeance-32gb-ddr5-6000-cl30",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "kingston-fury-beast-16gb-ddr4-3200-cl16",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "samsung-990-pro-1tb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "samsung-990-pro-2tb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "wd-black-sn850x-2tb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "kingston-nv3-1tb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "team-mp33-pro-2tb",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "seagate-barracuda-st2000dm008",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "wd-blue-wd20ezbx",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "corsair-rm750e-750w",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "corsair-rm850e-850w",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "be-quiet-pure-power-12-m-750w",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "msi-mag-a750gl-pcie5",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "corsair-4000d-airflow",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "nzxt-h5-flow",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "deepcool-cc560",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "deepcool-ak400",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "thermalright-peerless-assassin-120-se",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "noctua-nh-d15",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "arctic-liquid-freezer-iii-360",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "arctic-p12-pwm-pst",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "noctua-nf-a12x25-pwm",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "tp-link-archer-tx3000e",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "intel-x550-t2",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "creative-sound-blaster-ae-5-plus",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "asus-drw-24d5mt",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "aoc-24g4x",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "dell-g2724d",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "logitech-g413-se",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "logitech-g502-hero",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "hyperx-cloud-iii",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    },
+    {
+      "source": "pazaruvaj",
+      "model_id": "apc-bx750mi",
+      "status": "skipped",
+      "detail": "source_circuit_open: http_403",
+      "pages": 0,
+      "rows": 0,
+      "truncated": false
+    }
+  ],
+  "finished_at": "2026-09-07T09:18:38.902671+00:00",
+  "successful_jobs": 0,
+  "failed_jobs": 378,
+  "collected_rows": 0,
+  "health": "failed"
+}
