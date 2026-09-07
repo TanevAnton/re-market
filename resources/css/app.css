@@ -1,0 +1,210 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../../app/Livewire/**/*.php';
+
+/* Manual theme switching. Without this, dark: would follow the OS only and the
+   header toggle could not override it. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------------------
+   Tokens.
+
+   Every colour is a semantic name pointing at a CSS variable, and the variables
+   are redefined under .dark. Components never name a raw colour, so the whole
+   site re-themes from the two blocks below rather than from 40 files.
+--------------------------------------------------------------------------- */
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji';
+    /* Specs, prices and dimensions are tabular data. Monospace makes columns
+       line up and makes 8 vs 3 unmistakable at a glance. */
+    --font-mono: ui-monospace, 'JetBrains Mono', 'Cascadia Mono', 'SF Mono',
+        Menlo, Consolas, monospace;
+
+    --color-canvas:      var(--canvas);
+    --color-surface:     var(--surface);
+    --color-surface-alt: var(--surface-alt);
+    --color-ink:         var(--ink);
+    --color-ink-muted:   var(--ink-muted);
+    --color-ink-faint:   var(--ink-faint);
+    --color-line:        var(--line);
+    --color-line-strong: var(--line-strong);
+    --color-accent:      var(--accent);
+    --color-accent-ink:  var(--accent-ink);
+    --color-accent-soft: var(--accent-soft);
+    --color-good:        var(--good);
+    --color-good-soft:   var(--good-soft);
+    --color-warn:        var(--warn);
+    --color-warn-soft:   var(--warn-soft);
+    --color-bad:         var(--bad);
+    --color-bad-soft:    var(--bad-soft);
+}
+
+:root {
+    --canvas:      #ffffff;
+    --surface:     #ffffff;
+    --surface-alt: #f7f7f8;
+    --ink:         #0a0a0b;
+    --ink-muted:   #5c5c66;
+    --ink-faint:   #9a9aa5;
+    --line:        #e6e6ea;
+    --line-strong: #d0d0d8;
+    --accent:      #0040ff;
+    --accent-ink:  #ffffff;
+    --accent-soft: #edf2ff;
+    --good:        #067647;
+    --good-soft:   #e7f6ee;
+    --warn:        #8a5300;
+    --warn-soft:   #fdf3e2;
+    --bad:         #b3261e;
+    --bad-soft:    #fdeceb;
+
+    color-scheme: light;
+}
+
+.dark {
+    --canvas:      #0a0a0c;
+    --surface:     #131317;
+    --surface-alt: #1b1b21;
+    --ink:         #f2f2f5;
+    --ink-muted:   #a0a0ad;
+    --ink-faint:   #6b6b78;
+    --line:        #26262e;
+    --line-strong: #35353f;
+    /* Pure #0040ff is unreadable on near-black; lift it rather than reuse it. */
+    --accent:      #6c8fff;
+    --accent-ink:  #06060a;
+    --accent-soft: #171d33;
+    --good:        #4ade80;
+    --good-soft:   #10261a;
+    --warn:        #fbbf24;
+    --warn-soft:   #2a1f07;
+    --bad:         #f87171;
+    --bad-soft:    #2a1212;
+
+    color-scheme: dark;
+}
+
+/* ---------------------------------------------------------------------------
+   Base
+--------------------------------------------------------------------------- */
+@layer base {
+    html { -webkit-text-size-adjust: 100%; }
+
+    body {
+        @apply bg-canvas text-ink antialiased;
+    }
+
+    ::selection { background: var(--accent); color: var(--accent-ink); }
+
+    :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+    }
+
+    input[type='text'],
+    input[type='search'],
+    input[type='number'],
+    input[type='email'],
+    input[type='password'],
+    input[type='tel'],
+    input[type='url'],
+    input[type='date'],
+    select,
+    textarea {
+        @apply w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink
+               outline-none transition placeholder:text-ink-faint
+               focus:border-accent focus:ring-2 focus:ring-accent/20;
+    }
+
+    textarea { @apply min-h-28 resize-y; }
+
+    input[type='checkbox'],
+    input[type='radio'] {
+        @apply h-4 w-4 shrink-0 cursor-pointer rounded border-line-strong bg-surface;
+        accent-color: var(--accent);
+    }
+    input[type='radio'] { border-radius: 9999px; }
+    input[type='search']::-webkit-search-decoration { -webkit-appearance: none; }
+
+    label { @apply text-ink; }
+    hr { @apply border-line; }
+}
+
+/* ---------------------------------------------------------------------------
+   Components
+
+   NOTE: Tailwind 4 only lets @apply take real utilities - a component class
+   cannot @apply another component class the way it could in v3. So each
+   variant below repeats its base declarations instead of composing. Verbose,
+   but it is what actually compiles.
+--------------------------------------------------------------------------- */
+@layer components {
+
+    /* Prices, capacities, dimensions. */
+    .tabular { font-variant-numeric: tabular-nums; }
+
+    .btn {
+        @apply inline-flex select-none items-center justify-center gap-2 rounded-md px-4 py-2
+               text-sm font-medium transition
+               disabled:cursor-not-allowed disabled:opacity-40;
+    }
+
+    .btn-primary {
+        @apply inline-flex select-none items-center justify-center gap-2 rounded-md px-4 py-2
+               text-sm font-medium transition
+               disabled:cursor-not-allowed disabled:opacity-40
+               bg-accent text-[var(--accent-ink)] hover:opacity-90;
+    }
+
+    .btn-secondary {
+        @apply inline-flex select-none items-center justify-center gap-2 rounded-md px-4 py-2
+               text-sm font-medium transition
+               disabled:cursor-not-allowed disabled:opacity-40
+               border border-line-strong bg-surface text-ink hover:bg-surface-alt;
+    }
+
+    .btn-ghost {
+        @apply inline-flex select-none items-center justify-center gap-2 rounded-md px-4 py-2
+               text-sm font-medium transition
+               disabled:cursor-not-allowed disabled:opacity-40
+               text-ink-muted hover:bg-surface-alt hover:text-ink;
+    }
+
+    /* Declared after the variants so its padding wins when both are present. */
+    .btn-sm { @apply px-3 py-1.5 text-xs; }
+
+    .card     { @apply rounded-lg border border-line bg-surface; }
+    .card-pad { @apply rounded-lg border border-line bg-surface p-4; }
+
+    .label { @apply block text-xs font-medium uppercase tracking-wider text-ink-muted; }
+    .hint  { @apply mt-1 text-xs text-ink-faint; }
+    .error { @apply mt-1 text-sm text-bad; }
+
+    .badge         { @apply inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium; }
+    .badge-neutral { @apply inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium bg-surface-alt text-ink-muted; }
+    .badge-good    { @apply inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium bg-good-soft text-good; }
+    .badge-warn    { @apply inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium bg-warn-soft text-warn; }
+    .badge-bad     { @apply inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium bg-bad-soft text-bad; }
+    .badge-accent  { @apply inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium bg-accent-soft text-accent; }
+
+    /* The spec sheet. Monospace values, dotted leaders, aligned columns - the
+       single strongest visual signal that this site knows what a GPU is. */
+    .spec-row {
+        @apply flex items-baseline justify-between gap-3 border-b border-dashed border-line py-1.5 text-sm;
+    }
+    .spec-key { @apply shrink-0 text-ink-muted; }
+    .spec-value {
+        @apply text-right font-mono text-[13px] font-medium text-ink;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .price {
+        @apply font-mono font-semibold tracking-tight;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .link { @apply text-ink underline-offset-2 hover:text-accent hover:underline; }
+}

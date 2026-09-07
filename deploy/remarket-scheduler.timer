@@ -1,0 +1,12 @@
+[Unit]
+Description=Run RE-MARKET scheduled tasks every minute
+
+[Timer]
+# Laravel expects to be called every minute; it decides internally which of its
+# own tasks are actually due.
+OnCalendar=*:0/1
+AccuracySec=10s
+Persistent=false
+
+[Install]
+WantedBy=timers.target

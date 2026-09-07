@@ -1,0 +1,78 @@
+<?php
+
+use App\Livewire\Auth\Login;
+use App\Livewire\Auth\Register;
+use App\Livewire\Auth\VerifyEmailNotice;
+use App\Livewire\Auth\VerifyPhone;
+use App\Livewire\BrowseListings;
+use App\Livewire\Listings\CreateListing;
+use App\Livewire\Deals\MyDeals;
+use App\Livewire\Offers\OfferInbox;
+use App\Livewire\Profile\EditProfile;
+use App\Livewire\Profile\ShowProfile;
+use App\Livewire\ShowListing;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+
+/*
+ * Public URLs are Bulgarian, because they are read by Bulgarian users and by
+ * Google in Bulgarian. Listings are addressed by uuid rather than id so the
+ * site never advertises how few (or how many) listings it really has.
+ */
+
+// --- public ---------------------------------------------------------------
+// Browsing stays open. Gating reading behind signup is how a marketplace with
+// no users stays a marketplace with no users.
+Route::get('/', BrowseListings::class)->name('browse');
+Route::get('/obiava/{listing}', ShowListing::class)->name('listing');
+Route::get('/profil/{username}', ShowProfile::class)->name('profile');
+
+// --- guests ---------------------------------------------------------------
+Route::middleware('guest')->group(function () {
+    Route::get('/registraciya', Register::class)->name('register');
+    Route::get('/vhod', Login::class)->name('login');
+});
+
+// --- authenticated --------------------------------------------------------
+Route::middleware('auth')->group(function () {
+    Route::get('/potvardi-telefon', VerifyPhone::class)->name('phone.verify');
+
+    /*
+     * Email verification. These three route NAMES are not optional once User
+     * implements MustVerifyEmail: Laravel's built-in VerifyEmail notification
+     * builds its signed link from route('verification.verify'), so registering
+     * a user without them throws RouteNotFoundException mid-signup.
+     */
+    Route::get('/potvardi-imeil', VerifyEmailNotice::class)
+        ->name('verification.notice');
+
+    Route::get('/potvardi-imeil/{id}/{hash}', function (EmailVerificationRequest $request) {
+        $request->fulfill();
+
+        return redirect()->route('browse')->with('status', 'Имейлът е потвърден.');
+    })->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
+
+    Route::post('/potvardi-imeil/prati', function (Request $request) {
+        $request->user()->sendEmailVerificationNotification();
+
+        return back()->with('status', 'Изпратихме нов линк за потвърждение.');
+    })->middleware('throttle:6,1')->name('verification.send');
+    Route::get('/nastroyki', EditProfile::class)->name('profile.edit');
+    Route::get('/oferti', OfferInbox::class)->name('offers');
+    Route::get('/sdelki', MyDeals::class)->name('deals');
+
+    // NOTE: 'phone.verified' middleware is deliberately NOT applied yet, so the
+    // posting flow can be built and tested without a verification round trip.
+    // Add it here before launch - that is the whole point of the gate.
+    Route::get('/publikuvai', CreateListing::class)->name('listing.create');
+
+    Route::post('/izhod', function () {
+        Auth::logout();
+        session()->invalidate();
+        session()->regenerateToken();
+
+        return redirect()->route('browse');
+    })->name('logout');
+});

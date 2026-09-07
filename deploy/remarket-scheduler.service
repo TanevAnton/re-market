@@ -1,0 +1,23 @@
+# Laravel's scheduler, fired once a minute by the paired .timer.
+#
+#   sudo cp deploy/remarket-scheduler.* /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now remarket-scheduler.timer
+#
+# Until this runs, remarket:expire-offers and remarket:lapse-deals never fire.
+# Offers then sit "pending" past their TTL forever and, worse, no deal is ever
+# marked abandoned - which means the completion rate on every profile quietly
+# becomes a lie.
+
+[Unit]
+Description=RE-MARKET scheduled tasks
+After=network.target postgresql.service
+
+[Service]
+Type=oneshot
+User=www-data
+WorkingDirectory=/var/www/remarket
+ExecStart=/usr/bin/php /var/www/remarket/artisan schedule:run --no-interaction
+
+# A hung command must not block the next minute's run.
+TimeoutStartSec=300

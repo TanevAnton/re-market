@@ -1,0 +1,157 @@
+<?php
+
+namespace App\Livewire;
+
+use App\Enums\ListingCondition;
+use App\Models\City;
+use App\Models\Listing;
+use App\Support\SpecFilter;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
+use Livewire\Component;
+use Livewire\WithPagination;
+
+class BrowseListings extends Component
+{
+    use WithPagination;
+
+    #[Url(as: 'kat', except: '')]
+    public string $category = '';
+
+    #[Url(as: 'q', except: '')]
+    public string $q = '';
+
+    #[Url(as: 'ot', except: '')]
+    public string $priceMin = '';
+
+    #[Url(as: 'do', except: '')]
+    public string $priceMax = '';
+
+    #[Url(as: 'sast', except: [])]
+    public array $condition = [];
+
+    #[Url(as: 'grad', except: '')]
+    public string $city = '';
+
+    #[Url(as: 'sort', except: 'new')]
+    public string $sort = 'new';
+
+    /** Dynamic facet selections, keyed by spec name. */
+    #[Url(as: 'f', except: [])]
+    public array $specs = [];
+
+    public function updated($name): void
+    {
+        // Any filter change invalidates the current page number.
+        if ($name !== 'page') {
+            $this->resetPage();
+        }
+
+        // Spec facets are category-specific and meaningless once you switch.
+        if ($name === 'category') {
+            $this->specs = [];
+        }
+    }
+
+    public function clearFilters(): void
+    {
+        $this->reset(['q', 'priceMin', 'priceMax', 'condition', 'city', 'specs']);
+        $this->resetPage();
+    }
+
+    public function removeSpec(string $key): void
+    {
+        unset($this->specs[$key]);
+        $this->resetPage();
+    }
+
+    public function filter(): SpecFilter
+    {
+        return new SpecFilter($this->category);
+    }
+
+    /**
+     * Only offer facet values that actually exist in the current results.
+     * A filter that returns zero listings is worse than no filter at all.
+     */
+    public function facetOptions(string $key, array $spec): array
+    {
+        if (! $this->category) {
+            return [];
+        }
+
+        return Cache::remember(
+            "facet:{$this->category}:{$key}",
+            now()->addMinutes(10),
+            function () use ($key, $spec) {
+                if (($spec['scope'] ?? 'part') !== 'part') {
+                    return $spec['options'] ?? [];
+                }
+
+                $rows = DB::table('parts')
+                    ->selectRaw('DISTINCT specs->>? AS value', [$key])
+                    ->where('category', $this->category)
+                    // jsonb_exists(), not the `?` operator: PDO would read
+                    // that `?` as a bind placeholder and the query would break.
+                    ->whereRaw('jsonb_exists(specs, ?)', [$key])
+                    ->pluck('value')
+                    ->filter()
+                    ->all();
+
+                // Numeric specs sort numerically; text specs alphabetically.
+                usort($rows, fn ($a, $b) => is_numeric($a) && is_numeric($b)
+                    ? $a <=> $b
+                    : strcmp((string) $a, (string) $b));
+
+                return $rows;
+            }
+        );
+    }
+
+    #[Layout('components.layouts.app')]
+    public function render()
+    {
+        $filter = $this->filter();
+
+        $query = Listing::query()
+            ->visible()
+            ->with(['part', 'city', 'user', 'images'])
+            ->when($this->category, fn ($q) => $q->where('listings.category', $this->category))
+            ->when($this->city, fn ($q) => $q->whereHas('city', fn ($c) => $c->where('slug', $this->city)))
+            ->when($this->condition, fn ($q) => $q->whereIn('condition', $this->condition))
+            ->when($this->priceMin !== '', fn ($q) => $q->where('price_cents', '>=', (int) ($this->priceMin * 100)))
+            ->when($this->priceMax !== '', fn ($q) => $q->where('price_cents', '<=', (int) ($this->priceMax * 100)));
+
+        // Free text hits the listing title and the catalogue aliases alike, so
+        // "ртх 4090" and "rtx 4090" both work.
+        if ($this->q !== '') {
+            $term = mb_strtolower(trim($this->q));
+            $query->where(function ($outer) use ($term) {
+                $outer->whereRaw('LOWER(listings.title) LIKE ?', ['%'.$term.'%'])
+                      ->orWhereHas('part', fn ($p) => $p->matches($term));
+            });
+        }
+
+        foreach ($this->specs as $key => $value) {
+            $query = $filter->apply($query, $key, $value);
+        }
+
+        $query = match ($this->sort) {
+            'price_asc'  => $query->orderBy('price_cents'),
+            'price_desc' => $query->orderByDesc('price_cents'),
+            'views'      => $query->orderByDesc('view_count'),
+            default      => $query->orderByDesc('bumped_at'),
+        };
+
+        return view('livewire.browse-listings', [
+            'listings'   => $query->paginate(24),
+            'categories' => SpecFilter::categories(),
+            'cities'     => City::orderByDesc('population')->limit(40)->get(),
+            'conditions' => ListingCondition::cases(),
+            'facets'     => $filter->facets(),
+            'filter'     => $filter,
+        ]);
+    }
+}
