@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Auth;
 
+use App\Models\TelegramLink;
 use App\Services\Verification\PhoneNumber;
 use App\Services\Verification\PhoneVerifier;
 use Livewire\Attributes\Layout;
@@ -15,11 +16,53 @@ class VerifyPhone extends Component
     public ?string $channel = null;
     public ?string $status = null;
 
+    /** The pending Telegram handshake, once the user asks for one. */
+    public ?string $telegramUrl = null;
+
     public function mount(): void
     {
         if (auth()->user()?->phone_verified_at) {
             $this->redirectRoute('browse', navigate: true);
         }
+    }
+
+    public function telegramAvailable(): bool
+    {
+        return filled(config('remarket.verify.telegram_bot_token'))
+            && filled(config('remarket.verify.telegram_bot_username'));
+    }
+
+    /**
+     * Hand out a fresh deep link. No phone number is asked for here on purpose:
+     * the whole point is that the user does not type one, Telegram supplies the
+     * number it already verified.
+     */
+    public function startTelegram(): void
+    {
+        if (! $this->telegramAvailable()) {
+            return;
+        }
+
+        $this->telegramUrl = TelegramLink::issueFor(
+            auth()->user(),
+            (int) config('remarket.verify.telegram_link_ttl', 15),
+        )->deepLink();
+    }
+
+    /**
+     * Polled by the page while the user is over in Telegram. The listener does
+     * the actual verifying out of band, so the browser only has to notice that
+     * it happened.
+     */
+    public function checkTelegram()
+    {
+        if (auth()->user()?->fresh()?->phone_verified_at) {
+            session()->flash('status', 'Номерът ти е потвърден.');
+
+            return $this->redirectRoute('browse', navigate: true);
+        }
+
+        return null;
     }
 
     public function sendCode(): void

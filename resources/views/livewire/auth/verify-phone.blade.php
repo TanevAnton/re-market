@@ -5,6 +5,38 @@
         Номерът ти не се показва публично.
     </p>
 
+    {{-- The free path, and the better one: no code is sent, so there is nothing
+         to intercept or to be talked into reading out to someone. --}}
+    @if ($this->telegramAvailable() && ! $sent)
+        <div class="card-pad mt-6" @if ($telegramUrl) wire:poll.3s="checkTelegram" @endif>
+            @if (! $telegramUrl)
+                <p class="text-sm font-medium">С Telegram — веднага и без код</p>
+                <p class="mt-1 text-xs leading-relaxed text-ink-muted">
+                    Отваряш бота, натискаш „Сподели номера си" и си готов.
+                    Telegram вече е потвърдил номера ти.
+                </p>
+                <button type="button" wire:click="startTelegram" class="btn-primary mt-3 w-full">
+                    Потвърди с Telegram
+                </button>
+            @else
+                <p class="text-sm font-medium">Отвори Telegram и натисни Start</p>
+                <a href="{{ $telegramUrl }}" target="_blank" rel="noopener"
+                   class="btn-primary mt-3 block w-full text-center">
+                    Отвори бота
+                </a>
+                <p class="mt-2 break-all text-center font-mono text-[11px] text-ink-faint">
+                    {{ $telegramUrl }}
+                </p>
+                <p class="mt-3 flex items-center justify-center gap-2 text-xs text-ink-muted">
+                    <span class="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent"></span>
+                    Чакаме потвърждение…
+                </p>
+            @endif
+        </div>
+
+        <p class="mt-4 text-center text-xs text-ink-faint">или с код на телефона</p>
+    @endif
+
     @if (! $sent)
         <form wire:submit="sendCode" class="mt-6 space-y-4">
             <div>

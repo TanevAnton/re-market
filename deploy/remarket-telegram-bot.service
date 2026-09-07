@@ -1,0 +1,34 @@
+# The Telegram verification listener.
+#
+#   sudo cp deploy/remarket-telegram-bot.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now remarket-telegram-bot
+#
+# A long-running service, not a timer: the user is sitting on the verification
+# page waiting, and a once-a-minute cron would mean up to sixty seconds of
+# staring at nothing. Long polling makes it near-instant.
+#
+# Outbound HTTPS only - no public address or open port needed, which is why
+# this works on a LAN box where webhooks would not.
+
+[Unit]
+Description=RE-MARKET Telegram verification bot
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/remarket
+ExecStart=/usr/bin/php /var/www/remarket/artisan remarket:telegram-bot
+
+# Telegram drops long-poll connections routinely and the command exits on any
+# unhandled error. Always restart, with a pause so a bad token does not spin.
+Restart=always
+RestartSec=10
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

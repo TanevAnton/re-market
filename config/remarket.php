@@ -28,6 +28,14 @@ return [
         'allow_log_channel_in_production' => (bool) env('VERIFY_ALLOW_LOG_CHANNEL', false),
 
         'telegram_token'    => env('TELEGRAM_GATEWAY_TOKEN'),
+
+        // The BOT flow - free at any volume, and stronger than a code: the
+        // user shares their contact and Telegram vouches for the number it
+        // verified when they signed up. Nothing is sent, so nothing can be
+        // intercepted. Token from @BotFather.
+        'telegram_bot_token'    => env('TELEGRAM_BOT_TOKEN'),
+        'telegram_bot_username' => env('TELEGRAM_BOT_USERNAME'),
+        'telegram_link_ttl'     => (int) env('TELEGRAM_LINK_TTL_MINUTES', 15),
         'bulkgate_app_id'   => env('BULKGATE_APP_ID'),
         'bulkgate_token'    => env('BULKGATE_APP_TOKEN'),
         'sender_id'         => env('BULKGATE_SENDER_ID', 'REMARKET'),
