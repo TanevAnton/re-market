@@ -1,14 +1,5 @@
-# Component price tracker
+# Component tracker moved
 
-Run: 2026-09-07T09:18:35.458014+00:00 | Mode: live | Health: **failed**
+The tracker code, daily workflow, reports, and database have moved to [TanevAnton/re-tracker](https://github.com/TanevAnton/re-tracker).
 
-Prices in EUR. Used prices are asking prices, not completed sales. Shipping is excluded unless known.
-
-| Component | Condition | Samples | Median EUR | Confidence |
-|---|---|---:|---:|---|
-
-No verified, delivery-confirmed component offers in this run. See listings.csv and review.csv for observations requiring review.
-
-[Source status](source_status.csv) · [All listings](listings.csv) · [Review queue](review.csv) · [Price history](history.csv)
-
-The catalog and page limits define coverage. This is a sample, not an exhaustive crawl. Failed/old observations do not feed current summaries.
+Use the [current price reports](https://github.com/TanevAnton/re-tracker/tree/price-data). This branch no longer contains tracker data or receives daily updates.
