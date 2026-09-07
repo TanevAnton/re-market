@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ModerationTrigger;
+use App\Enums\RejectionReason;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,9 +19,10 @@ class ModerationItem extends Model
     protected function casts(): array
     {
         return [
-            'context'    => 'array',
-            'trigger'    => ModerationTrigger::class,
-            'decided_at' => 'datetime',
+            'context'         => 'array',
+            'trigger'         => ModerationTrigger::class,
+            'decision_reason' => RejectionReason::class,
+            'decided_at'      => 'datetime',
         ];
     }
 
@@ -33,5 +35,10 @@ class ModerationItem extends Model
         return $q->where('status', 'pending')
                  ->orderBy('priority')
                  ->orderBy('created_at');
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
     }
 }

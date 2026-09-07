@@ -1,19 +1,31 @@
 <div>
 
 @if ($this->isPrivateView())
-    <div class="mb-5 rounded-lg border border-line bg-warn-soft p-4">
-        <p class="text-sm font-medium text-warn">
-            @if ($listing->status === \App\Enums\ListingStatus::PendingReview)
-                Обявата чака преглед
-            @else
-                Обявата не е публична ({{ $listing->status->label() }})
-            @endif
-        </p>
-        <p class="mt-1 text-xs leading-relaxed text-warn">
-            Виждаш я, защото е твоя. Първите обяви от нов профил се проверяват ръчно —
-            обикновено до няколко часа. След одобрение излиза в резултатите.
-        </p>
-    </div>
+    @php $statement = $this->statementOfReasons(); @endphp
+
+    @if ($statement)
+        {{-- The decision, in full, to the person it was made about. A statement
+             of reasons filed only in the database is not a statement of
+             reasons - DSA Art. 17 is about what the user receives. --}}
+        <div class="mb-5 rounded-lg border border-line bg-bad-soft p-4">
+            <p class="text-sm font-medium text-bad">Обявата е премахната след преглед</p>
+            <p class="mt-2 whitespace-pre-line text-xs leading-relaxed text-bad">{{ $statement }}</p>
+        </div>
+    @else
+        <div class="mb-5 rounded-lg border border-line bg-warn-soft p-4">
+            <p class="text-sm font-medium text-warn">
+                @if ($listing->status === \App\Enums\ListingStatus::PendingReview)
+                    Обявата чака преглед
+                @else
+                    Обявата не е публична ({{ $listing->status->label() }})
+                @endif
+            </p>
+            <p class="mt-1 text-xs leading-relaxed text-warn">
+                Виждаш я, защото е твоя. Първите обяви от нов профил се проверяват ръчно —
+                обикновено до няколко часа. След одобрение излиза в резултатите.
+            </p>
+        </div>
+    @endif
 @endif
 
 <div class="grid gap-8 lg:grid-cols-[1fr_330px]">

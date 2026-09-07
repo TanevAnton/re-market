@@ -2,7 +2,9 @@
 
 namespace App\Livewire;
 
+use App\Enums\ListingStatus;
 use App\Models\Listing;
+use App\Models\ModerationItem;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -35,6 +37,28 @@ class ShowListing extends Component
     public function isPrivateView(): bool
     {
         return ! $this->listing->status->isPubliclyVisible();
+    }
+
+    /**
+     * The moderation decision, if this listing was refused.
+     *
+     * Shown to the seller and to moderators only - isPrivateView already
+     * establishes that, since anyone else got a 404 in mount(). The text is
+     * read back rather than rebuilt: it is the record of what the person was
+     * told, and rebuilding it from today's templates would quietly rewrite
+     * history every time the wording changes.
+     */
+    public function statementOfReasons(): ?string
+    {
+        if ($this->listing->status !== ListingStatus::Removed) {
+            return null;
+        }
+
+        return ModerationItem::where('subject_type', $this->listing->getMorphClass())
+            ->where('subject_id', $this->listing->getKey())
+            ->where('status', 'rejected')
+            ->latest('decided_at')
+            ->value('statement_of_reasons');
     }
 
     /**

@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // listing, offering, messaging - never browsing.
         $middleware->alias([
             'phone.verified' => App\Http\Middleware\EnsurePhoneIsVerified::class,
+            'admin'          => App\Http\Middleware\EnsureUserIsAdmin::class,
         ]);
 
         // The theme cookie is written by JavaScript, so it cannot be encrypted:

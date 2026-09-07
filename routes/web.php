@@ -8,6 +8,7 @@ use App\Livewire\BrowseListings;
 use App\Livewire\Listings\CreateListing;
 use App\Livewire\Deals\MyDeals;
 use App\Livewire\Messages\Inbox;
+use App\Livewire\Moderation\Queue as ModerationQueue;
 use App\Livewire\Messages\ShowThread;
 use App\Livewire\Offers\OfferInbox;
 use App\Livewire\Profile\EditProfile;
@@ -75,6 +76,14 @@ Route::middleware('auth')->group(function () {
     // posting flow can be built and tested without a verification round trip.
     // Add it here before launch - that is the whole point of the gate.
     Route::get('/publikuvai', CreateListing::class)->name('listing.create');
+
+    /*
+     * Moderation. The middleware answers 404 rather than 403 to anyone who is
+     * not a moderator: a 403 confirms the URL is real and worth attacking.
+     */
+    Route::get('/moderaciya', ModerationQueue::class)
+        ->middleware('admin')
+        ->name('moderation');
 
     Route::post('/izhod', function () {
         Auth::logout();

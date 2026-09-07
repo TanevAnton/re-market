@@ -12,6 +12,10 @@ return [
     // register again. Treat it as permanent once the site is live.
     'phone_hash_salt' => env('PHONE_HASH_SALT', ''),
 
+    // Where a user challenges a moderation decision. DSA Art. 17(3)(f) requires
+    // telling them how to appeal, so this stops being optional at launch.
+    'support_email' => env('SUPPORT_EMAIL'),
+
     'verify' => [
         // Cheapest channel first. Telegram ~$0.01, Viber ~EUR 0.017, SMS ~EUR 0.04.
         // The same volume on Twilio Verify would be roughly 10x the SMS price.

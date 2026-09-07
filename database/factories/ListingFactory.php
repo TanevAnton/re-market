@@ -63,11 +63,34 @@ class ListingFactory extends Factory
             'quantity'             => 1,
             'price_cents'          => $price,
             'offers_enabled'       => $this->faker->boolean(85),
-            'min_offer_cents'      => $hasFloor ? (int) round($price * $this->faker->randomFloat(2, 0.75, 0.95)) : null,
+            /*
+             * A closure, not a value computed from $price above: the database
+             * enforces min_offer <= price, and a test that overrides
+             * price_cents would otherwise get a floor derived from a price the
+             * row never had. That failed roughly one run in six - only when the
+             * random multiplier happened to land above the overridden price,
+             * which is the worst kind of test to be handed on a Friday.
+             *
+             * Closures are resolved after overrides are merged, so this always
+             * sees the price the row is actually being inserted with.
+             */
+            'min_offer_cents'      => $hasFloor
+                ? fn (array $attributes) => (int) round(
+                    $attributes['price_cents'] * $this->faker->randomFloat(2, 0.75, 0.95)
+                )
+                : null,
             'warranty_until'       => $this->faker->boolean(25) ? $this->faker->dateTimeBetween('now', '+2 years') : null,
             'has_receipt'          => $this->faker->boolean(30),
             'mining_use'           => $mining,
-            'mining_months'        => $mining === MiningUse::Yes ? $this->faker->numberBetween(3, 30) : null,
+            // Same reasoning as min_offer_cents: mining_months is guarded by a
+            // CHECK constraint tying it to mining_use, so it has to be derived
+            // from the value actually being inserted.
+            'mining_months'        => function (array $attributes) {
+                $use = $attributes['mining_use'] ?? MiningUse::No;
+                $use = $use instanceof MiningUse ? $use : MiningUse::from((string) $use);
+
+                return $use === MiningUse::Yes ? $this->faker->numberBetween(3, 30) : null;
+            },
             'accepts_inspect_test' => $this->faker->boolean(80),
             'specs'                => [],
             'delivery_options'     => $this->faker->randomElements(['econt', 'speedy', 'pickup'], $this->faker->numberBetween(1, 3)),

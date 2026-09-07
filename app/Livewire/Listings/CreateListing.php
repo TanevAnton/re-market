@@ -5,11 +5,13 @@ namespace App\Livewire\Listings;
 use App\Enums\ListingCondition;
 use App\Enums\ListingStatus;
 use App\Enums\MiningUse;
+use App\Enums\ModerationTrigger;
 use App\Models\City;
 use App\Models\Listing;
 use App\Models\ListingImage;
 use App\Models\Part;
 use App\Services\Images\ImageProcessor;
+use App\Services\Moderation\ModerationService;
 use App\Support\SpecFilter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -338,6 +340,21 @@ class CreateListing extends Component
                 'bumped_at'    => now(),
                 'expires_at'   => now()->addDays(config('remarket.listings.expire_after_days', 60)),
             ])->save();
+
+            /*
+             * Holding the listing and queueing it for review are the same
+             * decision, so they happen in the same transaction. Setting the
+             * status without the queue entry is how a listing becomes invisible
+             * to the public AND to every moderator - the seller waits for a
+             * review that was never scheduled.
+             */
+            if ($reviewed) {
+                app(ModerationService::class)->enqueue(
+                    $listing,
+                    ModerationTrigger::NewAccount,
+                    ['listings_so_far' => $user->listings()->count()],
+                );
+            }
 
             return $listing;
         });

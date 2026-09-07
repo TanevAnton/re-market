@@ -122,6 +122,18 @@
                         <span class="badge-accent ml-1 font-mono">{{ $unread }}</span>
                     @endif
                 </a>
+
+                @if (auth()->user()->is_admin)
+                    {{-- A queue nobody can see the size of is a queue nobody
+                         works. Sellers are sitting invisible until it is. --}}
+                    @php $queued = \App\Models\ModerationItem::queue()->count(); @endphp
+                    <a href="{{ route('moderation') }}" wire:navigate class="btn-ghost btn-sm">
+                        Модерация
+                        @if ($queued)
+                            <span class="badge-accent ml-1 font-mono">{{ $queued }}</span>
+                        @endif
+                    </a>
+                @endif
             @endauth
         </nav>
 
