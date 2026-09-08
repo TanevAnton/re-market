@@ -134,6 +134,27 @@
     color-scheme: dark;
 }
 
+/* Header buttons: bigger, uppercase, wider tracking.
+
+   Scoped to .site-header rather than changing .btn-sm, which is also worn by
+   every action button in the moderation queue, the offer inbox and the seller's
+   own listings - none of which want to shout.
+
+   Outside @layer on purpose: layered rules lose to unlayered ones regardless of
+   specificity, and .btn-sm lives in @layer components.
+
+   The theme toggle keeps its own px-0! and fixed 8x8 box; the important
+   modifier there outranks the padding set here, which is what we want. */
+.site-header .btn-ghost,
+.site-header .btn-primary,
+.site-header .btn-secondary {
+    @apply px-4 py-2.5 text-[13px] font-bold uppercase tracking-[0.06em];
+}
+
+/* Uppercase Cyrillic loses the ascenders and descenders that make a word
+   recognisable at a glance, so the tracking above is not decoration - without
+   it "СЪОБЩЕНИЯ" reads as one solid block. */
+
 /* Legal pages. Long prose, read once, under duress - so: a comfortable measure,
    generous line height, and headings that actually break the wall of text up.
    Nobody reads terms they cannot scan. */
