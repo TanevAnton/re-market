@@ -83,7 +83,7 @@
 <header class="site-header">
     <div class="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3.5">
 
-        <a href="{{ route('browse') }}" wire:navigate class="flex items-center gap-2">
+        <a href="{{ route('home') }}" wire:navigate class="flex items-center gap-2">
             <span class="grid h-8 w-8 place-items-center rounded-lg bg-accent font-mono text-[11px]
                          font-bold text-[var(--accent-ink)]">RM</span>
             <span class="hidden text-[15px] font-extrabold tracking-tight sm:inline">{{ config('app.name') }}</span>
@@ -133,6 +133,10 @@
                         <span class="badge-accent ml-1 font-mono">{{ $unread }}</span>
                     @endif
                 </a>
+
+                {{-- Discoverability is the whole point: a seller who cannot
+                     find their own listings cannot fix a price. --}}
+                <a href="{{ route('listings.mine') }}" wire:navigate class="btn-ghost btn-sm">Моите обяви</a>
 
                 @if (auth()->user()->is_admin)
                     {{-- A queue nobody can see the size of is a queue nobody
@@ -212,7 +216,7 @@
 
 <footer class="mt-12 border-t border-line bg-surface">
     <div class="mx-auto max-w-7xl px-4 py-8 text-sm text-ink-muted">
-        <p class="font-medium text-ink">{{ config('app.name') }}</p>
+        <a href="{{ route('home') }}" wire:navigate class="font-medium text-ink hover:text-accent">{{ config('app.name') }}</a>
         <p class="mt-1">Пазар за компютърни компоненти и гейминг техника.</p>
         <p class="mt-3 text-xs text-ink-faint">
             Сделките се уговарят пряко между потребителите. Платформата не обработва плащания

@@ -5,7 +5,10 @@ use App\Livewire\Auth\Register;
 use App\Livewire\Auth\VerifyEmailNotice;
 use App\Livewire\Auth\VerifyPhone;
 use App\Livewire\BrowseListings;
+use App\Livewire\Home;
 use App\Livewire\Listings\CreateListing;
+use App\Livewire\Listings\EditListing;
+use App\Livewire\Listings\MyListings;
 use App\Livewire\Deals\MyDeals;
 use App\Livewire\Messages\Inbox;
 use App\Livewire\Moderation\Queue as ModerationQueue;
@@ -28,7 +31,14 @@ use Illuminate\Support\Facades\Route;
 // --- public ---------------------------------------------------------------
 // Browsing stays open. Gating reading behind signup is how a marketplace with
 // no users stays a marketplace with no users.
-Route::get('/', BrowseListings::class)->name('browse');
+Route::get('/', Home::class)->name('home');
+
+/*
+ * Browse moved off "/" when the home page arrived. The route NAME is unchanged,
+ * so every link, redirect and test that pointed at route('browse') still lands
+ * on the listing grid - only the URL is new.
+ */
+Route::get('/obiavi', BrowseListings::class)->name('browse');
 Route::get('/obiava/{listing}', ShowListing::class)->name('listing');
 Route::get('/profil/{username}', ShowProfile::class)->name('profile');
 
@@ -91,6 +101,17 @@ Route::middleware('auth')->group(function () {
     // posting flow can be built and tested without a verification round trip.
     // Add it here before launch - that is the whole point of the gate.
     Route::get('/publikuvai', CreateListing::class)->name('listing.create');
+
+    /*
+     * The seller's own listings, and editing one.
+     *
+     * Both are owner-only - EditListing 404s on someone else's listing, and
+     * every mutation goes through ListingService, which checks ownership again.
+     * Two checks rather than one because the route is the thing most likely to
+     * be refactored later.
+     */
+    Route::get('/moite-obiavi', MyListings::class)->name('listings.mine');
+    Route::get('/obiava/{listing}/redakciya', EditListing::class)->name('listing.edit');
 
     /*
      * Moderation. The middleware answers 404 rather than 403 to anyone who is
