@@ -37,7 +37,9 @@ class AuthTest extends TestCase
             ->set('terms', true)
             ->call('register')
             ->assertHasNoErrors()
-            ->assertRedirect(route('phone.verify'));
+            // Email is the gate while SMS is off, so signup lands there.
+            // Phone verification is still reachable and still stronger.
+            ->assertRedirect(route('verification.notice'));
 
         $this->assertAuthenticated();
         $this->assertDatabaseHas('users', ['username' => 'ivanko']);

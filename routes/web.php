@@ -95,12 +95,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/sabshteniya/{thread}', ShowThread::class)->name('thread');
     // Entry point from a listing: opens the thread if it does not exist yet,
     // then redirects to its own URL.
-    Route::get('/obiava/{listing}/pisha', ShowThread::class)->name('listing.message');
+    Route::get('/obiava/{listing}/pisha', ShowThread::class)
+        ->middleware('verified')
+        ->name('listing.message');
 
-    // NOTE: 'phone.verified' middleware is deliberately NOT applied yet, so the
-    // posting flow can be built and tested without a verification round trip.
-    // Add it here before launch - that is the whole point of the gate.
-    Route::get('/publikuvai', CreateListing::class)->name('listing.create');
+    /*
+     * Creating and changing content needs a verified email; reading your own
+     * does not. Someone who cannot yet act should still be able to see the
+     * state of their own account.
+     *
+     * 'phone.verified' is still NOT applied. It is the stronger gate and it
+     * goes on before launch - the Telegram bot makes it free, so the only
+     * reason it is off is that the site is still being built.
+     */
+    Route::get('/publikuvai', CreateListing::class)
+        ->middleware('verified')
+        ->name('listing.create');
 
     /*
      * The seller's own listings, and editing one.
@@ -111,7 +121,9 @@ Route::middleware('auth')->group(function () {
      * be refactored later.
      */
     Route::get('/moite-obiavi', MyListings::class)->name('listings.mine');
-    Route::get('/obiava/{listing}/redakciya', EditListing::class)->name('listing.edit');
+    Route::get('/obiava/{listing}/redakciya', EditListing::class)
+        ->middleware('verified')
+        ->name('listing.edit');
 
     /*
      * Moderation. The middleware answers 404 rather than 403 to anyone who is

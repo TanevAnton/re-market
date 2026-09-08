@@ -13,8 +13,19 @@
         Изпрати линка отново
     </button>
 
+    <div class="card-pad mt-6">
+        <p class="text-sm font-medium">Докато не потвърдиш, не можеш да:</p>
+        <ul class="mt-2 space-y-1 text-sm text-ink-muted">
+            <li>· публикуваш обява</li>
+            <li>· изпращаш оферти</li>
+            <li>· пишеш съобщения</li>
+        </ul>
+        <p class="hint">Разглеждането на обяви остава свободно.</p>
+    </div>
+
     <p class="hint mt-4">
-        В режим за разработка писмата отиват в <code class="font-mono">storage/logs/laravel.log</code>,
-        не в пощата.
+        Ако писмото не пристигне, провери папката със спам.
+        В режим за разработка писмата отиват в
+        <code class="font-mono">storage/logs/laravel.log</code>, не в пощата.
     </p>
 </div>

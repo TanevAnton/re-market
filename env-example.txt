@@ -51,8 +51,33 @@ QUEUE_CONNECTION=database
 
 CACHE_STORE=database
 
-# Locally, mail goes to storage/logs/laravel.log rather than anywhere real.
+# ---------------------------------------------------------------------------
+# Mail.
+#
+# Email verification is the account gate while SMS is off, so this stops being
+# optional the moment anyone but you registers: with MAIL_MAILER=log the
+# verification link goes to storage/logs/laravel.log and nobody can get in.
+#
+# Locally, leave it as log and dig the link out of the log.
+# On the server, point it at the re-tech.bg mailbox:
+#
+#   MAIL_MAILER=smtp
+#   MAIL_HOST=mail.re-tech.bg          <- confirm with the hosting panel
+#   MAIL_PORT=465                      <- 465 for SSL, 587 for TLS
+#   MAIL_SCHEME=smtps                  <- smtps for 465, smtp for 587
+#   MAIL_USERNAME=no-reply@re-tech.bg
+#   MAIL_PASSWORD=
+#   MAIL_FROM_ADDRESS="no-reply@re-tech.bg"
+#
+# Deliverability: re-tech.bg needs SPF and DKIM covering this mailbox, or the
+# links land in spam and every signup stalls at "check your email". Same work
+# as the kt-pack.com fix.
 MAIL_MAILER=log
+MAIL_HOST=
+MAIL_PORT=587
+MAIL_SCHEME=smtp
+MAIL_USERNAME=
+MAIL_PASSWORD=
 MAIL_FROM_ADDRESS="no-reply@remarket.local"
 MAIL_FROM_NAME="${APP_NAME}"
 

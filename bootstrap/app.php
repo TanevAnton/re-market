@@ -17,6 +17,18 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'phone.verified' => App\Http\Middleware\EnsurePhoneIsVerified::class,
             'admin'          => App\Http\Middleware\EnsureUserIsAdmin::class,
+
+            /*
+             * The account gate WHILE SMS IS OFF. Laravel ships this alias by
+             * default; naming it here makes the dependency explicit and stops
+             * a framework default silently deciding who may post on the site.
+             *
+             * Email is a weaker proof than a phone number - a throwaway
+             * address costs nothing, so a ban costs nothing either. The
+             * moderation queue is what carries the weight until 'phone.verified'
+             * goes on.
+             */
+            'verified'       => Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         ]);
 
         // The theme cookie is written by JavaScript, so it cannot be encrypted:

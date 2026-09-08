@@ -51,6 +51,16 @@ class ThreadService
     {
         $this->assertParty($thread, $sender);
 
+        /*
+         * The account gate while SMS is off. In the service rather than the
+         * component, so the rule holds wherever a message is sent from - and
+         * before the rate limiter is hit, so an unverified account does not
+         * burn its own cooldown on a message that was never going to send.
+         */
+        if (! $sender->hasVerifiedEmail()) {
+            throw MessagingException::emailUnverified();
+        }
+
         if ($thread->is_locked) {
             throw MessagingException::locked();
         }

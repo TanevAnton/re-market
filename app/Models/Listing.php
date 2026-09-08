@@ -94,6 +94,12 @@ class Listing extends Model
         return $this->offers_enabled
             && $this->status->acceptsOffers()
             && $buyer !== null
+            // The account gate, while SMS is off. Email is a weaker proof than
+            // a phone number - a throwaway address is free - so this leans on
+            // the moderation queue rather than replacing it. Checked here
+            // because both MakeOffer and OfferService::place come through this
+            // one method, and a second copy would eventually disagree.
+            && $buyer->hasVerifiedEmail()
             && $buyer->id !== $this->user_id
             && ! $buyer->offers_suspended
             && ! $buyer->isSuspended();

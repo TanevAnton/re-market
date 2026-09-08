@@ -26,6 +26,11 @@ class MessagingException extends RuntimeException
         return new self("Изчакай {$seconds} сек. преди следващото съобщение.");
     }
 
+    public static function emailUnverified(): self
+    {
+        return new self('Потвърди имейла си, за да пишеш съобщения.');
+    }
+
     public static function unavailable(): self
     {
         return new self('Обявата вече не приема съобщения.');

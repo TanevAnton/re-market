@@ -87,9 +87,12 @@ class Register extends Component
         event(new Registered($user));
         Auth::login($user, remember: true);
 
-        // Email verification can wait; the phone is the anti-bot gate, so we
-        // send them straight at it while intent is high.
-        return $this->redirectRoute('phone.verify', navigate: true);
+        /*
+         * Straight to the email notice, because email is the gate right now.
+         * Phone verification stays reachable at /potvardi-telefon and is still
+         * the stronger proof - it is just not what unlocks the site today.
+         */
+        return $this->redirectRoute('verification.notice', navigate: true);
     }
 
     #[Layout('components.layouts.app')]
