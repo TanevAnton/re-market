@@ -78,6 +78,27 @@ else
     warn "Permission denied', run:  sudo chgrp -R www-data storage bootstrap/cache"
 fi
 
+green "==> Restarting the queue worker"
+# Not optional. The worker boots the framework once and holds it in memory, so
+# an unrestarted worker goes on running the code from before this pull -
+# including the old notification classes. Skipping this is how a deploy
+# "works" while notifications keep being sent from last week's code.
+if systemctl list-unit-files 2>/dev/null | grep -q '^remarket-queue.service'; then
+    # restart, not `queue:restart`: that only asks the worker to exit and
+    # relies on systemd to bring it back, which is the same thing with an
+    # extra way to fail.
+    sudo systemctl restart remarket-queue || warn "Could not restart remarket-queue."
+    sleep 1
+    systemctl is-active --quiet remarket-queue \
+        || warn "remarket-queue is NOT running. Notifications will queue up and never send.
+Check:  journalctl -u remarket-queue -n 50"
+else
+    warn "remarket-queue.service is not installed. Every notification will be"
+    warn "written to the jobs table and never sent - silently. See DEPLOY.md §7b:"
+    warn "  sudo cp deploy/remarket-queue.service /etc/systemd/system/"
+    warn "  sudo systemctl daemon-reload && sudo systemctl enable --now remarket-queue"
+fi
+
 green "==> Reloading PHP-FPM"
 if systemctl list-units --type=service 2>/dev/null | grep -q php.*fpm; then
     sudo systemctl reload "$(systemctl list-units --type=service --plain --no-legend \

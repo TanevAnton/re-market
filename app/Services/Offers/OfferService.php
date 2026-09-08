@@ -8,6 +8,11 @@ use App\Enums\OfferStatus;
 use App\Models\Deal;
 use App\Models\Listing;
 use App\Models\Offer;
+use App\Notifications\OfferAccepted;
+use App\Notifications\OfferCountered;
+use App\Notifications\OfferDeclined;
+use App\Notifications\OfferLost;
+use App\Notifications\OfferReceived;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -49,7 +54,7 @@ class OfferService
 
         $belowFloor = $listing->isBelowFloor($amountCents);
 
-        return DB::transaction(function () use ($listing, $buyer, $amountCents, $note, $belowFloor) {
+        $offer = DB::transaction(function () use ($listing, $buyer, $amountCents, $note, $belowFloor) {
             $offer = new Offer([
                 'listing_id'   => $listing->id,
                 'buyer_id'     => $buyer->id,
@@ -76,6 +81,21 @@ class OfferService
 
             return $offer;
         });
+
+        /*
+         * Outside the transaction on purpose: a queued job can start before an
+         * open transaction commits, and would then look for a row that is not
+         * there yet.
+         *
+         * An auto-declined lowball notifies nobody. It never reaches the
+         * seller's inbox by design, and pinging them about it would hand the
+         * buyer exactly the attention the floor exists to deny.
+         */
+        if (! $belowFloor) {
+            $listing->user->notify(new OfferReceived($offer));
+        }
+
+        return $offer;
     }
 
     /**
@@ -90,7 +110,9 @@ class OfferService
     {
         $this->assertRespondable($offer, $actor, seller: true);
 
-        return DB::transaction(function () use ($offer, $actor) {
+        $losers = [];
+
+        $deal = DB::transaction(function () use ($offer, $actor, &$losers) {
             $listing = $offer->listing()->lockForUpdate()->first();
 
             $offer->forceFill([
@@ -99,13 +121,7 @@ class OfferService
             ])->save();
 
             // Everyone else in the queue is out, including counter-offers.
-            Offer::where('listing_id', $listing->id)
-                ->whereKeyNot($offer->getKey())
-                ->where('status', OfferStatus::Pending)
-                ->update([
-                    'status'       => OfferStatus::Declined,
-                    'responded_at' => now(),
-                ]);
+            $losers = $this->declineOthers($listing, $offer);
 
             $listing->forceFill([
                 'status'         => ListingStatus::Reserved,
@@ -134,6 +150,11 @@ class OfferService
 
             return $deal;
         });
+
+        $offer->buyer->notify(new OfferAccepted($deal));
+        $this->notifyLosers($losers);
+
+        return $deal;
     }
 
     public function decline(Offer $offer, User $actor): Offer
@@ -144,6 +165,8 @@ class OfferService
             'status'       => OfferStatus::Declined,
             'responded_at' => now(),
         ])->save();
+
+        $offer->buyer->notify(new OfferDeclined($offer));
 
         return $offer;
     }
@@ -168,7 +191,7 @@ class OfferService
             throw OfferException::aboveAsking();
         }
 
-        return DB::transaction(function () use ($offer, $amountCents, $note) {
+        $counter = DB::transaction(function () use ($offer, $amountCents, $note) {
             $offer->forceFill([
                 'status'       => OfferStatus::Countered,
                 'responded_at' => now(),
@@ -189,6 +212,10 @@ class OfferService
 
             return $counter;
         });
+
+        $counter->buyer->notify(new OfferCountered($counter));
+
+        return $counter;
     }
 
     /** The buyer says yes to the seller's counter. Same outcome as accept(). */
@@ -200,7 +227,9 @@ class OfferService
             throw OfferException::notYours();
         }
 
-        return DB::transaction(function () use ($counter) {
+        $losers = [];
+
+        $deal = DB::transaction(function () use ($counter, &$losers) {
             $listing = $counter->listing()->lockForUpdate()->first();
 
             $counter->forceFill([
@@ -208,13 +237,7 @@ class OfferService
                 'responded_at' => now(),
             ])->save();
 
-            Offer::where('listing_id', $listing->id)
-                ->whereKeyNot($counter->getKey())
-                ->where('status', OfferStatus::Pending)
-                ->update([
-                    'status'       => OfferStatus::Declined,
-                    'responded_at' => now(),
-                ]);
+            $losers = $this->declineOthers($listing, $counter);
 
             $listing->forceFill([
                 'status'         => ListingStatus::Reserved,
@@ -241,6 +264,59 @@ class OfferService
 
             return $deal;
         });
+
+        // The buyer just acted; it is the seller who needs to hear about it.
+        $counter->seller->notify(new OfferAccepted($deal));
+        $this->notifyLosers($losers);
+
+        return $deal;
+    }
+
+    /**
+     * Close the auction: every other live offer on the listing loses.
+     *
+     * Returns them, because a bulk `update()` tells nobody. Until this returned
+     * anything, the losing bidders were the only people in the whole flow who
+     * were left to work out what happened by watching a listing they could no
+     * longer buy - and then waited out a 48-hour expiry that had already been
+     * decided. Read before the write, since after it they no longer match.
+     *
+     * @return list<Offer>
+     */
+    private function declineOthers(Listing $listing, Offer $winner): array
+    {
+        $losers = Offer::with('buyer')
+            ->where('listing_id', $listing->id)
+            ->whereKeyNot($winner->getKey())
+            ->where('status', OfferStatus::Pending)
+            ->get();
+
+        Offer::whereKey($losers->modelKeys())->update([
+            'status'       => OfferStatus::Declined,
+            'responded_at' => now(),
+        ]);
+
+        return $losers->all();
+    }
+
+    /**
+     * One buyer can hold several offers on one listing only in odd cases, but
+     * telling the same person twice about one event is still worth avoiding.
+     *
+     * @param  list<Offer>  $losers
+     */
+    private function notifyLosers(array $losers): void
+    {
+        $seen = [];
+
+        foreach ($losers as $loser) {
+            if (isset($seen[$loser->buyer_id])) {
+                continue;
+            }
+
+            $seen[$loser->buyer_id] = true;
+            $loser->buyer->notify(new OfferLost($loser));
+        }
     }
 
     /**

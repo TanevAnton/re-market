@@ -5,6 +5,7 @@ namespace App\Services\Messaging;
 use App\Models\Listing;
 use App\Models\Message;
 use App\Models\Thread;
+use App\Notifications\NewMessage;
 use App\Models\User;
 use App\Support\ContactScrubber;
 use Illuminate\Support\Facades\DB;
@@ -75,7 +76,18 @@ class ThreadService
 
         $scrubbed = ContactScrubber::scrub($body, $thread->allowsContactExchange());
 
-        return DB::transaction(function () use ($thread, $sender, $body, $scrubbed) {
+        /*
+         * Read BEFORE the write, because the write moves the timestamps this
+         * question depends on.
+         *
+         * One notification per unread streak, not one per message: if the
+         * recipient already has something unread in this thread they have been
+         * told, and ten messages in a row should not be ten pings. They get the
+         * next one after they have actually read.
+         */
+        $alreadyPending = $this->hasUnreadFor($thread, $sender);
+
+        $message = DB::transaction(function () use ($thread, $sender, $body, $scrubbed) {
             $message = Message::create([
                 'thread_id'        => $thread->id,
                 'sender_id'        => $sender->id,
@@ -97,6 +109,31 @@ class ThreadService
 
             return $message;
         });
+
+        if (! $alreadyPending) {
+            $recipient = $sender->id === $thread->buyer_id ? $thread->seller : $thread->buyer;
+            $recipient->notify(new NewMessage($thread, $sender->username));
+        }
+
+        return $message;
+    }
+
+    /**
+     * Does the OTHER party already have something unread here?
+     *
+     * Nothing sent yet counts as nothing unread, so the first message in a
+     * thread always notifies.
+     */
+    private function hasUnreadFor(Thread $thread, User $sender): bool
+    {
+        $isBuyer   = $sender->id === $thread->buyer_id;
+        $theirRead = $isBuyer ? $thread->seller_read_at : $thread->buyer_read_at;
+
+        if ($thread->last_message_at === null) {
+            return false;
+        }
+
+        return $theirRead === null || $theirRead->lessThan($thread->last_message_at);
     }
 
     public function markRead(Thread $thread, User $reader): void

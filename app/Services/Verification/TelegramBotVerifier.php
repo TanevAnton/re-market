@@ -135,11 +135,19 @@ class TelegramBotVerifier
             return;
         }
 
-        DB::transaction(function () use ($link, $e164) {
+        DB::transaction(function () use ($link, $e164, $chatId) {
             $user = $link->user;
 
             $user->setPhone($e164);
             $user->phone_verified_at = now();
+
+            /*
+             * Keep the chat. It was being thrown away with the consumed link,
+             * and it is the whole reason notifications can be free: the user
+             * opened this conversation themselves to prove their number, so
+             * there is no new channel to ask permission for.
+             */
+            $user->telegram_chat_id = $chatId;
             $user->save();
 
             // Single use. Consuming it inside the transaction is what stops a

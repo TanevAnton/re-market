@@ -17,6 +17,9 @@ class EditProfile extends Component
     public array $trader_details = ['company' => '', 'uic' => '', 'vat' => '', 'address' => ''];
     public string $locale = 'bg';
 
+    public bool $notify_email = true;
+    public bool $notify_telegram = true;
+
     public string $current_password = '';
     public string $password = '';
     public string $password_confirmation = '';
@@ -29,6 +32,27 @@ class EditProfile extends Component
         $this->seller_type    = $user->seller_type->value;
         $this->locale         = $user->locale;
         $this->trader_details = array_merge($this->trader_details, $user->trader_details ?? []);
+
+        $this->notify_email    = (bool) $user->notify_email;
+        $this->notify_telegram = (bool) $user->notify_telegram;
+    }
+
+    /**
+     * Saved on its own rather than folded into save(): a half-filled trader
+     * form must not be what stands between someone and turning off email.
+     *
+     * There is deliberately no "turn everything off" guard. Transactional mail
+     * a user has switched off is mail they did not consent to, and the
+     * consequence of silence - a missed offer - is theirs to accept.
+     */
+    public function saveNotifications(): void
+    {
+        auth()->user()->update([
+            'notify_email'    => $this->notify_email,
+            'notify_telegram' => $this->notify_telegram,
+        ]);
+
+        session()->flash('status', 'Настройките за известия са запазени.');
     }
 
     public function save(): void

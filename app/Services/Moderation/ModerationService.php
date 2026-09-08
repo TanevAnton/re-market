@@ -8,6 +8,7 @@ use App\Enums\RejectionReason;
 use App\Models\Listing;
 use App\Models\ModerationItem;
 use App\Models\User;
+use App\Notifications\ModerationDecision;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
@@ -76,7 +77,7 @@ class ModerationService
      */
     public function approve(ModerationItem $item, User $moderator): ModerationItem
     {
-        return DB::transaction(function () use ($item, $moderator) {
+        $item = DB::transaction(function () use ($item, $moderator) {
             $item = $this->lockPending($item, $moderator);
 
             $subject = $item->subject;
@@ -105,6 +106,12 @@ class ModerationService
 
             return $item;
         });
+
+        if (($listing = $item->subject) instanceof Listing) {
+            $listing->user->notify(new ModerationDecision($listing, approved: true));
+        }
+
+        return $item;
     }
 
     /**
@@ -128,7 +135,7 @@ class ModerationService
             throw new RuntimeException('A rejection needs the facts it relies on.');
         }
 
-        return DB::transaction(function () use ($item, $moderator, $reason, $facts) {
+        $item = DB::transaction(function () use ($item, $moderator, $reason, $facts) {
             $item = $this->lockPending($item, $moderator);
 
             $subject   = $item->subject;
@@ -167,6 +174,24 @@ class ModerationService
 
             return $item;
         });
+
+        /*
+         * DSA Art. 17 requires the affected user to RECEIVE the statement of
+         * reasons. Storing it and hoping they reopen the listing does not
+         * satisfy the article - which is exactly what was happening until now.
+         *
+         * Sent whole and unedited: it is the record of what they were told, and
+         * a summary here would differ from the copy on file.
+         */
+        if (($listing = $item->subject) instanceof Listing) {
+            $listing->user->notify(new ModerationDecision(
+                $listing,
+                approved: false,
+                statement: $item->statement_of_reasons,
+            ));
+        }
+
+        return $item;
     }
 
     /**

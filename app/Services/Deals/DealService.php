@@ -5,6 +5,7 @@ namespace App\Services\Deals;
 use App\Enums\DealStatus;
 use App\Enums\ListingStatus;
 use App\Models\Deal;
+use App\Notifications\DealConfirmed;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -40,7 +41,7 @@ class DealService
             throw DealException::alreadyConfirmed();
         }
 
-        return DB::transaction(function () use ($deal, $column) {
+        $deal = DB::transaction(function () use ($deal, $column) {
             $deal->forceFill([$column => now()])->save();
 
             if ($deal->isMutuallyConfirmed()) {
@@ -49,6 +50,22 @@ class DealService
 
             return $deal;
         });
+
+        /*
+         * Only tell the other side while there is still something for them to
+         * do. Once both have confirmed the deal is finished and a "the other
+         * side confirmed" message would be noise arriving after the fact.
+         *
+         * This is the notification that most directly protects a profile: a
+         * deal that stalls almost always stalls on one side forgetting, and
+         * forgetting costs them an abandonment mark.
+         */
+        if (! $deal->isMutuallyConfirmed()) {
+            $other = $isBuyer ? $deal->seller : $deal->buyer;
+            $other->notify(new DealConfirmed($deal));
+        }
+
+        return $deal;
     }
 
     /**

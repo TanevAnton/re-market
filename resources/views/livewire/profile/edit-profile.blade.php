@@ -67,6 +67,46 @@
         <button type="submit" class="btn-primary">Запази</button>
     </form>
 
+    <form wire:submit="saveNotifications" class="card-pad space-y-4">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-ink-muted">Известия</h2>
+
+        <p class="text-xs text-ink-muted">
+            Известяваме те при нова оферта, контра-оферта, отговор на оферта, ново съобщение,
+            потвърдена сделка и решение на модерацията. Офертите изтичат след 48 часа —
+            изключиш ли всичко, часовникът пак върви.
+        </p>
+
+        <label class="flex items-start gap-2 rounded-md border border-line p-3 text-sm">
+            <input type="checkbox" wire:model="notify_email" class="mt-0.5">
+            <span>
+                <span class="font-medium">Имейл</span>
+                <span class="mt-0.5 block text-xs text-ink-muted">
+                    @if (auth()->user()->hasVerifiedEmail())
+                        До {{ auth()->user()->email }}
+                    @else
+                        Няма да получаваш имейли, докато не потвърдиш адреса си.
+                    @endif
+                </span>
+            </span>
+        </label>
+
+        <label class="flex items-start gap-2 rounded-md border border-line p-3 text-sm">
+            <input type="checkbox" wire:model="notify_telegram" class="mt-0.5">
+            <span>
+                <span class="font-medium">Telegram</span>
+                <span class="mt-0.5 block text-xs text-ink-muted">
+                    @if (auth()->user()->telegram_chat_id)
+                        През бота, с който потвърди телефона си.
+                    @else
+                        Достъпно след потвърждаване на телефона през Telegram бота.
+                    @endif
+                </span>
+            </span>
+        </label>
+
+        <button type="submit" class="btn-secondary">Запази известията</button>
+    </form>
+
     <form wire:submit="updatePassword" class="card-pad space-y-4">
         <h2 class="text-sm font-semibold uppercase tracking-wider text-ink-muted">Смяна на парола</h2>
 

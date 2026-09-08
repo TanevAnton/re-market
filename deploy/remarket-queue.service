@@ -1,0 +1,56 @@
+# The queue worker. Nothing gets notified without it.
+#
+#   sudo cp deploy/remarket-queue.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now remarket-queue
+#
+# Every notification the site sends is queued, so a slow SMTP handshake cannot
+# sit in the middle of accepting an offer. The cost of that choice is this
+# unit: with QUEUE_CONNECTION=database and no worker running, jobs pile up in
+# the `jobs` table and are never sent. Nothing errors, nothing is logged, and
+# the site looks like it works - the quietest possible failure mode, which is
+# why it is worth checking after every deploy:
+#
+#   systemctl is-active remarket-queue
+#   php artisan queue:monitor default --max=100
+#
+# Restarting after a deploy is NOT optional. The worker boots the framework
+# once and keeps it in memory, so it goes on running the old code - including
+# the old notification classes - until it is restarted. deploy.sh does this.
+
+[Unit]
+Description=RE-MARKET queue worker
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/remarket
+
+# --tries=3 with a backoff: a mail server that is briefly down should not cost
+#   the user their notification, but a permanently bad address should stop
+#   being retried before it hurts the sending domain's reputation.
+# --max-time=3600 makes systemd recycle the process hourly, which caps any
+#   slow memory growth without needing to diagnose it.
+# --sleep=3 keeps an idle worker from busy-polling Postgres.
+ExecStart=/usr/bin/php /var/www/remarket/artisan queue:work \
+    --queue=default \
+    --tries=3 \
+    --backoff=10,60,300 \
+    --max-time=3600 \
+    --sleep=3 \
+    --rest=0.2
+
+# Graceful: SIGTERM tells the worker to finish the job in hand and then exit,
+# so a deploy never kills a half-sent notification.
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=90
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

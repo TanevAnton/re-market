@@ -196,6 +196,37 @@ systemctl list-timers remarket-scheduler.timer
 and — worse — no deal is ever marked abandoned, which means the completion rate
 on every profile silently stops being true.
 
+## 7b. The queue worker
+
+```bash
+sudo cp deploy/remarket-queue.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now remarket-queue
+systemctl is-active remarket-queue
+```
+
+**Do not skip this either, and for a nastier reason than the scheduler.** Every
+notification the site sends — offer received, countered, accepted, declined,
+new message, deal confirmed, moderation decision — is queued. With
+`QUEUE_CONNECTION=database` and no worker, those jobs are written to the `jobs`
+table and stay there. Nothing throws, nothing is logged, and the site behaves
+normally in every visible way; sellers simply never hear that an offer arrived,
+and it expires in 48 hours. The way to catch it:
+
+```bash
+php artisan queue:monitor default --max=50    # a growing backlog means no worker
+php artisan queue:failed                      # jobs that ran and gave up
+journalctl -u remarket-queue -n 50
+```
+
+One of those queued jobs is legally load-bearing: DSA Art. 17 requires the
+affected user to *receive* the statement of reasons for a removal. If the
+worker is not running, we stored it and told nobody.
+
+`deploy.sh` restarts this service on every deploy. That is required, not
+tidiness — the worker boots the framework once and keeps it in memory, so an
+unrestarted worker keeps running the code from before the pull.
+
 ## 8. Open the port
 
 ```bash

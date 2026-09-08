@@ -20,6 +20,26 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $fillable = [
         'name', 'username', 'email', 'password', 'city_id', 'avatar_path',
         'locale', 'seller_type', 'trader_details',
+
+        // Preferences, not permissions: the worst a forged value can do is
+        // stop the forger's own notifications. telegram_chat_id is NOT here -
+        // it is proof of a conversation and is only ever written by the bot.
+        'notify_email', 'notify_telegram',
+    ];
+
+    /**
+     * The same defaults the migration writes, repeated here on purpose.
+     *
+     * A model that has not been read back from the database has no value for a
+     * column it never set, and `null` is falsy - so via() would quietly return
+     * no channels at all and the notification would go nowhere, without an
+     * error. Any user loaded from a row is fine; it is the freshly-created
+     * instance still in hand that is not. Defaulting here means "notifiable"
+     * never depends on whether someone remembered to refresh the model.
+     */
+    protected $attributes = [
+        'notify_email'    => true,
+        'notify_telegram' => true,
     ];
 
     /**
@@ -50,6 +70,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'rating_avg'        => 'decimal:2',
             'offers_suspended'  => 'boolean',
             'is_admin'          => 'boolean',
+            'notify_email'      => 'boolean',
+            'notify_telegram'   => 'boolean',
         ];
     }
 
