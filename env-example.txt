@@ -172,7 +172,14 @@ VITE_APP_NAME="${APP_NAME}"
 # These appear on /kontakti, /usloviya and /poveritelnost. Until they are filled
 # the pages render a visible red placeholder rather than a blank - an invented
 # company number on a legal page is worse than an obviously missing one.
-LEGAL_ENTITY_NAME="КОМПНЕТ СОЛЮШЪНС ООД"
+# The company details now live in config/legal.php as defaults - they are
+# public Trade Register data, identical everywhere, so there is nothing to fill
+# in here. These stay only as overrides.
+#
+# LEGAL_ENTITY_VAT is intentionally left empty: BG208386399 is a чл. 97а
+# registration (cross-border services), not ordinary VAT registration, and
+# publishing it as "ДДС номер" would misstate the company's tax status.
+LEGAL_ENTITY_NAME=
 LEGAL_ENTITY_EIK=
 LEGAL_ENTITY_VAT=
 LEGAL_ENTITY_ADDRESS=

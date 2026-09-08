@@ -29,6 +29,7 @@ class LegalPagesTest extends TestCase
         $this->seed(CitySeeder::class);
 
         config([
+            'legal.entity.name'             => 'ПРИМЕР ООД',
             'legal.entity.eik'              => '123456789',
             'legal.entity.address'          => 'гр. Горна Оряховица, ул. Примерна 1',
             'legal.contact.users'           => 'support@example.bg',

@@ -20,7 +20,7 @@
     <h2>Администратор на лични данни</h2>
     <dl>
         <dt>Дружество</dt>
-        <dd>{{ config('legal.entity.name') }}</dd>
+        <dd><x-legal-value :value="config('legal.entity.name')" env="LEGAL_ENTITY_NAME" /></dd>
 
         <dt>ЕИК</dt>
         <dd><x-legal-value :value="config('legal.entity.eik')" env="LEGAL_ENTITY_EIK" /></dd>

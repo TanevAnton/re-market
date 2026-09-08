@@ -196,7 +196,11 @@ class ModerationService
                 .'), но решението е взето от човек.'
             : 'Решението е взето от човек, без автоматизирани средства.';
 
-        $redress = ($email = config('remarket.support_email'))
+        // Falls back to the published Art. 12 contact point rather than being
+        // a second place to configure the same address - two sources for "where
+        // do I appeal" is how a statement of reasons ends up naming a mailbox
+        // that no longer exists.
+        $redress = ($email = config('remarket.support_email') ?: config('legal.contact.users'))
             ? "Ако смяташ, че решението е грешно, можеш да го оспориш на {$email} в срок от 6 месеца. "
                 ."Имаш право и да се обърнеш към извънсъдебен орган за решаване на спорове или към съд."
             : 'Ако смяташ, че решението е грешно, можеш да го оспориш през формата за контакт в срок '
