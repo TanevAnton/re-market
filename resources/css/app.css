@@ -186,6 +186,11 @@ html[data-theme='dark']   .theme-icon-dark { display: block; }
 /* ---------------------------------------------------------------------------
    Base
 --------------------------------------------------------------------------- */
+/* Unlayered on purpose: an unlayered rule beats a layered one regardless of
+   specificity, and this must win against anything that sets `display`. Without
+   it the lightbox is briefly painted over the page before Alpine boots. */
+[x-cloak] { display: none !important; }
+
 @layer base {
     html { -webkit-text-size-adjust: 100%; }
 

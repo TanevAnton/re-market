@@ -81,7 +81,19 @@ return [
         // Private sellers must photograph the item beside a handwritten note
         // showing their username and the date. This single rule kills
         // stock-photo scams outright.
-        'require_timestamp_photo_for_private' => true,
+        /*
+         * The handwritten-note photo is now optional.
+         *
+         * It is still the strongest single signal that a seller physically has
+         * the item, so the mark, the badge and the rejection reason all stay -
+         * and a moderator can still weigh its absence. What it stopped being is
+         * a wall in front of publishing: a first-time seller who does not
+         * understand the demand abandons the listing rather than fetching a pen,
+         * and a marketplace with no supply catches no scammers either.
+         *
+         * Set back to true and the requirement returns exactly as it was.
+         */
+        'require_timestamp_photo_for_private' => env('REQUIRE_TIMESTAMP_PHOTO', false),
     ],
 
     'antispam' => [

@@ -31,18 +31,45 @@
     <div class="card-pad mt-4">
         <p class="label">Снимки</p>
 
+        <p class="hint mt-1">
+            Първата снимка е основната — тя се показва в резултатите от търсене.
+        </p>
+
         <div class="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
-            @foreach ($listing->images as $image)
+            @foreach ($listing->images as $index => $image)
                 <div class="group relative" wire:key="img-{{ $image->id }}">
                     <img src="{{ $image->thumbUrl() }}" alt=""
-                         class="aspect-square w-full rounded-lg border border-line object-cover
-                                {{ $image->is_timestamp_photo ? 'ring-2 ring-accent' : '' }}">
+                         @class([
+                             'aspect-square w-full rounded-lg border object-cover',
+                             'border-accent ring-2 ring-accent' => $index === 0,
+                             'border-line'                      => $index !== 0,
+                             'ring-2 ring-accent/50'            => $index !== 0 && $image->is_timestamp_photo,
+                         ])>
+
+                    @if ($index === 0)
+                        <span class="absolute left-1 top-1 rounded bg-accent px-1.5 py-0.5 text-[10px]
+                                     font-semibold text-[var(--accent-ink)]">
+                            основна
+                        </span>
+                    @else
+                        <button type="button" wire:click="makePrimary({{ $image->id }})"
+                                class="absolute left-1 top-1 rounded bg-canvas/90 px-1.5 py-0.5 text-[10px]
+                                       font-medium text-ink-muted opacity-0 backdrop-blur transition
+                                       hover:text-accent group-hover:opacity-100"
+                                title="Направи основна снимка">
+                            основна
+                        </button>
+                    @endif
 
                     <div class="absolute inset-x-1 bottom-1 flex gap-1 opacity-0 transition group-hover:opacity-100">
                         <button type="button" wire:click="markTimestamp({{ $image->id }})"
-                                class="flex-1 rounded bg-canvas/90 px-1 py-0.5 text-[10px] font-medium backdrop-blur"
+                                @class([
+                                    'flex-1 rounded px-1 py-0.5 text-[10px] font-medium backdrop-blur',
+                                    'bg-accent text-[var(--accent-ink)]' => $image->is_timestamp_photo,
+                                    'bg-canvas/90'                       => ! $image->is_timestamp_photo,
+                                ])
                                 title="Снимка с ръкописна бележка">
-                            бележка
+                            {{ $image->is_timestamp_photo ? '✓ бележка' : 'бележка' }}
                         </button>
                         <button type="button" wire:click="removePhoto({{ $image->id }})"
                                 class="rounded bg-canvas/90 px-1.5 py-0.5 text-[10px] font-medium text-bad backdrop-blur">

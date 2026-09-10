@@ -12,6 +12,7 @@ use App\Models\ListingImage;
 use App\Services\Images\ImageProcessor;
 use App\Services\Listings\ListingService;
 use App\Support\SpecFilter;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
@@ -170,10 +171,57 @@ class EditListing extends Component
     public function markTimestamp(int $imageId): void
     {
         $listing = $this->listing();
+        $image   = $listing->images()->find($imageId);
+
+        if (! $image) {
+            return;
+        }
+
+        // Toggles. It matters more now that the note photo is optional: a
+        // seller who marked the wrong picture had no way to unmark it, and the
+        // badge on the listing would keep claiming a note that is not there.
+        $wasMarked = $image->is_timestamp_photo;
 
         // Exactly one, so flipping a new one clears the old.
         $listing->images()->update(['is_timestamp_photo' => false]);
-        $listing->images()->whereKey($imageId)->update(['is_timestamp_photo' => true]);
+
+        if (! $wasMarked) {
+            $listing->images()->whereKey($imageId)->update(['is_timestamp_photo' => true]);
+        }
+    }
+
+    /**
+     * Make this the photo the listing leads with.
+     *
+     * `images()` orders by position and `coverImage()` takes the first, so the
+     * main photo is simply position 0 - no extra column, and browse, search and
+     * the home page all follow without knowing this exists.
+     *
+     * Every row is renumbered rather than just swapping two, because positions
+     * drift: photos deleted over the life of a listing leave gaps, and two rows
+     * sharing a position makes "first" depend on insertion order. One pass
+     * leaves them 0..n-1 with no duplicates.
+     */
+    public function makePrimary(int $imageId): void
+    {
+        $listing = $this->listing();
+        $images  = $listing->images()->get();
+
+        if (! $images->contains('id', $imageId)) {
+            return;
+        }
+
+        $ordered = $images->sortBy(fn ($image) => $image->id === $imageId ? -1 : $image->position)
+            ->values();
+
+        DB::transaction(function () use ($ordered) {
+            foreach ($ordered as $position => $image) {
+                $image->forceFill(['position' => $position])->save();
+            }
+        });
+
+        // No cache to clear: listing() re-queries on every call, so the next
+        // render already reads the new order.
     }
 
     // --- save -------------------------------------------------------------

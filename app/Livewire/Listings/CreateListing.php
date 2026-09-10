@@ -200,6 +200,40 @@ class CreateListing extends Component
         $this->timestampIndex = $this->timestampIndex === $index ? null : $index;
     }
 
+    /**
+     * Promote a photo to be the one everyone sees first.
+     *
+     * The cover image is whichever photo sits at position 0 - `images()` orders
+     * by position and `coverImage()` takes the first - so "make this the main
+     * photo" is a reorder, not a new column. That keeps browse, the home page,
+     * search results and the listing page in agreement without any of them
+     * knowing this feature exists.
+     *
+     * Moved rather than swapped: a seller who picks the fourth photo wants it
+     * first, and expects the rest to stay in the order they uploaded them.
+     */
+    public function makePrimary(int $index): void
+    {
+        if (! isset($this->stored[$index]) || $index === 0) {
+            return;
+        }
+
+        $moved = $this->stored[$index];
+        unset($this->stored[$index]);
+        array_unshift($this->stored, $moved);
+        $this->stored = array_values($this->stored);
+
+        // timestampIndex points at a position in this same array, so it has to
+        // follow the photo it was marking rather than the slot it used to be
+        // in - otherwise reordering silently re-marks a different picture.
+        $this->timestampIndex = match (true) {
+            $this->timestampIndex === null    => null,
+            $this->timestampIndex === $index  => 0,
+            $this->timestampIndex < $index    => $this->timestampIndex + 1,
+            default                           => $this->timestampIndex,
+        };
+    }
+
     // --- navigation -------------------------------------------------------
 
     protected function rulesForStep(int $step): array
@@ -256,8 +290,16 @@ class CreateListing extends Component
 
         $this->validate($this->rulesForStep($this->step));
 
-        // A private seller must include the handwritten timestamp photo. It is
-        // the single most effective thing we do against stock-photo scams.
+        /*
+         * The handwritten-note photo is encouraged, not enforced - see
+         * config('remarket.listings.require_timestamp_photo_for_private'),
+         * which now defaults to false. The mark still exists and still shows as
+         * a badge on the listing; it just no longer blocks publishing.
+         *
+         * The check stays here rather than being deleted so that turning the
+         * config back on restores the old behaviour exactly, with no code to
+         * write under whatever pressure prompted it.
+         */
         if ($this->step === 3 && $this->requiresTimestampPhoto() && $this->timestampIndex === null) {
             $this->addError('timestampIndex',
                 'Отбележи коя снимка е с ръкописна бележка (име и дата).');

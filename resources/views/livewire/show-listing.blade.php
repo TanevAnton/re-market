@@ -21,8 +21,12 @@
                 @endif
             </p>
             <p class="mt-1 text-xs leading-relaxed text-warn">
-                Виждаш я, защото е твоя. Първите обяви от нов профил се проверяват ръчно —
-                обикновено до няколко часа. След одобрение излиза в резултатите.
+                @if (auth()->id() === $listing->user_id)
+                    Виждаш я, защото е твоя. Първите обяви от нов профил се проверяват ръчно —
+                    обикновено до няколко часа. След одобрение излиза в резултатите.
+                @else
+                    Виждаш я като модератор. Публично не е достъпна.
+                @endif
             </p>
         </div>
     @endif
@@ -64,12 +68,35 @@
             @endif
         </div>
 
-        {{-- gallery --}}
-        <div class="mt-5 space-y-2">
+        {{-- gallery ---------------------------------------------------------
+
+             Alpine rather than Livewire: switching photo is a client-side
+             concern, and a server round trip per thumbnail makes a gallery feel
+             broken on a phone. Nothing here needs the server.
+
+             wire:ignore so a Livewire re-render (the admin takedown form, for
+             one) cannot reach in and reset which photo is open. --}}
+        @php($images = $listing->images)
+
+        <div class="mt-5 space-y-2" wire:ignore
+             x-data="{
+                 i: 0,
+                 open: false,
+                 urls: {{ Illuminate\Support\Js::from($images->map->url()) }},
+                 next() { this.i = (this.i + 1) % this.urls.length },
+                 prev() { this.i = (this.i - 1 + this.urls.length) % this.urls.length },
+             }"
+             @keydown.window.escape="open = false"
+             @keydown.window.arrow-right="if (open) next()"
+             @keydown.window.arrow-left="if (open) prev()">
+
             <div class="card overflow-hidden">
-                @if ($listing->images->isNotEmpty())
-                    <img src="{{ $listing->images->first()->url() }}" alt="{{ $listing->title }}"
-                         class="aspect-[4/3] w-full object-cover">
+                @if ($images->isNotEmpty())
+                    <img :src="urls[i]" alt="{{ $listing->title }}"
+                         src="{{ $images->first()->url() }}"
+                         @click="open = true"
+                         class="aspect-[4/3] w-full cursor-zoom-in object-cover
+                                transition hover:brightness-105">
                 @else
                     <div class="grid aspect-[4/3] place-items-center bg-surface-alt text-sm text-ink-faint">
                         Няма снимки
@@ -77,10 +104,13 @@
                 @endif
             </div>
 
-            @if ($listing->images->count() > 1)
+            @if ($images->count() > 1)
                 <div class="grid grid-cols-5 gap-2 sm:grid-cols-6">
-                    @foreach ($listing->images as $img)
-                        <div class="relative overflow-hidden rounded-md border border-line">
+                    @foreach ($images as $index => $img)
+                        <button type="button" @click="i = {{ $index }}"
+                                :class="i === {{ $index }} ? 'border-accent' : 'border-line hover:border-ink-faint'"
+                                class="relative overflow-hidden rounded-md border transition"
+                                aria-label="Снимка {{ $index + 1 }}">
                             <img src="{{ $img->thumbUrl() }}" alt="" loading="lazy"
                                  class="aspect-[4/3] w-full object-cover">
                             @if ($img->is_timestamp_photo)
@@ -89,8 +119,44 @@
                                     с бележка
                                 </span>
                             @endif
-                        </div>
+                        </button>
                     @endforeach
+                </div>
+            @endif
+
+            {{-- lightbox --}}
+            @if ($images->isNotEmpty())
+                <div x-show="open" x-cloak x-transition.opacity
+                     @click.self="open = false"
+                     class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
+
+                    <button type="button" @click="open = false" aria-label="Затвори"
+                            class="absolute right-4 top-4 rounded-md px-3 py-1.5 text-2xl leading-none
+                                   text-white/70 transition hover:bg-white/10 hover:text-white">
+                        &times;
+                    </button>
+
+                    @if ($images->count() > 1)
+                        <button type="button" @click="prev()" aria-label="Предишна"
+                                class="absolute left-2 rounded-md px-3 py-6 text-3xl text-white/70
+                                       transition hover:bg-white/10 hover:text-white sm:left-6">
+                            &lsaquo;
+                        </button>
+                        <button type="button" @click="next()" aria-label="Следваща"
+                                class="absolute right-2 rounded-md px-3 py-6 text-3xl text-white/70
+                                       transition hover:bg-white/10 hover:text-white sm:right-6">
+                            &rsaquo;
+                        </button>
+                    @endif
+
+                    <img :src="urls[i]" alt="{{ $listing->title }}"
+                         class="max-h-[88vh] max-w-full rounded-md object-contain">
+
+                    @if ($images->count() > 1)
+                        <p class="absolute bottom-4 font-mono text-xs text-white/60">
+                            <span x-text="i + 1"></span> / {{ $images->count() }}
+                        </p>
+                    @endif
                 </div>
             @endif
         </div>
@@ -234,6 +300,64 @@
              from, who has no account here. --}}
         @if (auth()->id() !== $listing->user_id)
             @livewire('reports.report-form', ['subject' => $listing], key('report-listing-'.$listing->id))
+        @endif
+
+        {{-- Moderator takedown ------------------------------------------------
+
+             Here rather than only in the queue, because the queue shows what
+             was flagged. A moderator who runs into something bad while just
+             browsing should not have to wait for a report before they can act.
+
+             It is the same door as the queue - ModerationService - so it leaves
+             the same record and sends the seller the same statement of reasons.
+             Deliberately not a one-click delete: a listing that vanishes with
+             no reason attached is one nobody can explain later. --}}
+        @if ($this->canModerate())
+            <div class="card-pad border-bad/30">
+                <h2 class="label text-bad">Модерация</h2>
+
+                @unless ($removing)
+                    <p class="hint mt-2">
+                        Премахването е решение по DSA чл. 17 — продавачът получава
+                        причината и фактите, и може да го оспори.
+                    </p>
+                    <button type="button" wire:click="startRemove"
+                            class="btn-secondary mt-3 w-full border-bad/40 text-bad">
+                        Премахни обявата
+                    </button>
+                @else
+                    <div class="mt-3 space-y-3">
+                        <div>
+                            <label class="label" for="mod-reason">Причина</label>
+                            <select id="mod-reason" wire:model="reason" class="mt-1 w-full">
+                                <option value="">— избери —</option>
+                                @foreach ($this->rejectionReasons() as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            </select>
+                            @error('reason') <p class="error mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label class="label" for="mod-facts">Установени факти</label>
+                            <textarea id="mod-facts" rows="4" wire:model="facts" class="mt-1 w-full"
+                                      placeholder="Какво точно е нередно в тази обява?"></textarea>
+                            <p class="hint">
+                                Продавачът чете точно този текст. Категорията казва коя
+                                е нарушената точка; това казва какво се е случило.
+                            </p>
+                            @error('facts') <p class="error mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button type="button" wire:click="remove"
+                                    class="btn-primary flex-1">Премахни</button>
+                            <button type="button" wire:click="cancelRemove"
+                                    class="btn-ghost">Откажи</button>
+                        </div>
+                    </div>
+                @endunless
+            </div>
         @endif
     </aside>
 </div>

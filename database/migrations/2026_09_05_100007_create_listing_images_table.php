@@ -23,8 +23,12 @@ return new class extends Migration
             $table->bigInteger('phash')->nullable();
 
             // The r/hardwareswap convention: item photographed next to a
-            // handwritten note with username and date. Mandatory for private
-            // sellers; kills stock-photo scams outright.
+            // handwritten note with username and date. Optional - see
+            // config('remarket.listings.require_timestamp_photo_for_private'),
+            // which now defaults to false because requiring it cost more
+            // listings than it caught scams. Still the strongest single signal
+            // that a seller physically has the item, so it is still marked,
+            // badged and weighed in review.
             $table->boolean('is_timestamp_photo')->default(false);
 
             $table->unsignedTinyInteger('position')->default(0);

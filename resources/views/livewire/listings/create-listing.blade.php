@@ -215,6 +215,13 @@
                         с потребителското ти име и днешната дата. Това е най-бързият начин
                         купувачът да види, че вещта наистина е у теб.
                     </div>
+                @else
+                    <div class="mt-2 rounded-md bg-surface-alt px-3 py-2 text-xs text-ink-muted">
+                        <strong class="text-ink">Съвет:</strong> снимай вещта до ръкописна бележка с
+                        потребителското си име и днешната дата, и я отбележи по-долу. Не е
+                        задължително, но е най-бързият начин купувачът да види, че вещта наистина
+                        е у теб — обявите с бележка получават повече оферти.
+                    </div>
                 @endif
 
                 <input type="file" wire:model="photos" multiple accept="image/*"
@@ -227,11 +234,34 @@
                 @error('timestampIndex') <p class="error">{{ $message }}</p> @enderror
 
                 @if ($stored)
-                    <div class="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                    <p class="hint mt-3">
+                        Първата снимка е основната — тя се показва в резултатите от търсене.
+                    </p>
+
+                    <div class="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
                         @foreach ($stored as $i => $img)
-                            <div class="group relative overflow-hidden rounded-md border border-line">
+                            <div wire:key="photo-{{ $img['path'] }}"
+                                 @class([
+                                     'group relative overflow-hidden rounded-md border',
+                                     'border-accent ring-1 ring-accent' => $i === 0,
+                                     'border-line'                      => $i !== 0,
+                                 ])>
                                 <img src="{{ Storage::disk('public')->url($img['thumb']) }}" alt=""
                                      class="aspect-[4/3] w-full object-cover">
+
+                                @if ($i === 0)
+                                    <span class="absolute left-1 top-1 rounded bg-accent px-1.5 py-0.5
+                                                 text-[10px] font-semibold text-[var(--accent-ink)]">
+                                        основна
+                                    </span>
+                                @else
+                                    <button type="button" wire:click="makePrimary({{ $i }})"
+                                            class="absolute left-1 top-1 rounded bg-canvas/90 px-1.5 py-0.5
+                                                   text-[10px] font-medium text-ink-muted opacity-0
+                                                   transition hover:text-accent group-hover:opacity-100">
+                                        направи основна
+                                    </button>
+                                @endif
 
                                 <button type="button" wire:click="removePhoto({{ $i }})"
                                         class="absolute right-1 top-1 rounded bg-canvas/90 px-1.5 py-0.5
