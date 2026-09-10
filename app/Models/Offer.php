@@ -94,4 +94,23 @@ class Offer extends Model
                 ->where(fn (Builder $b) => $b->where('is_counter', false)->where('seller_id', $userId))
                 ->orWhere(fn (Builder $b) => $b->where('is_counter', true)->where('buyer_id', $userId)));
     }
+
+    /**
+     * The same question about one loaded offer.
+     *
+     * The scope answers it for a count in the nav; this answers it for a row
+     * in a list. Both exist because both are needed, and they are next to each
+     * other so the rule cannot be changed in one and not the other - which is
+     * the mistake the scope's own comment above is about.
+     */
+    public function awaitsResponseFrom(?int $userId): bool
+    {
+        if ($userId === null || $this->status !== OfferStatus::Pending) {
+            return false;
+        }
+
+        return $this->is_counter
+            ? $this->buyer_id === $userId
+            : $this->seller_id === $userId;
+    }
 }

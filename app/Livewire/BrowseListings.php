@@ -148,6 +148,113 @@ class BrowseListings extends Component
         $this->resetPage();
     }
 
+    /**
+     * Filters shown as chips, above the results, each one removable.
+     *
+     * Without these the sidebar is the only record of what is applied, and
+     * after five facets nobody can tell why they are looking at four listings
+     * - they scroll a column of a dozen boxes hunting for the one they set.
+     * The chips are also where a filter gets removed, which is the action
+     * someone actually wants at that moment.
+     *
+     * @return list<array{label: string, key: string, spec: string|null}>
+     */
+    public function activeFilters(): array
+    {
+        $chips = [];
+
+        if ($this->q !== '') {
+            $chips[] = ['label' => '„'.$this->q.'“', 'key' => 'q', 'spec' => null];
+        }
+
+        if ($this->category !== '') {
+            $chips[] = [
+                'label' => SpecFilter::categoryLabel($this->category),
+                'key'   => 'category',
+                'spec'  => null,
+            ];
+        }
+
+        if ($this->priceMin !== '' || $this->priceMax !== '') {
+            $chips[] = [
+                'label' => match (true) {
+                    $this->priceMin !== '' && $this->priceMax !== '' => "{$this->priceMin}–{$this->priceMax} €",
+                    $this->priceMin !== ''                           => "над {$this->priceMin} €",
+                    default                                          => "до {$this->priceMax} €",
+                },
+                'key'  => 'price',
+                'spec' => null,
+            ];
+        }
+
+        foreach ($this->condition as $value) {
+            if ($case = ListingCondition::tryFrom($value)) {
+                $chips[] = ['label' => $case->label(), 'key' => 'condition:'.$value, 'spec' => null];
+            }
+        }
+
+        if ($this->city !== '') {
+            $chips[] = [
+                'label' => City::where('slug', $this->city)->first()?->name() ?? $this->city,
+                'key'   => 'city',
+                'spec'  => null,
+            ];
+        }
+
+        $filter = $this->filter();
+
+        foreach ($this->specs as $key => $value) {
+            $chips[] = [
+                'label' => $filter->label($key).': '.$this->describeSpec($value, $filter->unit($key)),
+                'key'   => 'spec',
+                'spec'  => $key,
+            ];
+        }
+
+        return $chips;
+    }
+
+    /** A facet value as a person would say it, not as it is stored. */
+    private function describeSpec(mixed $value, ?string $unit): string
+    {
+        $suffix = $unit ? ' '.$unit : '';
+
+        if (is_array($value) && (isset($value['min']) || isset($value['max']))) {
+            $min = $value['min'] ?? '';
+            $max = $value['max'] ?? '';
+
+            return match (true) {
+                $min !== '' && $max !== '' => "{$min}–{$max}{$suffix}",
+                $min !== ''                => "над {$min}{$suffix}",
+                default                    => "до {$max}{$suffix}",
+            };
+        }
+
+        if (is_array($value)) {
+            return implode(', ', $value).$suffix;
+        }
+
+        return is_bool($value) ? 'да' : $value.$suffix;
+    }
+
+    /** Remove one filter from a chip. Nothing else about the search moves. */
+    public function clearFilter(string $key, ?string $spec = null): void
+    {
+        match (true) {
+            $key === 'q'        => $this->q = '',
+            $key === 'category' => $this->reset(['category', 'specs']),
+            $key === 'city'     => $this->city = '',
+            $key === 'price'    => $this->reset(['priceMin', 'priceMax']),
+            $key === 'spec'     => $this->removeSpec((string) $spec),
+            str_starts_with($key, 'condition:') => $this->condition = array_values(
+                array_diff($this->condition, [substr($key, 10)])
+            ),
+            default => null,
+        };
+
+        $this->resetPage();
+    }
+
     public function filter(): SpecFilter
     {
         return new SpecFilter($this->category);

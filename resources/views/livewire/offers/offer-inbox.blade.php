@@ -79,7 +79,31 @@
                 $live    = $offer->status === \App\Enums\OfferStatus::Pending;
             @endphp
 
-            <article class="card p-4">
+            @php
+                // Whose move it is. The header nav already counts these, but
+                // the count told you a number and then the list told you
+                // nothing - you had to reconstruct, per row, whether you were
+                // waiting or being waited on. The offer clock runs either way.
+                //
+                // Asked of the model rather than worked out here: a plain offer
+                // waits on the seller and a counter waits on the buyer, and
+                // that rule has exactly one home.
+                $yourMove = $offer->awaitsResponseFrom(auth()->id());
+            @endphp
+
+            <article @class([
+                'card p-4',
+                // A left edge rather than a background: it marks the row
+                // without making every actionable card shout at the same
+                // volume as the expiry warning inside it.
+                'border-l-2 border-l-accent' => $yourMove,
+            ])>
+                @if ($yourMove)
+                    <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-accent">
+                        Чака твоя отговор
+                    </p>
+                @endif
+
                 <div class="flex gap-3">
                     <a href="{{ route('listing', $listing) }}" wire:navigate
                        class="h-16 w-20 shrink-0 overflow-hidden rounded-md bg-surface-alt">
@@ -114,9 +138,10 @@
 
                             @if ($live)
                                 <span class="badge-accent">{{ $offer->status->label() }}</span>
-                                <span class="text-xs text-ink-faint">
-                                    изтича {{ $offer->expires_at->diffForHumans() }}
-                                </span>
+                                @include('partials.deadline', [
+                                    'at'     => $offer->expires_at,
+                                    'prefix' => 'изтича,',
+                                ])
                             @elseif ($offer->status === \App\Enums\OfferStatus::Accepted)
                                 <span class="badge-good">{{ $offer->status->label() }}</span>
                             @elseif ($offer->status === \App\Enums\OfferStatus::Countered)

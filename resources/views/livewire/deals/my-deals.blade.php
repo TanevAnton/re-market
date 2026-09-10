@@ -54,7 +54,29 @@
                 $open    = $deal->status === \App\Enums\DealStatus::Open;
             @endphp
 
-            <article class="card p-4">
+            @php
+                // An open deal you have not confirmed is the single most
+                // expensive thing on this screen to overlook: past the window
+                // it is marked abandoned, and that follows the profile.
+                $yourMove = $open && ! $mineOk;
+            @endphp
+
+            <article @class([
+                'card p-4',
+                'border-l-2 border-l-accent' => $yourMove,
+            ])>
+                @if ($yourMove)
+                    <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-accent">
+                        Чака твоето потвърждение
+                    </p>
+                @elseif ($open && ! $theirOk)
+                    {{-- Said plainly, so the person who did their part does not
+                         think the site has forgotten about them. --}}
+                    <p class="mb-2 text-xs font-medium text-ink-muted">
+                        Ти потвърди. Чакаме {{ $other->username }}.
+                    </p>
+                @endif
+
                 <div class="flex gap-3">
                     <a href="{{ route('listing', $listing) }}" wire:navigate
                        class="h-16 w-20 shrink-0 overflow-hidden rounded-md bg-surface-alt">
@@ -93,9 +115,16 @@
                                     @break
                                 @case(\App\Enums\DealStatus::Open)
                                     <span class="badge-accent">{{ $deal->status->label() }}</span>
-                                    <span class="text-xs text-ink-faint">
-                                        срок {{ $deal->expires_at->diffForHumans() }}
-                                    </span>
+                                    @include('partials.deadline', [
+                                        'at'     => $deal->expires_at,
+                                        'prefix' => 'срок,',
+                                        // Already confirmed by this side, so
+                                        // the clock is no longer theirs to
+                                        // worry about - it is the other party
+                                        // who is now late, and shouting at the
+                                        // person who did their part is wrong.
+                                        'done'   => (bool) $mineOk,
+                                    ])
                                     @break
                                 @default
                                     <span class="badge-neutral">{{ $deal->status->label() }}</span>
