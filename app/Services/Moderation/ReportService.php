@@ -7,6 +7,8 @@ use App\Enums\ReportReason;
 use App\Models\ModerationItem;
 use App\Models\Report;
 use App\Models\User;
+use App\Notifications\ReportOutcome;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -101,24 +103,88 @@ class ReportService
      * Art. 16(5) - the decision goes back to the notifier, not only into our
      * own records. Called from ModerationService when an item is decided.
      */
-    public function settle(ModerationItem $item, string $decision, ?string $statement, User $handler): int
+    public function settle(ModerationItem $item, string $decision, ?string $statement, User $handler): Collection
     {
-        return Report::query()
+        // When a listing was left up there is no restrictive measure and so no
+        // Art. 17 statement; the notifier is still owed the outcome, in words
+        // rather than a status code.
+        $outcome = $statement
+            ?? 'Проверихме обявата и не установихме нарушение на условията за ползване.';
+
+        /*
+         * Read the notices BEFORE the update, and keep them.
+         *
+         * This used to be one bulk `update()` returning a row count. A bulk
+         * update touches rows without loading a model, so there was nothing to
+         * notify and nobody was told - the method's own docblock said "tell
+         * everyone who reported this", and it told no one. Exactly the trap the
+         * losing bidders fell into in OfferService.
+         *
+         * After the update these rows no longer match `status = open`, so the
+         * read has to come first or it comes back empty.
+         */
+        $reports = Report::query()
+            ->with('reporter')
             ->where('reportable_type', $item->subject_type)
             ->where('reportable_id', $item->subject_id)
             ->where('status', 'open')
-            ->update([
-                'status'     => $decision === 'rejected' ? 'actioned' : 'rejected',
-                'decision'   => $decision,
-                'handled_by' => $handler->id,
-                // When a listing was left up there is no restrictive measure and
-                // so no Art. 17 statement; the notifier is still owed the
-                // outcome, in words rather than a status code.
-                'statement_of_reasons' => $statement
-                    ?? 'Проверихме обявата и не установихме нарушение на условията за ползване.',
-                'resolved_at' => now(),
-                'updated_at'  => now(),
-            ]);
+            ->get();
+
+        if ($reports->isEmpty()) {
+            return $reports;
+        }
+
+        Report::whereKey($reports->modelKeys())->update([
+            'status'               => $decision === 'rejected' ? 'actioned' : 'rejected',
+            'decision'             => $decision,
+            'handled_by'           => $handler->id,
+            'statement_of_reasons' => $outcome,
+            'resolved_at'          => now(),
+            'updated_at'           => now(),
+        ]);
+
+        // Carried on the in-memory copies so the caller can send them without
+        // re-reading rows that no longer match the query above.
+        return $reports->each(fn (Report $r) => $r->forceFill([
+            'decision'             => $decision,
+            'statement_of_reasons' => $outcome,
+        ]));
+    }
+
+    /**
+     * Send the outcome to the people who reported.
+     *
+     * Called by ModerationService AFTER its transaction commits: these are
+     * queued jobs, and a queued job can start before the commit it depends on
+     * and read a row that does not exist yet.
+     *
+     * Only reporters with an account are reached. Anonymous notices are
+     * accepted on purpose - Art. 16 does not permit demanding an account - but
+     * they leave only an email address, and mailing an unverified address
+     * supplied by a stranger is an open relay for whoever wants to use our
+     * domain to send someone a message. Their outcome is on the record and
+     * available on request instead. This is a deliberate limit, not an
+     * oversight; revisit it if a verified reply-address flow is ever built.
+     *
+     * @param  Collection<int, Report>  $reports
+     */
+    public function notifySettled(Collection $reports): void
+    {
+        $seen = [];
+
+        foreach ($reports as $report) {
+            $reporter = $report->reporter;
+
+            // One outcome per person, even if they filed against several
+            // things in the same batch - and never to the person who was
+            // reported, who gets the Art. 17 statement of reasons instead.
+            if (! $reporter || isset($seen[$reporter->id])) {
+                continue;
+            }
+
+            $seen[$reporter->id] = true;
+            $reporter->notify(new ReportOutcome($report));
+        }
     }
 
     private function openNoticeFrom(Model $reportable, ?User $reporter, ?string $email): ?Report

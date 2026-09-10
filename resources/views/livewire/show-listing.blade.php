@@ -216,7 +216,30 @@
                     Съобщение до продавача
                 </a>
             @endauth
+
+            @if (auth()->id() !== $listing->user_id)
+                <div class="mt-2">
+                    @livewire('favorites.favorite-button', ['listing' => $listing],
+                        key('fav-detail-'.$listing->id))
+                </div>
+            @endif
         </div>
+
+        {{-- The catalogue page for this model. The most valuable internal link
+             on the site: it is where a buyer finds out whether this price is
+             normal, and it is what gets the landing pages crawled at all. --}}
+        @if ($listing->part)
+            <div class="card-pad">
+                <h2 class="label">Този модел</h2>
+                <a href="{{ route('part', $listing->part) }}" wire:navigate
+                   class="mt-2 block text-sm font-semibold hover:text-accent">
+                    {{ $listing->part->fullName() }} →
+                </a>
+                <p class="hint mt-1">
+                    Пазарни цени, спецификации и всички обяви за този модел.
+                </p>
+            </div>
+        @endif
 
         @if ($listing->accepts_inspect_test)
             <div class="rounded-lg border border-line bg-good-soft p-4">

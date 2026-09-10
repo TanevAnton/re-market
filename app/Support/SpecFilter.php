@@ -143,6 +143,20 @@ class SpecFilter
         return $this->schema()[$key]['unit'] ?? null;
     }
 
+    /**
+     * One category's display name.
+     *
+     * categories() returns a LIST - it ends in ->values() - so indexing it by
+     * category key silently yields nothing rather than failing. This reads the
+     * config directly, which is the only shape that is actually keyed.
+     */
+    public static function categoryLabel(string $key): string
+    {
+        $labels = config("catalog.categories.{$key}.label", []);
+
+        return $labels[app()->getLocale()] ?? $labels['en'] ?? $key;
+    }
+
     public static function categories(): array
     {
         return collect(config('catalog.categories'))

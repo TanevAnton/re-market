@@ -26,6 +26,11 @@ class Part extends Model
             'specs'        => 'array',
             'aliases'      => 'array',
             'is_published' => 'boolean',
+
+            // Without this it comes back as a string and every ->lt() /
+            // ->diffForHumans() on the landing page is a fatal - which is
+            // exactly what the price-band staleness check does.
+            'price_stats_at' => 'datetime',
         ];
     }
 

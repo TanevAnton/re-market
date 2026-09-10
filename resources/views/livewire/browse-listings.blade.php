@@ -101,6 +101,42 @@
 
             <div class="flex-1"></div>
 
+            @if ($savingSearch)
+                <div class="w-full order-last mt-3 card-pad">
+                    <label class="label" for="search-name">Име на търсенето</label>
+                    <div class="mt-1 flex flex-wrap items-start gap-2">
+                        <div class="min-w-0 flex-1">
+                            <input id="search-name" type="text" wire:model="searchName"
+                                   wire:keydown.enter="saveSearch" class="w-full">
+                            @error('searchName') <p class="error mt-1">{{ $message }}</p> @enderror
+                        </div>
+                        <button type="button" wire:click="saveSearch" class="btn-primary">Запази</button>
+                        <button type="button" wire:click="cancelSaveSearch" class="btn-ghost">Откажи</button>
+                    </div>
+                    <p class="hint mt-2">
+                        Ще получаваш известие при нова обява, която отговаря на тези филтри.
+                        Спираш ги по всяко време от „Запазени търсения“.
+                    </p>
+                </div>
+            @endif
+
+            <div x-data="{ shown: false }" x-on:search-saved.window="shown = true; setTimeout(() => shown = false, 4000)"
+                 x-show="shown" x-cloak x-transition class="order-last w-full">
+                <p class="mt-3 rounded-md bg-good-soft px-3 py-2 text-xs text-good">
+                    Търсенето е запазено.
+                    <a href="{{ route('searches') }}" wire:navigate class="underline">Виж запазените търсения</a>
+                </p>
+            </div>
+
+            {{-- Only offered once there is something worth saving. "Save this
+                 search" next to no filters saves "everything", which then
+                 alerts on every listing posted and gets muted within a day. --}}
+            @if ($this->hasFilters())
+                <button type="button" wire:click="startSaveSearch" class="btn-ghost btn-sm">
+                    Запази търсенето
+                </button>
+            @endif
+
             <button type="button" wire:click="clearFilters" class="btn-ghost btn-sm">Изчисти филтрите</button>
 
             <select wire:model.live="sort" class="w-auto py-1.5 text-sm">

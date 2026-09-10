@@ -193,11 +193,11 @@
 
                 <div class="mt-5 flex flex-wrap gap-2">
                     @foreach ($popularParts as $part)
-                        <a href="{{ route('browse', ['q' => $part['name']]) }}" wire:navigate
+                        <a href="{{ route('part', $part) }}" wire:navigate
                            class="inline-flex items-center gap-2 rounded-full border border-line bg-surface
                                   px-3 py-1.5 text-sm transition hover:border-accent hover:text-accent">
-                            {{ $part['name'] }}
-                            <span class="font-mono text-[11px] tabular text-ink-faint">{{ $part['count'] }}</span>
+                            {{ $part->fullName() }}
+                            <span class="font-mono text-[11px] tabular text-ink-faint">{{ $part->live_count }}</span>
                         </a>
                     @endforeach
                 </div>

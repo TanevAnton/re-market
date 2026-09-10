@@ -34,3 +34,30 @@ Schedule::command('remarket:expire-offers')
 Schedule::command('remarket:lapse-deals')
     ->hourly()
     ->withoutOverlapping();
+
+/*
+ * The numbers on every part landing page - listing counts and the price band.
+ *
+ * Nightly rather than on write: the figures are a market summary, nobody is
+ * harmed by them being a few hours old, and recomputing percentiles on every
+ * publish would put a full table scan in the path of posting an ad.
+ *
+ * If this never runs, every part page reports zero listings and no price band,
+ * which is precisely the content those pages exist to carry. 04:10 rather than
+ * 04:00 so it is not fighting whatever else the box does on the hour.
+ */
+Schedule::command('remarket:refresh-part-stats')
+    ->dailyAt('04:10')
+    ->withoutOverlapping();
+
+/*
+ * Saved-search alerts. Hourly is the compromise: often enough that a buyer
+ * hears about a card while it is still for sale, rare enough that nobody gets
+ * a message every time someone posts.
+ *
+ * The command itself is what stops it becoming spam - it only ever reports
+ * listings published since that search last notified.
+ */
+Schedule::command('remarket:notify-saved-searches')
+    ->hourly()
+    ->withoutOverlapping();

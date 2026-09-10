@@ -5,7 +5,10 @@ use App\Livewire\Auth\Register;
 use App\Livewire\Auth\VerifyEmailNotice;
 use App\Livewire\Auth\VerifyPhone;
 use App\Livewire\BrowseListings;
+use App\Livewire\Favorites\MyFavorites;
 use App\Livewire\Home;
+use App\Livewire\SavedSearches\MySearches;
+use App\Livewire\ShowPart;
 use App\Livewire\Listings\CreateListing;
 use App\Livewire\Listings\EditListing;
 use App\Livewire\Listings\MyListings;
@@ -17,6 +20,7 @@ use App\Livewire\Offers\OfferInbox;
 use App\Livewire\Profile\EditProfile;
 use App\Livewire\Profile\ShowProfile;
 use App\Livewire\ShowListing;
+use App\Http\Controllers\Sitemap;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,6 +45,26 @@ Route::get('/', Home::class)->name('home');
 Route::get('/obiavi', BrowseListings::class)->name('browse');
 Route::get('/obiava/{listing}', ShowListing::class)->name('listing');
 Route::get('/profil/{username}', ShowProfile::class)->name('profile');
+
+/*
+ * The catalogue landing pages - the entire organic-search strategy.
+ *
+ * Nobody searches for this site by name. They search for "rtx 4070 цена бг",
+ * and a listing cannot answer that: it is one asking price and it disappears
+ * when the card sells, taking its rankings with it. These pages are permanent,
+ * accumulate links, and keep working when there is nothing for sale.
+ *
+ * `/model/` rather than `/chast/`: it is what the page is about, it is short,
+ * and it reads the same in both alphabets.
+ */
+Route::get('/model/{part}', ShowPart::class)->name('part');
+
+/*
+ * Landing pages nobody crawls are worth nothing, so the sitemap ships with
+ * them rather than "later". It refuses to serve anything when the deployment
+ * is not indexable - see config('remarket.seo.indexable').
+ */
+Route::get('/sitemap.xml', Sitemap::class)->name('sitemap');
 
 /*
  * The legal pages. Public and unauthenticated on purpose: DSA Art. 11 and 12
@@ -88,6 +112,14 @@ Route::middleware('auth')->group(function () {
         return back()->with('status', 'Изпратихме нов линк за потвърждение.');
     })->middleware('throttle:6,1')->name('verification.send');
     Route::get('/nastroyki', EditProfile::class)->name('profile.edit');
+
+    /*
+     * The shortlist and the standing wants. Neither needs a verified email:
+     * they are reading and remembering, not acting on anyone else.
+     */
+    Route::get('/zapazeni', MyFavorites::class)->name('favorites');
+    Route::get('/zapazeni-tarseniya', MySearches::class)->name('searches');
+
     Route::get('/oferti', OfferInbox::class)->name('offers');
     Route::get('/sdelki', MyDeals::class)->name('deals');
 

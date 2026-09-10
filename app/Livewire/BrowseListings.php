@@ -5,13 +5,17 @@ namespace App\Livewire;
 use App\Enums\ListingCondition;
 use App\Models\City;
 use App\Models\Listing;
+use App\Models\SavedSearch;
+use App\Services\Search\SavedSearchService;
 use App\Support\SpecFilter;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
+use RuntimeException;
 
 class BrowseListings extends Component
 {
@@ -59,6 +63,83 @@ class BrowseListings extends Component
     {
         $this->reset(['q', 'priceMin', 'priceMax', 'condition', 'city', 'specs']);
         $this->resetPage();
+    }
+
+    // --- saving this search ----------------------------------------------
+
+    public bool $savingSearch = false;
+    public string $searchName = '';
+
+    /**
+     * The current filters in the same shape the URL uses.
+     *
+     * Deliberately the query-string keys rather than the property names: a
+     * saved search is then just a browse URL, so it can be re-opened as a
+     * normal page and a shared link can be saved without translation.
+     */
+    public function criteria(): array
+    {
+        return [
+            'kat'  => $this->category,
+            'q'    => $this->q,
+            'ot'   => $this->priceMin,
+            'do'   => $this->priceMax,
+            'sast' => $this->condition,
+            'grad' => $this->city,
+            'f'    => $this->specs,
+        ];
+    }
+
+    /** Nothing selected is not a search worth saving. */
+    public function hasFilters(): bool
+    {
+        return collect($this->criteria())->filter(fn ($v) => $v !== '' && $v !== [] && $v !== null)
+            ->isNotEmpty();
+    }
+
+    public function startSaveSearch(SavedSearchService $searches): void
+    {
+        if (! auth()->check()) {
+            $this->redirectRoute('login', navigate: true);
+
+            return;
+        }
+
+        $this->savingSearch = true;
+        $this->resetErrorBag();
+
+        // Pre-filled from the filters themselves. Asking someone to name a
+        // thing before they can save it is where most people abandon; a name
+        // they can accept as-is is the difference.
+        $this->searchName = Str::limit(
+            $searches->describe(new SavedSearch(['criteria' => $this->criteria()])),
+            60,
+            '',
+        );
+    }
+
+    public function cancelSaveSearch(): void
+    {
+        $this->reset(['savingSearch', 'searchName']);
+    }
+
+    public function saveSearch(SavedSearchService $searches): void
+    {
+        $this->validate(
+            ['searchName' => ['required', 'string', 'min:2', 'max:80']],
+            ['searchName.required' => 'Дай име на търсенето.'],
+        );
+
+        try {
+            $searches->save(auth()->user(), trim($this->searchName), $this->criteria());
+        } catch (RuntimeException $e) {
+            $this->addError('searchName', $e->getMessage());
+
+            return;
+        }
+
+        $this->reset(['savingSearch', 'searchName']);
+        $this->dispatch('search-saved');
     }
 
     public function removeSpec(string $key): void

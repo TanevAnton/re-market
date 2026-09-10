@@ -73,6 +73,42 @@ return [
         'store_exact_price' => (bool) env('DEAL_STORE_EXACT_PRICE', true),
     ],
 
+    'seo' => [
+        /*
+         * OFF by default, and that is the safe direction.
+         *
+         * The site currently runs on a LAN box at an IP address. If that ever
+         * became reachable and indexable it would compete with the real domain
+         * for its own content on the day it launches, and duplicate content
+         * under a different host is the hardest kind to undo.
+         *
+         * Set SEO_INDEXABLE=true in .env on the real domain, and nowhere else.
+         */
+        'indexable' => (bool) env('SEO_INDEXABLE', false),
+    ],
+
+    /*
+     * The catalogue pages - our whole organic-search strategy. Someone typing
+     * "RTX 4070 цена бг" should land on a page that answers the question, not
+     * on a search result that might be empty this week.
+     */
+    'parts' => [
+        // Below this many live listings a "market price" is one person's
+        // opinion, so no band is shown at all. Low on purpose while the site
+        // is young: a threshold nothing meets means no page has a band, and
+        // the band is the reason to visit the page.
+        'price_band_min_listings' => (int) env('PART_PRICE_BAND_MIN', 3),
+
+        // A band computed a month ago is quoted in negotiations as if it were
+        // today's. Past this age the page stops showing it.
+        'price_band_max_age_days' => (int) env('PART_PRICE_BAND_MAX_AGE', 7),
+
+        // Landing pages with nothing on them are worse than no landing page:
+        // they teach a crawler the site is thin. Below this, the page still
+        // works for anyone with the link but stays out of the sitemap.
+        'sitemap_min_listings'    => (int) env('PART_SITEMAP_MIN', 1),
+    ],
+
     'listings' => [
         'expire_after_days'   => 60,
         'bump_cooldown_hours' => 24,

@@ -1,5 +1,21 @@
-{{-- Shared by browse and profile. One card definition, one place to change. --}}
-<article class="card-interactive group flex flex-col overflow-hidden">
+{{-- Shared by browse, profile, home and the part pages. One card definition,
+     one place to change. --}}
+<article class="card-interactive group relative flex flex-col overflow-hidden">
+
+    {{-- Outside the <a>, because a button nested in a link is invalid HTML and
+         behaves differently in every browser. $withFavorite defaults to true so
+         every existing include gets it; the saved-listings page passes false
+         and positions its own, to avoid two hearts on one card. --}}
+    @auth
+        @if (($withFavorite ?? true) && $listing->status->isPubliclyVisible())
+            <div class="absolute right-2 top-2 z-10">
+                @livewire('favorites.favorite-button',
+                    ['listing' => $listing, 'compact' => true],
+                    key('fav-'.$listing->id))
+            </div>
+        @endif
+    @endauth
+
     <a href="{{ route('listing', $listing) }}" wire:navigate class="flex flex-1 flex-col">
 
         {{-- The photograph is what people actually scan. It gets the room. --}}

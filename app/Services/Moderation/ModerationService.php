@@ -77,7 +77,9 @@ class ModerationService
      */
     public function approve(ModerationItem $item, User $moderator): ModerationItem
     {
-        $item = DB::transaction(function () use ($item, $moderator) {
+        $settled = collect();
+
+        $item = DB::transaction(function () use ($item, $moderator, &$settled) {
             $item = $this->lockPending($item, $moderator);
 
             $subject = $item->subject;
@@ -98,7 +100,7 @@ class ModerationService
 
             // Anyone who reported this is owed the outcome - Art. 16(5) - even
             // when the outcome is "we looked and left it up".
-            $this->reports()->settle($item, 'approved', null, $moderator);
+            $settled = $this->reports()->settle($item, 'approved', null, $moderator);
 
             Log::info('[moderation] approved', [
                 'item' => $item->id, 'by' => $moderator->id,
@@ -110,6 +112,10 @@ class ModerationService
         if (($listing = $item->subject) instanceof Listing) {
             $listing->user->notify(new ModerationDecision($listing, approved: true));
         }
+
+        // Art. 16(5). Outside the transaction for the same reason as every
+        // other dispatch here: a queued job can outrun its own commit.
+        $this->reports()->notifySettled($settled);
 
         return $item;
     }
@@ -135,7 +141,9 @@ class ModerationService
             throw new RuntimeException('A rejection needs the facts it relies on.');
         }
 
-        $item = DB::transaction(function () use ($item, $moderator, $reason, $facts) {
+        $settled = collect();
+
+        $item = DB::transaction(function () use ($item, $moderator, $reason, $facts, &$settled) {
             $item = $this->lockPending($item, $moderator);
 
             $subject   = $item->subject;
@@ -166,7 +174,7 @@ class ModerationService
                 'decided_at'           => now(),
             ])->save();
 
-            $this->reports()->settle($item, 'rejected', $statement, $moderator);
+            $settled = $this->reports()->settle($item, 'rejected', $statement, $moderator);
 
             Log::info('[moderation] rejected', [
                 'item' => $item->id, 'by' => $moderator->id, 'reason' => $reason->value,
@@ -190,6 +198,8 @@ class ModerationService
                 statement: $item->statement_of_reasons,
             ));
         }
+
+        $this->reports()->notifySettled($settled);
 
         return $item;
     }

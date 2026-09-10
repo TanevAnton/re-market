@@ -156,14 +156,24 @@ class HomeTest extends TestCase
             ->assertSee('name="q"', false);
     }
 
-    public function test_popular_models_link_to_a_search(): void
+    /**
+     * The chips point at the catalogue page for the model, not at a search for
+     * its name. That is the whole difference: a search for "RTX 4070" is empty
+     * the week nobody is selling one, while the model page still carries the
+     * specs, the price band and somewhere to leave an alert - and the home page
+     * linking to it is how the catalogue gets crawled at all.
+     */
+    public function test_popular_models_link_to_their_catalogue_page(): void
     {
         $listing = $this->listing();
 
         $parts = Livewire::test(Home::class)->instance()->popularParts();
 
         $this->assertNotEmpty($parts);
-        $this->assertSame(1, $parts[0]['count']);
-        $this->assertSame($listing->part->fullName(), $parts[0]['name']);
+        $this->assertSame(1, (int) $parts[0]->live_count);
+        $this->assertSame($listing->part->fullName(), $parts[0]->fullName());
+
+        $this->get(route('home'))
+            ->assertSee(route('part', $listing->part), escape: false);
     }
 }

@@ -105,24 +105,27 @@ class Home extends Component
     /**
      * The models people are actually selling, as search chips.
      *
-     * This is the seed of the SEO play: every chip is a query that will one day
-     * be a part landing page.
+     * These ARE the landing pages now, not chips pointing at a search. That is
+     * the whole difference: a search for "RTX 4070" is empty the week nobody is
+     * selling one, while the model page still carries the specs, the price band
+     * and somewhere to leave an alert. It is also how the catalogue gets
+     * crawled at all - the home page is what links to it.
      *
-     * @return list<array{name: string, count: int}>
+     * @return \Illuminate\Support\Collection<int, Part>
      */
-    public function popularParts(): array
+    public function popularParts()
     {
         return Part::query()
-            ->select('parts.id', 'parts.manufacturer', 'parts.model', 'parts.variant')
-            ->selectRaw('count(listings.id) as listings_count')
+            ->select('parts.id', 'parts.slug', 'parts.manufacturer', 'parts.model', 'parts.variant')
+            ->selectRaw('count(listings.id) as live_count')
             ->join('listings', 'listings.part_id', '=', 'parts.id')
             ->where('listings.status', ListingStatus::Active)
-            ->groupBy('parts.id', 'parts.manufacturer', 'parts.model', 'parts.variant')
-            ->orderByDesc('listings_count')
+            ->whereNull('listings.deleted_at')
+            ->where('parts.is_published', true)
+            ->groupBy('parts.id', 'parts.slug', 'parts.manufacturer', 'parts.model', 'parts.variant')
+            ->orderByDesc('live_count')
             ->limit(12)
-            ->get()
-            ->map(fn (Part $p) => ['name' => $p->fullName(), 'count' => (int) $p->listings_count])
-            ->all();
+            ->get();
     }
 
     /**

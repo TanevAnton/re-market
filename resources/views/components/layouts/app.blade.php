@@ -25,6 +25,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ isset($title) ? $title.' · '.config('app.name') : config('app.name') }}</title>
 
+    {{-- Per-page SEO.
+         --------------------------------------------------------------------
+         Every one of these is optional and every one of them is absent by
+         default, because a wrong canonical or a boilerplate description
+         repeated on ten thousand pages does more damage than none at all.
+         Pages that have something specific to say (the part landing pages,
+         listings) pass it; the rest stay quiet.
+
+         The description is truncated rather than trusted: Google cuts around
+         160 characters and a sentence chopped mid-word in the results looks
+         like a broken site. --}}
+    @isset($description)
+        <meta name="description" content="{{ Str::limit(strip_tags($description), 155) }}">
+    @endisset
+
+    {{-- Filters produce a combinatorial number of URLs for the same listings.
+         Without a canonical, every one of them competes with the others and
+         none of them ranks. --}}
+    <link rel="canonical" href="{{ $canonical ?? url()->current() }}">
+
+    <meta property="og:type" content="{{ $ogType ?? 'website' }}">
+    <meta property="og:site_name" content="{{ config('app.name') }}">
+    <meta property="og:locale" content="bg_BG">
+    <meta property="og:title" content="{{ $title ?? config('app.name') }}">
+    <meta property="og:url" content="{{ $canonical ?? url()->current() }}">
+    @isset($description)
+        <meta property="og:description" content="{{ Str::limit(strip_tags($description), 200) }}">
+    @endisset
+
+    {{-- summary_large_image only when there is an image to fill it. Declaring
+         it without one renders as a broken card rather than a small one. --}}
+    @isset($ogImage)
+        <meta property="og:image" content="{{ $ogImage }}">
+        <meta name="twitter:card" content="summary_large_image">
+    @else
+        <meta name="twitter:card" content="summary">
+    @endisset
+
+    {{-- Structured data, passed in already encoded by whoever knows what the
+         page is. Kept out of the shared layout on purpose: a Product schema
+         guessed from a page that is not a product is a manual penalty. --}}
+    @isset($jsonLd)
+        <script type="application/ld+json">{!! $jsonLd !!}</script>
+    @endisset
+
+    {{-- A staging or LAN deployment must not be indexed. It would compete with
+         the real site for the same content the day that launches. --}}
+    @unless (config('remarket.seo.indexable', false))
+        <meta name="robots" content="noindex, nofollow">
+    @endunless
+
     {{-- The page background, before any stylesheet has loaded. In dev, Vite
          injects the CSS with JavaScript, so without this the first paint is a
          bare rectangle no matter what class <html> carries. Dark first, to
@@ -137,6 +188,11 @@
                 {{-- Discoverability is the whole point: a seller who cannot
                      find their own listings cannot fix a price. --}}
                 <a href="{{ route('listings.mine') }}" wire:navigate class="btn-ghost btn-sm">Моите обяви</a>
+
+                {{-- The buyer's side of "come back later". Everything else in
+                     this nav belongs to selling; without this a buyer has no
+                     reason to return until they need something again. --}}
+                <a href="{{ route('favorites') }}" wire:navigate class="btn-ghost btn-sm">Запазени</a>
 
                 @if (auth()->user()->is_admin)
                     {{-- A queue nobody can see the size of is a queue nobody
