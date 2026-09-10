@@ -152,12 +152,29 @@ class Home extends Component
     #[Layout('components.layouts.app')]
     public function render()
     {
+        $stats = $this->stats();
+
         return view('livewire.home', [
             'categories'    => $this->categories(),
             'newest'        => $this->newest(),
             'mostViewed'    => $this->mostViewed(),
             'popularParts'  => $this->popularParts(),
-            'stats'         => $this->stats(),
+            'stats'         => $stats,
+        ])->layoutData([
+            /*
+             * No site name in the title: the layout appends it, and "RE-MARKET
+             * · RE-MARKET" is what happens otherwise. What goes here is the
+             * phrase someone would search for, since this is the page that
+             * ranks for the brand plus the category.
+             */
+            'title'       => 'Втора употреба компютърни части и гейминг техника',
+            'description' => sprintf(
+                'Купувай и продавай втора употреба хардуер в България — %d активни обяви. '
+                .'Каталог със спецификации, оферти без пазарлък в коментарите и '
+                .'преглед на пратката преди плащане.',
+                $stats['listings'],
+            ),
+            'canonical'   => route('home'),
         ]);
     }
 }

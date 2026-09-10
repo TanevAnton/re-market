@@ -16,6 +16,7 @@ use App\Services\Moderation\ModerationService;
 use App\Support\SpecFilter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use App\Livewire\Concerns\ChecksTurnstile;
 use Livewire\Component;
@@ -271,13 +272,30 @@ class CreateListing extends Component
     {
         return [
             'stored.min'       => 'Добави поне една снимка.',
-            'title.min'        => 'Заглавието е твърде кратко.',
-            'description.min'  => 'Опиши състоянието по-подробно - това спестява въпроси.',
+            'title.min'        => 'Заглавието трябва да е поне 8 знака.',
+            'description.min'  => 'Опиши състоянието с поне 20 знака - това спестява въпроси.',
             'min_offer.lte'    => 'Минималната оферта не може да е над цената.',
             'category.required' => 'Избери категория.',
             'city_id.required' => 'Избери град.',
             'delivery_options.required' => 'Избери поне един начин за доставка.',
         ];
+    }
+
+    /**
+     * The optional half of step 3, folded away by default.
+     *
+     * Step 3 asks for more than the other three steps combined - title,
+     * condition, description, mining history, every catalogue spec, warranty,
+     * a benchmark link, a receipt, and photos. Most of that is optional, and
+     * a seller who cannot tell which is which reads the whole wall as required
+     * and closes the tab. Supply is the bottleneck; this screen is where it
+     * leaks.
+     */
+    public bool $showOptional = false;
+
+    public function toggleOptional(): void
+    {
+        $this->showOptional = ! $this->showOptional;
     }
 
     public function next(): void
@@ -288,7 +306,19 @@ class CreateListing extends Component
             $this->processPendingPhotos();
         }
 
-        $this->validate($this->rulesForStep($this->step));
+        try {
+            $this->validate($this->rulesForStep($this->step));
+        } catch (ValidationException $e) {
+            /*
+             * Step 3 is long enough that the field which failed is usually off
+             * screen. Without this the button appears to do nothing at all,
+             * which is indistinguishable from the site being broken - and the
+             * error is sitting three scrolls up.
+             */
+            $this->dispatch('form-invalid');
+
+            throw $e;
+        }
 
         /*
          * The handwritten-note photo is encouraged, not enforced - see

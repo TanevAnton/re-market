@@ -22,7 +22,24 @@
 
     @if ($listings->isEmpty())
         <div class="card-pad mt-6 text-center">
-            <p class="text-sm text-ink-muted">Няма обяви тук.</p>
+            @if ($tab === 'all')
+                <p class="text-sm font-medium">Още нямаш обяви.</p>
+                <p class="hint mx-auto mt-2 max-w-md">
+                    Избираш модела от каталога и спецификациите се попълват сами —
+                    отнема около две минути.
+                </p>
+                <a href="{{ route('listing.create') }}" wire:navigate class="btn-primary mt-4 inline-block">
+                    Публикувай обява
+                </a>
+            @else
+                {{-- A filter that matched nothing, not an empty account. Saying
+                     "you have no listings" here would be wrong and confusing to
+                     someone looking at a tab. --}}
+                <p class="text-sm text-ink-muted">Няма обяви в този раздел.</p>
+                <button type="button" wire:click="$set('tab', 'all')" class="btn-ghost btn-sm mt-3">
+                    Виж всички
+                </button>
+            @endif
         </div>
     @endif
 

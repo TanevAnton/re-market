@@ -149,9 +149,34 @@
 
         <div wire:loading.class="opacity-40" class="transition-opacity">
             @if ($listings->isEmpty())
+                {{-- The most valuable empty state on the site.
+
+                     Someone who filtered down to nothing knows exactly what
+                     they want and cannot have it today - which is the profile
+                     of the best buyer on a used marketplace, and the one most
+                     likely to leave and not come back. "Try broader criteria"
+                     hands them nothing; a standing alert keeps them. --}}
                 <div class="card border-dashed p-12 text-center">
                     <p class="font-medium">Няма обяви по тези филтри</p>
-                    <p class="mt-1 text-sm text-ink-muted">Опитай с по-широки критерии.</p>
+                    <p class="mx-auto mt-1 max-w-md text-sm text-ink-muted">
+                        Пазарът за втора употреба се движи бързо — това, което търсиш,
+                        може да се появи утре.
+                    </p>
+
+                    <div class="mt-5 flex flex-wrap items-center justify-center gap-2">
+                        @if ($this->hasFilters())
+                            <button type="button" wire:click="startSaveSearch" class="btn-primary">
+                                Извести ме при нова обява
+                            </button>
+                            <button type="button" wire:click="clearFilters" class="btn-ghost">
+                                Изчисти филтрите
+                            </button>
+                        @else
+                            <a href="{{ route('listing.create') }}" wire:navigate class="btn-primary">
+                                Публикувай първата обява
+                            </a>
+                        @endif
+                    </div>
                 </div>
             @else
                 <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

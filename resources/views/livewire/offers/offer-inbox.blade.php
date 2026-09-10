@@ -52,7 +52,22 @@
                     </button>
                 </p>
             @endif
-            <a href="{{ route('browse') }}" wire:navigate class="btn-secondary btn-sm mt-4">Разгледай обявите</a>
+            {{-- Different person, different next step. "Received" is empty for
+                 a seller, who needs something listed before anyone can offer;
+                 "sent" is empty for a buyer, who needs something to offer on.
+                 One shared button sent half of them the wrong way. --}}
+            @if ($tab === 'received')
+                <p class="hint mx-auto mt-2 max-w-md">
+                    Офертите се появяват тук, щом някой предложи цена по твоя обява.
+                </p>
+                <a href="{{ route('listing.create') }}" wire:navigate class="btn-secondary btn-sm mt-4">
+                    Публикувай обява
+                </a>
+            @else
+                <a href="{{ route('browse') }}" wire:navigate class="btn-secondary btn-sm mt-4">
+                    Разгледай обявите
+                </a>
+            @endif
         </div>
     @endif
 

@@ -86,6 +86,28 @@ class ShowProfile extends Component
                 ->latest('id')
                 ->limit(20)
                 ->get(),
+        ])->layoutData([
+            'title'       => 'Профил на '.$this->user->username,
+
+            /*
+             * The completion rate rather than the listing count, because that
+             * is the figure a cautious buyer is actually looking for and the
+             * only one a spammer cannot inflate.
+             */
+            'description' => sprintf(
+                'Обяви и оценки на %s в RE-MARKET — %d завършени сделки.',
+                $this->user->username,
+                $this->user->deals_completed,
+            ),
+            'canonical'   => route('profile', $this->user->username),
+
+            /*
+             * Profiles carry a person's trading history and are not the pages
+             * we want ranking for hardware searches. They stay reachable and
+             * shareable; they just do not go in the index, and nothing here
+             * belongs in a search result someone else typed.
+             */
+            'noindex'     => true,
         ]);
     }
 }

@@ -70,11 +70,25 @@
         <script type="application/ld+json">{!! $jsonLd !!}</script>
     @endisset
 
-    {{-- A staging or LAN deployment must not be indexed. It would compete with
-         the real site for the same content the day that launches. --}}
-    @unless (config('remarket.seo.indexable', false))
+    {{-- Two separate reasons to stay out of the index.
+
+         The deployment: a staging or LAN copy must never be indexed, or it
+         competes with the real site for the same content the day that launches.
+
+         The page: filters multiply into an unbounded number of URLs showing
+         the same listings, and a crawler that spends its budget on
+         "?kat=gpu&ot=200&do=400&grad=sofia" is not spending it on the pages
+         worth ranking. Those pages still work and still carry a canonical
+         pointing at the version that should rank. --}}
+    @if (! config('remarket.seo.indexable', false))
+        {{-- nofollow too: nothing on a copy of the site should be crawled
+             onward from it, including its links back to the real one. --}}
         <meta name="robots" content="noindex, nofollow">
-    @endunless
+    @elseif ($noindex ?? false)
+        {{-- follow, deliberately: the page should not rank, but the listings
+             it links to should still be discovered through it. --}}
+        <meta name="robots" content="noindex, follow">
+    @endif
 
     {{-- The page background, before any stylesheet has loaded. In dev, Vite
          injects the CSS with JavaScript, so without this the first paint is a

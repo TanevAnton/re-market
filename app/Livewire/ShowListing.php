@@ -222,9 +222,106 @@ class ShowListing extends Component
         return $rows;
     }
 
+    /**
+     * The sentence under the link in a search result or a shared card.
+     *
+     * Built from the facts a buyer decides on rather than the seller's own
+     * description, which on a used marketplace is as often "спешно!!!" as it is
+     * useful. Condition, price, location, and the two things that actually
+     * separate two identical cards: warranty and whether you may test it before
+     * paying.
+     */
+    public function metaDescription(): string
+    {
+        $bits = [
+            $this->listing->condition->label(),
+            $this->listing->formattedPrice(),
+        ];
+
+        if ($city = $this->listing->city?->name()) {
+            $bits[] = $city;
+        }
+
+        if ($this->listing->isWarrantied()) {
+            $bits[] = 'с гаранция';
+        }
+
+        if ($this->listing->accepts_inspect_test) {
+            $bits[] = 'преглед и тест при получаване';
+        }
+
+        // The seller's own words, trimmed, after the facts - so a shared card
+        // still reads like a specific item rather than a spec dump.
+        $own = trim(preg_replace('/\s+/', ' ', (string) $this->listing->description));
+
+        return implode(' · ', $bits).'. '.mb_substr($own, 0, 110);
+    }
+
+    /**
+     * The photo that appears when the link is pasted into Viber, Messenger or
+     * a Telegram group - which is how a Bulgarian marketplace actually spreads.
+     *
+     * The full image, not the thumbnail: previews are rendered large and a
+     * 400px thumb comes out soft. Null when there is no photo, because a
+     * declared og:image that 404s renders as a broken card rather than a
+     * plain one.
+     */
+    public function ogImage(): ?string
+    {
+        return $this->listing->coverImage()?->url();
+    }
+
+    /**
+     * Offer, not AggregateOffer: this is one specific item at one price.
+     *
+     * Emitted only while the listing is actually buyable. Marking a sold or
+     * removed listing as InStock would be a claim about availability that the
+     * page itself contradicts.
+     */
+    public function jsonLd(): string
+    {
+        $schema = [
+            '@context'      => 'https://schema.org',
+            '@type'         => 'Product',
+            'name'          => $this->listing->title,
+            'description'   => mb_substr(strip_tags((string) $this->listing->description), 0, 500),
+            'url'           => route('listing', $this->listing),
+            'itemCondition' => 'https://schema.org/UsedCondition',
+        ];
+
+        if ($image = $this->ogImage()) {
+            $schema['image'] = $image;
+        }
+
+        if ($part = $this->listing->part) {
+            $schema['brand'] = ['@type' => 'Brand', 'name' => $part->manufacturer];
+            $schema['model'] = $part->fullName();
+        }
+
+        if ($this->listing->status === ListingStatus::Active) {
+            $schema['offers'] = [
+                '@type'         => 'Offer',
+                'price'         => round($this->listing->price_cents / 100, 2),
+                'priceCurrency' => 'EUR',
+                'availability'  => 'https://schema.org/InStock',
+                'itemCondition' => 'https://schema.org/UsedCondition',
+                'url'           => route('listing', $this->listing),
+            ];
+        }
+
+        return json_encode($schema, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
     #[Layout('components.layouts.app')]
     public function render()
     {
-        return view('livewire.show-listing');
+        return view('livewire.show-listing')->layoutData([
+            'title'       => $this->listing->title,
+            'description' => $this->metaDescription(),
+            'canonical'   => route('listing', $this->listing),
+            'ogType'      => 'product',
+            'ogImage'     => $this->ogImage(),
+            'jsonLd'      => $this->jsonLd(),
+        ]);
     }
 }

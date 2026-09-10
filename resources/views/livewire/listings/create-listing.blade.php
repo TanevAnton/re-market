@@ -1,4 +1,15 @@
-<div class="mx-auto max-w-3xl">
+<div class="mx-auto max-w-3xl"
+     x-data
+     x-on:form-invalid.window="
+         $nextTick(() => {
+             const first = $el.querySelector('.error');
+             if (first) {
+                 first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                 const field = first.closest('div')?.querySelector('input, textarea, select');
+                 field?.focus({ preventScroll: true });
+             }
+         })
+     ">
 
     {{-- ---------------------------------------------------- progress --}}
     <ol class="mb-8 flex items-center gap-2 text-xs">
@@ -20,6 +31,23 @@
             </li>
         @endforeach
     </ol>
+
+    {{-- One place that says what went wrong, at the top where the button is
+         not. Step 3 is long enough that the failing field is usually off
+         screen, and a button that silently does nothing reads as a broken
+         site rather than a validation error. --}}
+    @if ($errors->any())
+        <div class="mb-5 rounded-lg border border-bad/40 bg-bad-soft p-4">
+            <p class="text-sm font-medium text-bad">
+                Липсва нещо, преди да продължим
+            </p>
+            <ul class="mt-2 space-y-1 text-xs leading-relaxed text-bad">
+                @foreach ($errors->all() as $message)
+                    <li>· {{ $message }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
     {{-- ==================================================== step 1 --}}
     @if ($step === 1)
@@ -112,11 +140,19 @@
     {{-- ==================================================== step 3 --}}
     @elseif ($step === 3)
         <h1 class="text-xl font-semibold tracking-tight">Състояние и снимки</h1>
+        <p class="hint">
+            Заглавие, описание и поне една снимка. Всичко останало е по желание —
+            но колкото повече попълниш, толкова по-малко въпроси ще получиш.
+        </p>
 
         <div class="mt-5 space-y-5">
             <div>
                 <label class="label" for="title">Заглавие</label>
                 <input id="title" type="text" wire:model.blur="title" maxlength="120">
+                <p class="hint">
+                    Моделът и състоянието, кратко. Поне 8 знака.
+                    <span class="font-mono tabular">{{ mb_strlen($title) }}/120</span>
+                </p>
                 @error('title') <p class="error">{{ $message }}</p> @enderror
             </div>
 
@@ -133,6 +169,11 @@
                 <label class="label" for="description">Описание</label>
                 <textarea id="description" wire:model.blur="description" rows="5"
                           placeholder="Как е ползвана, има ли забележки, какво включва комплектът."></textarea>
+                <p class="hint">
+                    Поне 20 знака. Купувачите питат едно и също — откога е,
+                    има ли кутия, защо я продаваш.
+                    <span class="font-mono tabular">{{ mb_strlen($description) }}</span>
+                </p>
                 @error('description') <p class="error">{{ $message }}</p> @enderror
             </div>
 
@@ -154,6 +195,31 @@
                     <p class="hint">Честният отговор продава по-бързо, отколкото мълчанието.</p>
                 </div>
             @endif
+
+            {{-- Everything below is optional and folded away by default.
+
+                 Left open, this is a wall of a dozen fields that a first-time
+                 seller reads as required - and the ones who bail here are the
+                 supply the marketplace does not get. The specs still matter
+                 (they are what makes a listing filterable), so the toggle says
+                 what they buy rather than just "advanced". --}}
+            <div class="rounded-lg border border-line">
+                <button type="button" wire:click="toggleOptional"
+                        class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
+                    <span>
+                        <span class="text-sm font-medium">Подробности по желание</span>
+                        <span class="mt-0.5 block text-xs text-ink-muted">
+                            Характеристики, гаранция, тест, касова бележка — обявите с
+                            попълнени характеристики излизат във филтрите.
+                        </span>
+                    </span>
+                    <span class="shrink-0 font-mono text-xs text-ink-faint">
+                        {{ $showOptional ? '−' : '+' }}
+                    </span>
+                </button>
+
+                @if ($showOptional)
+                    <div class="space-y-5 border-t border-line p-4">
 
             @foreach ($itemSpecs as $key => $spec)
                 <div>
@@ -199,6 +265,10 @@
             <label class="flex items-center gap-2 text-sm">
                 <input type="checkbox" wire:model="has_receipt"> Имам касова бележка / фактура
             </label>
+
+                    </div>
+                @endif
+            </div>
 
             {{-- ------------------------------------------------ photos --}}
             <div class="card-pad">
