@@ -10,6 +10,13 @@
 <div class="mx-auto max-w-md">
     <h1 class="text-2xl font-semibold tracking-tight">Вход</h1>
 
+    {{-- Where a finished password reset lands. Without somewhere to say it,
+         the reset ends on a login form that looks exactly like the one that
+         just rejected them. --}}
+    @if (session('status'))
+        <p class="mt-4 rounded-md bg-good-soft px-3 py-2 text-sm text-good">{{ session('status') }}</p>
+    @endif
+
     <div class="card-pad mt-6">
         <form wire:submit="authenticate" class="space-y-4">
             <div>
@@ -24,12 +31,10 @@
                     {{-- Next to the field it belongs to, not buried under the
                          form: someone who cannot get in is looking at the
                          password box, and that is where the way out should be. --}}
-                    @if (\Illuminate\Support\Facades\Route::has('password.request'))
-                        <a href="{{ route('password.request') }}" wire:navigate
-                           class="text-xs text-ink-muted underline-offset-2 hover:text-accent hover:underline">
-                            Забравена парола?
-                        </a>
-                    @endif
+                    <a href="{{ route('password.request') }}" wire:navigate
+                       class="text-xs text-ink-muted underline-offset-2 hover:text-accent hover:underline">
+                        Забравена парола?
+                    </a>
                 </div>
                 <input id="password" type="password" wire:model="password" autocomplete="current-password" class="mt-2">
                 @error('password') <p class="error">{{ $message }}</p> @enderror

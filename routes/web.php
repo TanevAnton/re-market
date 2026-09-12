@@ -1,7 +1,9 @@
 <?php
 
+use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
+use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\VerifyEmailNotice;
 use App\Livewire\Auth\VerifyPhone;
 use App\Livewire\BrowseListings;
@@ -85,6 +87,18 @@ Route::view('/signali', 'legal.notice')->name('legal.notice');
 Route::middleware('guest')->group(function () {
     Route::get('/registraciya', Register::class)->name('register');
     Route::get('/vhod', Login::class)->name('login');
+
+    /*
+     * Password reset. Until these existed, forgetting a password meant losing
+     * the account outright - the site's only proof of identity was the email
+     * address and nothing was wired to it that could recover anything.
+     *
+     * The route NAME `password.reset` is not free choice: it is what the reset
+     * link is built from, and what Laravel's own password-confirmation
+     * middleware looks for. The URL underneath it is ours.
+     */
+    Route::get('/zabravena-parola', ForgotPassword::class)->name('password.request');
+    Route::get('/nova-parola/{token}', ResetPassword::class)->name('password.reset');
 });
 
 // --- authenticated --------------------------------------------------------

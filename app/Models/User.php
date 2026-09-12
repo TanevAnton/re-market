@@ -75,6 +75,22 @@ class User extends Authenticatable implements MustVerifyEmail
         ];
     }
 
+    /**
+     * Account recovery, not a notification.
+     *
+     * Overridden so it never touches RemarketNotification's via() rules: that
+     * class skips an unverified address, returns no channels at all when the
+     * user has email switched off, and prefers Telegram when the bot knows the
+     * chat. All three are right for an offer and wrong for this - a preference
+     * about being pinged must not be able to lock somebody out of their own
+     * account, and the one message whose purpose is to prove control of a
+     * mailbox has to go to that mailbox.
+     */
+    public function sendPasswordResetNotification(#[\SensitiveParameter] $token): void
+    {
+        $this->notify(new \App\Notifications\ResetPasswordLink($token));
+    }
+
     // --- phone -----------------------------------------------------------
 
     /**
