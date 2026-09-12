@@ -62,6 +62,20 @@
                 <dd class="mt-0.5 font-mono text-lg font-semibold tabular">{{ $listings->total() }}</dd>
             </div>
         </dl>
+
+        {{-- A brand-new seller and a bad one produce the same row of dashes,
+             and a buyer looking at "0 / — / —" reads it as the second one.
+             Saying "new" is both true and the more useful of the two, and it
+             costs nothing: the numbers arrive on their own. --}}
+        {{-- Loose, not ===: these two columns are zero on a new row and null on
+             an older one, and a strict check quietly stops showing the note for
+             exactly the accounts it exists for. --}}
+        @if (! $user->deals_completed && ! $user->rating_count)
+            <p class="mt-3 rounded-md border border-line bg-surface-alt px-3 py-2 text-xs leading-relaxed text-ink-muted">
+                Нов профил — още няма завършени сделки.
+                Уговаряйте се през платформата и използвайте „преглед и тест" при куриера.
+            </p>
+        @endif
     </div>
 
     <h2 class="mt-8 text-sm font-semibold uppercase tracking-wider text-ink-muted">Обяви</h2>
@@ -87,10 +101,7 @@
             @foreach ($ratings as $rating)
                 <article class="card-pad">
                     <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                        <span class="font-mono text-sm text-accent">
-                            {{ str_repeat('★', $rating->score) }}<span
-                                class="text-ink-faint">{{ str_repeat('★', 5 - $rating->score) }}</span>
-                        </span>
+                        @include('partials.stars', ['score' => $rating->score])
 
                         {{-- Which side they were. Being reliable as a seller
                              says little about being reliable as a buyer. --}}

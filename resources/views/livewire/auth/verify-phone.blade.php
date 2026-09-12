@@ -20,7 +20,7 @@
                     <span wire:loading.remove wire:target="startTelegram">Потвърди с Telegram</span>
                     <span wire:loading wire:target="startTelegram">Момент…</span>
                 </button>
-                @error('telegram') <p class="mt-2 text-xs text-red-600">{{ $message }}</p> @enderror
+                @error('telegram') <p class="error text-xs">{{ $message }}</p> @enderror
             @else
                 <p class="text-sm font-medium">Отвори Telegram и натисни Start</p>
                 <a href="{{ $telegramUrl }}" target="_blank" rel="noopener"
@@ -46,7 +46,7 @@
                 <label for="phone" class="label">Мобилен номер</label>
                 <input id="phone" type="tel" wire:model="phone" placeholder="0888 123 456"
                        autocomplete="tel" autofocus>
-                @error('phone') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                @error('phone') <p class="error">{{ $message }}</p> @enderror
                 <p class="hint">Пробваме Telegram, после Viber, накрая SMS.</p>
             </div>
 
@@ -56,7 +56,7 @@
             </button>
         </form>
     @else
-        <div class="mt-6 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">{{ $status }}</div>
+        <div class="mt-6 rounded-lg bg-good-soft p-3 text-sm text-good">{{ $status }}</div>
 
         <form wire:submit="confirm" class="mt-4 space-y-4">
             <div>
@@ -64,7 +64,7 @@
                 <input id="code" type="text" inputmode="numeric" maxlength="6" wire:model="code"
                        autocomplete="one-time-code" autofocus
                        class="text-center text-2xl tracking-[0.4em]">
-                @error('code') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                @error('code') <p class="error">{{ $message }}</p> @enderror
             </div>
 
             <button type="submit" class="btn-primary w-full" wire:loading.attr="disabled">

@@ -57,11 +57,21 @@ class RateDeal extends Component
         session()->flash('status', 'Благодарим за оценката.');
     }
 
-    public function render()
+    public function render(RatingService $ratings)
     {
         return view('livewire.ratings.rate-deal', [
             'mine'  => $this->mine(),
             'other' => $this->deal->counterparty(auth()->user()),
+            /*
+             * Asked before the form is drawn, not after it is submitted.
+             *
+             * The rating window closes 60 days after completion, and the view
+             * was checking only "completed and not yet rated" - so past the
+             * window it still rendered five stars and a comment box, took the
+             * whole thing, and answered with a generic error. The service knew;
+             * the screen did not.
+             */
+            'canRate' => $ratings->canRate($this->deal, auth()->user()),
         ]);
     }
 }

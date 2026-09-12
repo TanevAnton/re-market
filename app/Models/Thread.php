@@ -49,12 +49,34 @@ class Thread extends Model
      */
     public function allowsContactExchange(): bool
     {
+        return $this->currentDeal() !== null;
+    }
+
+    /**
+     * The live deal between these two on this listing, if there is one.
+     *
+     * The rule for "are these two past the handshake" lives here and nowhere
+     * else: contact masking asks it as a yes/no through allowsContactExchange(),
+     * and the thread view asks it for the object so it can show what was agreed.
+     * Two copies of the status list is how the banner ends up saying one thing
+     * and the scrubber doing another.
+     *
+     * Deliberately NOT memoised on the instance. It is tempting - the thread
+     * view and the scrubber both ask - but this is the check that decides
+     * whether a phone number gets stripped out of somebody's message, and a
+     * cached "no deal yet" on a model instance that outlives the moment a deal
+     * is struck is a masking bug that only shows up in production. One query
+     * per ask, every time.
+     */
+    public function currentDeal(): ?Deal
+    {
         return Deal::query()
             ->where('listing_id', $this->listing_id)
             ->where('buyer_id', $this->buyer_id)
             ->where('seller_id', $this->seller_id)
             ->whereIn('status', [DealStatus::Open, DealStatus::Completed])
-            ->exists();
+            ->latest('id')
+            ->first();
     }
 
     public function counterparty(User $viewer): User
@@ -70,6 +92,48 @@ class Thread extends Model
      */
     public static function unreadTotalFor(int $userId): int
     {
+        return self::unreadQuery($userId)->count();
+    }
+
+    /**
+     * Unread counts for a page of threads, keyed by thread id, in one query.
+     *
+     * The inbox was calling unreadCountFor() inside the row loop - one query
+     * per conversation, up to a hundred of them, on a page that is already
+     * loading a listing and its images for every row. The comment above is
+     * about exactly this mistake; the inbox made it anyway, because there was
+     * no batched version to reach for.
+     *
+     * @param  list<int>  $threadIds
+     * @return array<int, int>
+     */
+    public static function unreadCountsFor(int $userId, array $threadIds): array
+    {
+        if ($threadIds === []) {
+            return [];
+        }
+
+        // get(), not pluck(): pluck replaces the select list with the two column
+        // names it was given, which would throw away the count(*) this depends
+        // on and leave the aggregate ungrouped.
+        $rows = self::unreadQuery($userId)
+            ->whereIn('threads.id', $threadIds)
+            ->groupBy('threads.id')
+            ->selectRaw('threads.id as thread_id, count(*) as unread')
+            ->get();
+
+        return collect($rows)
+            ->mapWithKeys(fn ($row) => [(int) $row->thread_id => (int) $row->unread])
+            ->all();
+    }
+
+    /**
+     * Messages this user has not read yet. One definition of "unread", shared
+     * by the header badge and the inbox - two places that must never be able
+     * to disagree about whether there is something waiting.
+     */
+    private static function unreadQuery(int $userId): \Illuminate\Database\Query\Builder
+    {
         return DB::table('messages')
             ->join('threads', 'threads.id', '=', 'messages.thread_id')
             ->where('messages.sender_id', '!=', $userId)
@@ -83,8 +147,7 @@ class Thread extends Model
                         ->where(fn ($x) => $x->whereNull('threads.seller_read_at')
                             ->orWhereColumn('messages.created_at', '>', 'threads.seller_read_at'));
                 });
-            })
-            ->count();
+            });
     }
 
     public function unreadCountFor(User $user): int

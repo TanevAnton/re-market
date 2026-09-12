@@ -277,4 +277,49 @@ class RatingsTest extends TestCase
         Livewire::test(ShowProfile::class, ['username' => $this->seller->username])
             ->assertDontSee('Несправедлив коментар.');
     }
+
+    /**
+     * The service has always known the window closes after 60 days. The screen
+     * did not: it drew five stars and a comment box for anyone on a completed
+     * deal, took the whole submission, and answered with a generic error.
+     */
+    public function test_the_rating_form_is_not_offered_after_the_window(): void
+    {
+        $deal = $this->completedDeal();
+
+        $this->actingAs($this->buyer);
+
+        Livewire::test(RateDeal::class, ['deal' => $deal])
+            ->assertSee('Как мина с');
+
+        $this->travel(61)->days();
+
+        Livewire::test(RateDeal::class, ['deal' => $deal->fresh()])
+            ->assertDontSee('Как мина с')
+            // Said, rather than the form silently vanishing - which reads as
+            // the page being broken.
+            ->assertSee('Срокът за оценка');
+    }
+
+    /**
+     * A brand-new seller and a bad one produced the same row of dashes, and a
+     * buyer reads that row as the second one.
+     */
+    public function test_a_profile_with_no_history_says_it_is_new(): void
+    {
+        $fresh = User::factory()->create();
+        $fresh->forceFill(['deals_completed' => 0, 'rating_count' => 0, 'rating_avg' => null])->save();
+
+        Livewire::test(ShowProfile::class, ['username' => $fresh->username])
+            ->assertSee('Нов профил');
+    }
+
+    public function test_a_profile_with_history_is_not_called_new(): void
+    {
+        $deal = $this->completedDeal();
+        $this->ratings->rate($deal, $this->buyer, 5);
+
+        Livewire::test(ShowProfile::class, ['username' => $this->seller->username])
+            ->assertDontSee('Нов профил');
+    }
 }

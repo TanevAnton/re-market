@@ -43,6 +43,21 @@ class Deal extends Model
     public function uniqueIds(): array        { return ['uuid']; }
     public function getRouteKeyName(): string { return 'uuid'; }
 
+    public function formattedAgreedPrice(): string
+    {
+        return number_format($this->agreed_price_cents / 100, 2, ',', ' ').' €';
+    }
+
+    /** Whether this side has already done their part of the confirmation. */
+    public function confirmedBy(?int $userId): bool
+    {
+        return match ($userId) {
+            $this->buyer_id  => $this->buyer_confirmed_at !== null,
+            $this->seller_id => $this->seller_confirmed_at !== null,
+            default          => false,
+        };
+    }
+
     /** A deal completes only when BOTH sides say it did. */
     public function isMutuallyConfirmed(): bool
     {

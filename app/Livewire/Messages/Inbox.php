@@ -26,8 +26,13 @@ class Inbox extends Component
     #[Layout('components.layouts.app')]
     public function render()
     {
+        $threads = $this->threads();
+
         return view('livewire.messages.inbox', [
-            'threads' => $this->threads(),
+            'threads' => $threads,
+            // Batched here rather than asked per row: the view was calling
+            // unreadCountFor() inside the loop, which is a query per thread.
+            'unread'  => Thread::unreadCountsFor(auth()->id(), $threads->modelKeys()),
         ]);
     }
 }

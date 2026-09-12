@@ -286,4 +286,36 @@ class AuthTest extends TestCase
     {
         $this->get('/')->assertOk();
     }
+
+    // --- what the signup page promises ------------------------------------
+
+    /**
+     * The first sentence on the signup page said "we will ask you for a phone
+     * number". Register logs you in and redirects to the email notice, and
+     * email is what gates posting, offers and messages - so the promise was
+     * never kept. If the gate moves back to phone, this test fails and the
+     * copy gets fixed with it, which is the point.
+     */
+    public function test_the_signup_page_describes_the_step_it_actually_has(): void
+    {
+        Livewire::test(Register::class)
+            ->assertSee('имейл', escape: false)
+            ->assertDontSee('Ще ти поискаме телефон');
+    }
+
+    /**
+     * Both auth screens were still on raw palette utilities that do not move
+     * with the theme, on a site whose default theme is dark. This asserts the
+     * converted markup rather than the absence of the old classes, so it keeps
+     * meaning something after the next edit.
+     */
+    public function test_the_auth_screens_use_the_design_system(): void
+    {
+        foreach ([Login::class, Register::class] as $screen) {
+            $html = Livewire::test($screen)->html();
+
+            $this->assertStringContainsString('btn-primary', $html);
+            $this->assertStringNotContainsString('bg-neutral-9', $html);
+        }
+    }
 }
