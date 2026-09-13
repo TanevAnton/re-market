@@ -8,6 +8,7 @@ use App\Enums\MiningUse;
 use App\Enums\ModerationTrigger;
 use App\Models\City;
 use App\Models\Listing;
+use App\Models\ListingDraft;
 use App\Models\ListingImage;
 use App\Models\Part;
 use App\Services\Images\ImageProcessor;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use App\Livewire\Concerns\ChecksTurnstile;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -28,7 +30,28 @@ class CreateListing extends Component
 
     use WithFileUploads;
 
+    /*
+     * #[Locked] on the three properties the client has no business setting.
+     *
+     * Livewire lets the browser update any public property. None of these are
+     * bound with wire:model anywhere in the view - they are only ever written
+     * by next()/back(), by the photo methods, and by restoring a draft - so
+     * locking them costs nothing and closes three doors:
+     *
+     *   step           - jumping straight to 4 skips every earlier validation.
+     *                    publish() re-validates all four steps, so this was not
+     *                    exploitable, but it was one refactor away from being.
+     *   stored         - a crafted update could point a listing at an arbitrary
+     *                    path on the images disk, including somebody else's.
+     *   timestampIndex - decides which photo carries the handwritten-note
+     *                    badge, which is a trust signal buyers read.
+     *
+     * markTimestamp() and the rest still work: Locked blocks direct property
+     * updates from the client, not server-side methods it calls.
+     */
+    #[Locked]
     public int $step = 1;
+
     public const LAST_STEP = 4;
 
     // --- 1. category ------------------------------------------------------
@@ -55,7 +78,10 @@ class CreateListing extends Component
     /** @var array<int, \Livewire\Features\SupportFileUploads\TemporaryUploadedFile> */
     public array $photos = [];
     /** Already processed and on disk: ['path','thumb','phash','width','height','bytes'] */
+    #[Locked]
     public array $stored = [];
+
+    #[Locked]
     public ?int $timestampIndex = null;
 
     // --- 4. price and delivery -------------------------------------------
@@ -66,9 +92,185 @@ class CreateListing extends Component
     public bool $accepts_inspect_test = true;
     public ?int $city_id = null;
 
-    public function mount(): void
+    /**
+     * A draft is waiting, and we are asking rather than restoring.
+     *
+     * Restoring silently is the tempting version and the wrong one: somebody
+     * who came here to post a second, unrelated card would find last week's
+     * half-written ad in the boxes and have to work out what happened.
+     */
+    #[Locked]
+    public bool $draftAvailable = false;
+
+    #[Locked]
+    public ?string $draftAge = null;
+
+    #[Locked]
+    public ?int $draftPhotos = null;
+
+    /** Set when the wizard was opened as a copy of an existing listing. */
+    #[Locked]
+    public bool $copiedFrom = false;
+
+    public function mount(?Listing $from = null): void
     {
         $this->city_id = auth()->user()?->city_id;
+
+        if ($from !== null) {
+            $this->copyFrom($from);
+
+            return;
+        }
+
+        if ($draft = $this->draft()) {
+            if ($draft->isSubstantial()) {
+                $this->draftAvailable = true;
+                $this->draftAge       = $draft->updated_at->diffForHumans();
+                $this->draftPhotos    = $draft->photoCount();
+            } else {
+                // Nothing worth offering back. Clear it now rather than
+                // prompting about an empty form.
+                $draft->discard();
+            }
+        }
+    }
+
+    // --- duplicating an existing listing ----------------------------------
+
+    /**
+     * Open the wizard already filled in from one of your own listings.
+     *
+     * A dealer with three identical RAM kits, or anyone relisting the same
+     * model they sell every month, was filling four steps from scratch each
+     * time. Supply is the bottleneck; this is the cheapest supply there is.
+     *
+     * Photos are deliberately NOT copied, and not only for tidiness:
+     * ListingScreener matches perceptual hashes across every listing on the
+     * site and queues anything within the threshold. It records whether the
+     * match was the same seller, but it still queues it - so copying the
+     * photos would send every duplicated listing to moderation and teach the
+     * moderator to approve without looking, which is worse than not screening.
+     * Each copy gets its own photographs, which is also what a buyer needs:
+     * three kits are three items, and the one in the picture is the one being
+     * described.
+     */
+    private function copyFrom(Listing $source): void
+    {
+        // 404 rather than 403: whether somebody else's listing exists is not
+        // this screen's business to confirm. Matches the thread guard.
+        abort_unless($source->user_id === auth()->id(), 404);
+
+        // A listing a moderator took down is not a template. Copying it is the
+        // one-click way to repost exactly what was removed.
+        abort_if($source->status === ListingStatus::Removed, 404);
+
+        $this->category             = $source->category;
+        $this->partId               = $source->part_id;
+        $this->partNotListed        = $source->part_id === null;
+        $this->title                = $source->title;
+        $this->description          = $source->description;
+        $this->condition            = $source->condition->value;
+        $this->quantity             = $source->quantity;
+        $this->specs                = $source->specs ?? [];
+        $this->mining_use           = $source->mining_use->value;
+        $this->mining_months        = $source->mining_months;
+        $this->has_receipt          = $source->has_receipt;
+        $this->validation_url       = (string) $source->validation_url;
+        $this->price                = rtrim(rtrim(number_format($source->priceEur(), 2, '.', ''), '0'), '.');
+        $this->offers_enabled       = $source->offers_enabled;
+        $this->min_offer            = $source->min_offer_cents
+            ? rtrim(rtrim(number_format($source->minOfferEur(), 2, '.', ''), '0'), '.')
+            : '';
+        $this->delivery_options     = $source->delivery_options ?: ['econt'];
+        $this->accepts_inspect_test = $source->accepts_inspect_test;
+        $this->city_id              = $source->city_id ?? auth()->user()?->city_id;
+
+        /*
+         * Warranty is NOT copied. It is a date on one physical item, and a
+         * seller clicking through a prefilled form will not notice a stale one
+         * carried over - which would be a warranty claim they cannot honour
+         * and, under ЗЗП, a statement they are answerable for.
+         */
+        $this->warranty_until = null;
+
+        // Straight to step 3: category and model are already answered, and
+        // photos - the one thing that must be redone - live there.
+        $this->step       = 3;
+        $this->copiedFrom = true;
+    }
+
+    // --- drafts -----------------------------------------------------------
+
+    private function draft(): ?ListingDraft
+    {
+        return ListingDraft::where('user_id', auth()->id())->first();
+    }
+
+    /**
+     * Write the wizard state away.
+     *
+     * Called on every step change and whenever a step-3 field loses focus,
+     * which is where the abandonment happens. Cheap enough to do often: one
+     * upsert of a jsonb column, no photo work - the images are already on disk
+     * by the time they reach $stored.
+     */
+    public function saveDraft(): void
+    {
+        if (! auth()->check() || $this->step < 2) {
+            // Nothing before a category is chosen is worth keeping, and a
+            // draft row created by merely opening the page would prompt on the
+            // next visit about a form nobody filled in.
+            return;
+        }
+
+        $payload = [];
+
+        foreach (ListingDraft::PERSISTED as $key) {
+            $payload[$key] = $this->{$key};
+        }
+
+        ListingDraft::updateOrCreate(
+            ['user_id' => auth()->id()],
+            [
+                'payload'  => $payload,
+                'step'     => $this->step,
+                'title'    => $this->title ?: null,
+                'category' => $this->category ?: null,
+            ],
+        );
+    }
+
+    public function resumeDraft(): void
+    {
+        $draft = $this->draft();
+
+        if (! $draft) {
+            $this->draftAvailable = false;
+
+            return;
+        }
+
+        /*
+         * Restored key by key from the allow-list, not by filling the component
+         * with whatever the JSON happens to hold. The payload is the server's
+         * own writing, but it is stored data coming back into typed properties,
+         * and an allow-list costs one foreach.
+         */
+        foreach (ListingDraft::PERSISTED as $key) {
+            if (array_key_exists($key, $draft->payload)) {
+                $this->{$key} = $draft->payload[$key];
+            }
+        }
+
+        $this->step           = max(1, min((int) $draft->step, self::LAST_STEP));
+        $this->draftAvailable = false;
+    }
+
+    public function discardDraft(): void
+    {
+        $this->draft()?->discard();
+
+        $this->draftAvailable = false;
     }
 
     // ---------------------------------------------------------------------
@@ -338,11 +540,15 @@ class CreateListing extends Component
         }
 
         $this->step = min($this->step + 1, self::LAST_STEP);
+
+        $this->saveDraft();
     }
 
     public function back(): void
     {
         $this->step = max($this->step - 1, 1);
+
+        $this->saveDraft();
     }
 
     public function requiresTimestampPhoto(): bool
@@ -447,6 +653,16 @@ class CreateListing extends Component
          */
         $flagged  = app(ListingScreener::class)->screen($listing);
         $reviewed = $reviewed || $flagged !== [];
+
+        /*
+         * delete(), NOT discard().
+         *
+         * discard() removes the draft's images from disk, which is right when
+         * somebody abandons a wizard and wrong here: those exact files are now
+         * the published listing's photographs. Calling the wrong one empties
+         * every image off an ad that was created one line earlier.
+         */
+        $this->draft()?->delete();
 
         session()->flash('status', $reviewed
             ? 'Обявата е изпратена за преглед. Първите обяви от нов профил се проверяват ръчно.'

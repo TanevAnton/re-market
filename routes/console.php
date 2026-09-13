@@ -61,3 +61,15 @@ Schedule::command('remarket:refresh-part-stats')
 Schedule::command('remarket:notify-saved-searches')
     ->hourly()
     ->withoutOverlapping();
+
+/*
+ * Abandoned wizards, and the photos behind them.
+ *
+ * The wizard puts every uploaded photo on disk before any listing row exists,
+ * so an abandoned draft is also a pile of orphaned files. Weekly is often
+ * enough: the TTL is measured in weeks, and the cost of a draft living seven
+ * days longer than its deadline is a few megabytes.
+ */
+Schedule::command('remarket:prune-drafts')
+    ->weeklyOn(1, '04:40')
+    ->withoutOverlapping();

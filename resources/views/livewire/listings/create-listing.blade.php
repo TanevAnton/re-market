@@ -1,5 +1,15 @@
+{{-- Autosave, delegated from the root rather than bolted onto forty fields.
+
+     `focusout` is used instead of `blur` because blur does not bubble, so one
+     listener here would never see it. Debounced, since tabbing through a form
+     is a burst of these and each one is a round trip.
+
+     wire:model is deferred by default in Livewire 3, so the values reach the
+     server on this very call - the save is of what is on screen, not of what
+     was there one field ago. --}}
 <div class="mx-auto max-w-3xl"
      x-data
+     x-on:focusout.debounce.1500ms="$wire.saveDraft()"
      x-on:form-invalid.window="
          $nextTick(() => {
              const first = $el.querySelector('.error');
@@ -10,6 +20,42 @@
              }
          })
      ">
+
+    {{-- ------------------------------------------------ resume a draft
+
+         Offered, never restored silently. Somebody who came here to post a
+         second, unrelated card would otherwise find last week's half-written
+         ad already in the boxes and have to work out what had happened to
+         their form. --}}
+    @if ($draftAvailable)
+        <div class="mb-6 card border-l-2 border-l-accent p-4">
+            <p class="text-sm font-medium">Имаш незапазена обява</p>
+            <p class="mt-1 text-xs leading-relaxed text-ink-muted">
+                Започнал си я {{ $draftAge }}@if ($draftPhotos) и си качил
+                    {{ $draftPhotos }} {{ $draftPhotos === 1 ? 'снимка' : 'снимки' }}@endif.
+                Можеш да продължиш оттам или да започнеш начисто.
+            </p>
+            <div class="mt-3 flex flex-wrap gap-2">
+                <button type="button" wire:click="resumeDraft" class="btn-primary btn-sm">
+                    Продължи
+                </button>
+                <button type="button" wire:click="discardDraft"
+                        wire:confirm="Черновата и качените снимки ще бъдат изтрити. Сигурен ли си?"
+                        class="btn-ghost btn-sm">
+                    Започни нова
+                </button>
+            </div>
+        </div>
+    @endif
+
+    {{-- Said once, at the top, so nobody publishes a copy thinking it is the
+         original — and so the missing photos read as deliberate. --}}
+    @if ($copiedFrom)
+        <div class="mb-6 rounded-md border border-line bg-surface-alt px-3 py-2 text-xs leading-relaxed text-ink-muted">
+            Копие на съществуваща обява. Всичко е пренесено без снимките и
+            гаранцията — добави снимки на конкретната бройка, която продаваш.
+        </div>
+    @endif
 
     {{-- ---------------------------------------------------- progress --}}
     <ol class="mb-8 flex items-center gap-2 text-xs">

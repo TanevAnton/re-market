@@ -281,8 +281,10 @@ class PasswordResetTest extends TestCase
                 ->set('email', 'zhertva@example.com');
 
             $this->fail('the locked address accepted an update from the client');
-        } catch (CannotUpdateLockedPropertyException) {
-            // What #[Locked] is there for.
+        } catch (\Throwable $e) {
+            // Asserted rather than type-hinted: a catch on a class that does
+            // not exist never matches and says nothing about it.
+            $this->assertInstanceOf(CannotUpdateLockedPropertyException::class, $e);
         }
 
         $this->assertSame($victim->password, $victim->fresh()->password);

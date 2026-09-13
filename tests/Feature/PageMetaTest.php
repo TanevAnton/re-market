@@ -227,7 +227,13 @@ class PageMetaTest extends TestCase
 
         Livewire::actingAs($verified)
             ->test(CreateListing::class)
-            ->set('step', 3)
+            // Walked to step 3 rather than set there: `step` is #[Locked] now,
+            // because a client that can choose its own step can skip the
+            // validation of every step before it.
+            ->set('category', 'gpu')
+            ->call('next')
+            ->call('next')
+            ->assertSet('step', 3)
             ->set('title', 'кратко')
             ->call('next')
             ->assertHasErrors('title')
@@ -242,7 +248,9 @@ class PageMetaTest extends TestCase
 
         Livewire::actingAs($verified)
             ->test(CreateListing::class)
-            ->set('step', 3)
+            ->set('category', 'gpu')
+            ->call('next')
+            ->call('next')
             // Copied from the blade, not retyped: "не" and "Не" are the same
             // word and a different assertion, and that has cost time here twice.
             ->assertSee('Поне 8 знака')

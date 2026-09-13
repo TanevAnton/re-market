@@ -150,6 +150,24 @@
                             </button>
                         @endif
 
+                        {{-- Not the same as "публикувай отново".
+
+                             Relist brings THIS ad back; this starts a second
+                             one from it, for the next identical kit. A dealer
+                             with three of the same RAM was filling four steps
+                             three times.
+
+                             Offered on every status except Removed - a listing
+                             a moderator took down is not a template, and the
+                             component refuses it anyway. --}}
+                        @if ($listing->status !== \App\Enums\ListingStatus::Removed)
+                            <a href="{{ route('listing.duplicate', $listing) }}" wire:navigate
+                               class="btn-ghost btn-sm"
+                               title="Отваря нова обява с попълнени данни от тази">
+                                Дублирай
+                            </a>
+                        @endif
+
                         <button type="button" wire:click="confirmDelete({{ $listing->id }})"
                                 class="btn-ghost btn-sm text-bad hover:text-bad">
                             Изтрий

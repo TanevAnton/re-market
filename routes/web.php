@@ -159,6 +159,21 @@ Route::middleware('auth')->group(function () {
         ->name('listing.create');
 
     /*
+     * The same wizard, opened as a copy of one of your own listings.
+     *
+     * The parameter is named {from} because that is the argument name on
+     * CreateListing::mount() - route-model binding matches by name, and a
+     * mismatch here fails as "no listing prefilled" rather than as an error,
+     * which is the quiet kind.
+     *
+     * Ownership is checked in mount(), not here: the component has to make the
+     * same decision when it is reached any other way.
+     */
+    Route::get('/publikuvai/kopie/{from}', CreateListing::class)
+        ->middleware('verified')
+        ->name('listing.duplicate');
+
+    /*
      * The seller's own listings, and editing one.
      *
      * Both are owner-only - EditListing 404s on someone else's listing, and

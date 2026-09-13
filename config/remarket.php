@@ -114,6 +114,17 @@ return [
         'bump_cooldown_hours' => 24,
         'max_images'          => 12,
         'min_images'          => 1,
+
+        /*
+         * How long an unfinished wizard is kept before `remarket:prune-drafts`
+         * deletes it and the photos it was holding.
+         *
+         * Generous on purpose. The draft exists because somebody walked away
+         * mid-listing, and the whole point is that they can come back to it —
+         * a week is the sort of interval that turns a rescue into a second
+         * loss. The cost of being wrong in this direction is disk.
+         */
+        'draft_ttl_days'      => (int) env('LISTING_DRAFT_TTL_DAYS', 30),
         // Private sellers must photograph the item beside a handwritten note
         // showing their username and the date. This single rule kills
         // stock-photo scams outright.
