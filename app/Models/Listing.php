@@ -40,6 +40,7 @@ class Listing extends Model
             'warranty_until'       => 'date',
             'published_at'         => 'datetime',
             'bumped_at'            => 'datetime',
+            'price_drop_notified_at' => 'datetime',
             'expires_at'           => 'datetime',
             'reserved_until'       => 'datetime',
             'sold_at'              => 'datetime',

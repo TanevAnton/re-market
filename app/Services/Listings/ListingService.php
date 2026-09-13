@@ -6,9 +6,11 @@ use App\Enums\DealStatus;
 use App\Enums\ListingStatus;
 use App\Enums\OfferStatus;
 use App\Models\Deal;
+use App\Models\Favorite;
 use App\Models\Listing;
 use App\Models\Offer;
 use App\Models\User;
+use App\Notifications\PriceDropped;
 use App\Services\Moderation\ListingScreener;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -68,9 +70,44 @@ class ListingService
 
         unset($data['part_id'], $data['category'], $data['user_id'], $data['status']);
 
-        return DB::transaction(function () use ($listing, $data) {
+        /*
+         * The offer floor cannot end up above the asking price.
+         *
+         * There is a CHECK constraint on the table saying so, and EditListing
+         * validates `lte:price` so the seller gets a form error rather than a
+         * 500. Neither helps a PARTIAL update: `update(['price_cents' => …])`
+         * alone, with a floor already set higher, sails past the form and hits
+         * the database, which answers with a QueryException in the middle of
+         * somebody editing their listing.
+         *
+         * No caller does that today - EditListing always sends both fields -
+         * but the bulk importer on the backlog is exactly the sort of caller
+         * that would. The guards are supposed to live here.
+         *
+         * Refused rather than fixed up: clearing the floor would silently
+         * remove the seller's anti-lowball protection, and scaling it would be
+         * inventing a number they did not choose. The edit form has both
+         * fields; the message says which one to change.
+         */
+        $newPrice = array_key_exists('price_cents', $data)
+            ? (int) $data['price_cents']
+            : (int) $listing->price_cents;
+
+        $newFloor = array_key_exists('min_offer_cents', $data)
+            ? $data['min_offer_cents']
+            : $listing->min_offer_cents;
+
+        if ($newFloor !== null && (int) $newFloor > $newPrice) {
+            throw new RuntimeException(
+                'Минималната оферта е над новата цена. Намали и нея, преди да запазиш.'
+            );
+        }
+
+        $wasCents = (int) $listing->price_cents;
+
+        $listing = DB::transaction(function () use ($listing, $data, $wasCents) {
             $priceChanged = array_key_exists('price_cents', $data)
-                && (int) $data['price_cents'] !== (int) $listing->price_cents;
+                && (int) $data['price_cents'] !== $wasCents;
 
             $listing->fill($data)->save();
 
@@ -89,6 +126,79 @@ class ListingService
 
             return $listing;
         });
+
+        // Outside the transaction, like every other dispatch here: a queued job
+        // can otherwise outrun its own commit and read a row that is not there.
+        $this->announcePriceDrop($listing, $wasCents);
+
+        return $listing;
+    }
+
+    /**
+     * Tell the people who shortlisted this that it got cheaper.
+     *
+     * They are the warmest buyers on the site - they looked at this exact item,
+     * decided they wanted it, and did not buy at the old number - and until now
+     * a price cut reached everybody except them.
+     *
+     * Four conditions, each of which exists because of a specific way this goes
+     * wrong:
+     */
+    private function announcePriceDrop(Listing $listing, int $wasCents): void
+    {
+        // 1. Down, not up. "The thing you wanted costs more now" is a message
+        //    whose only effect is to make somebody regret giving us an address.
+        $drop = $wasCents - (int) $listing->price_cents;
+
+        if ($drop <= 0 || $wasCents <= 0) {
+            return;
+        }
+
+        // 2. Big enough to be news. A 2 € cut on a 900 € card is not a reason
+        //    to interrupt anyone, and a channel that interrupts for nothing
+        //    gets muted before it ever carries something worth reading.
+        $minPercent = (int) config('remarket.listings.price_drop_min_percent', 3);
+
+        if ($drop / $wasCents * 100 < $minPercent) {
+            return;
+        }
+
+        // 3. Not a stream. A seller feeling out the market moves the price
+        //    several times in an afternoon - individually over the threshold,
+        //    collectively the reason somebody turns notifications off.
+        $cooldown = (int) config('remarket.listings.price_drop_cooldown_hours', 24);
+
+        if ($listing->price_drop_notified_at?->addHours($cooldown)->isFuture()) {
+            return;
+        }
+
+        // 4. Only for something a buyer can actually act on. A price change on
+        //    a listing awaiting review, or already reserved, is not an offer to
+        //    anybody.
+        if ($listing->status !== ListingStatus::Active) {
+            return;
+        }
+
+        $favouriters = User::query()
+            ->whereIn('id', Favorite::where('listing_id', $listing->id)->select('user_id'))
+            // A seller cannot favourite their own listing through the UI, but
+            // the ids travel through the browser and this costs one clause.
+            ->whereKeyNot($listing->user_id)
+            ->get();
+
+        if ($favouriters->isEmpty()) {
+            // The watermark is NOT moved here. Nobody was told anything, so the
+            // next drop - which might be the one someone is waiting for - would
+            // otherwise be swallowed by a cooldown that protected no one.
+            return;
+        }
+
+        foreach ($favouriters as $user) {
+            $user->notify(new PriceDropped($listing, $wasCents));
+        }
+
+        // forceFill: this is not a column a seller submits.
+        $listing->forceFill(['price_drop_notified_at' => now()])->save();
     }
 
     /**

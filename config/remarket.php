@@ -125,6 +125,21 @@ return [
          * loss. The cost of being wrong in this direction is disk.
          */
         'draft_ttl_days'      => (int) env('LISTING_DRAFT_TTL_DAYS', 30),
+
+        /*
+         * Price-drop alerts to the people who shortlisted a listing.
+         *
+         * Two guards, because this is the only notification a buyer receives
+         * about somebody else's decision, which makes it the easiest one to
+         * experience as spam.
+         *
+         * The percentage is "is this news" - a 2 € cut on a 900 € card is not.
+         * The cooldown is "is this a stream" - a seller feeling out the market
+         * moves the price four times in an afternoon, each step over the
+         * threshold, and the fourth message is what gets the channel muted.
+         */
+        'price_drop_min_percent'     => (int) env('PRICE_DROP_MIN_PERCENT', 3),
+        'price_drop_cooldown_hours'  => (int) env('PRICE_DROP_COOLDOWN_HOURS', 24),
         // Private sellers must photograph the item beside a handwritten note
         // showing their username and the date. This single rule kills
         // stock-photo scams outright.

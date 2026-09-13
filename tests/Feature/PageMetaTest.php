@@ -136,13 +136,66 @@ class PageMetaTest extends TestCase
     }
 
     /**
-     * And the sold case, from the only side that can still see it. The seller
-     * keeps access to their own listing after it ends; the public gets a 404,
-     * which is why the reserved test above is the one about crawlers.
+     * The sold case, which changed on 13 Sep and is the reason this test is
+     * worth reading rather than skimming.
+     *
+     * It used to 404 for the public, and the SEO argument for that was sound:
+     * a site full of "sold" pages competes with its own live listings. What it
+     * also did was throw away every link anybody had ever pasted into a Viber
+     * group, at the exact moment the person following it was shopping for that
+     * model.
+     *
+     * So the page stays, and the SEO argument is answered directly instead:
+     * `noindex` keeps it out of the index, and the canonical hands whatever
+     * authority the shared link earned to the catalogue page, which will still
+     * be there next year. `follow`, not `nofollow` - the whole point is the
+     * links to what IS for sale.
      */
-    public function test_a_sold_listing_is_gone_for_the_public(): void
+    public function test_a_sold_listing_is_a_tombstone_rather_than_a_404(): void
+    {
+        // The part is pinned, not left to the factory: the canonical asserted
+        // below is the part page, and a listing that happened to have no part
+        // would make this pass for the wrong reason.
+        $part = \App\Models\Part::firstOrFail();
+
+        $this->listing->forceFill([
+            'status'  => ListingStatus::Sold,
+            'part_id' => $part->id,
+        ])->save();
+
+        $html = $this->get(route('listing', $this->listing))->assertOk()->getContent();
+
+        $this->assertStringContainsString('Продадено', $html);
+        $this->assertStringContainsString('name="robots" content="noindex, follow"', $html);
+        $this->assertStringContainsString(
+            'rel="canonical" href="'.route('part', $part).'"',
+            $html,
+        );
+    }
+
+    /** Nothing sold is in stock, so it declares no offer. */
+    public function test_a_sold_listing_declares_no_offer(): void
     {
         $this->listing->forceFill(['status' => ListingStatus::Sold])->save();
+
+        $schema = json_decode(
+            Livewire::test(ShowListing::class, ['listing' => $this->listing->fresh()])
+                ->instance()
+                ->jsonLd(),
+            true,
+        );
+
+        $this->assertArrayNotHasKey('offers', $schema);
+    }
+
+    /**
+     * The case that did NOT change, and must not. A moderator took that
+     * listing down; serving it again - banner or no banner - republishes the
+     * content the decision was about.
+     */
+    public function test_a_removed_listing_is_still_gone_for_the_public(): void
+    {
+        $this->listing->forceFill(['status' => ListingStatus::Removed])->save();
 
         Livewire::test(ShowListing::class, ['listing' => $this->listing->fresh()])
             ->assertNotFound();

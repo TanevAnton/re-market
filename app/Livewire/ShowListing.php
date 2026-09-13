@@ -21,6 +21,19 @@ class ShowListing extends Component
     public string $reason = '';
     public string $facts  = '';
 
+    /**
+     * Statuses that still render publicly, as a tombstone rather than a 404.
+     *
+     * Sold and expired only. Removed stays a 404 for everyone but its owner and
+     * a moderator: that listing was taken down by a decision, and serving it
+     * again - even with a banner over it - publishes the content the decision
+     * was about.
+     */
+    private const TOMBSTONED = [
+        ListingStatus::Sold,
+        ListingStatus::Expired,
+    ];
+
     public function mount(Listing $listing): void
     {
         // A listing awaiting review is not public - but its owner must still be
@@ -29,6 +42,13 @@ class ShowListing extends Component
         $viewer = auth()->user();
 
         $canView = $listing->status->isPubliclyVisible()
+            // Sold and expired listings stay reachable as a tombstone. On a
+            // marketplace that grows by word of mouth, every link pasted into a
+            // Viber group became a dead end the moment the card sold - and the
+            // person following it is somebody actively shopping for exactly
+            // this model. Removed is NOT here: a moderator took that down, and
+            // re-serving it would walk around the decision.
+            || in_array($listing->status, self::TOMBSTONED, true)
             || $viewer?->id === $listing->user_id
             || $viewer?->is_admin;
 
@@ -42,10 +62,61 @@ class ShowListing extends Component
         }
     }
 
-    /** True when the viewer is seeing something the public cannot. */
+    /**
+     * True when the viewer is seeing something the public cannot.
+     *
+     * A tombstone is excluded: sold and expired listings ARE public now, and
+     * showing the owner-only "не е публична" banner over a page every passer-by
+     * can read would be both wrong and confusing.
+     */
     public function isPrivateView(): bool
     {
-        return ! $this->listing->status->isPubliclyVisible();
+        return ! $this->listing->status->isPubliclyVisible()
+            && ! $this->isTombstone();
+    }
+
+    /** Public, but nothing here is for sale any more. */
+    public function isTombstone(): bool
+    {
+        return in_array($this->listing->status, self::TOMBSTONED, true);
+    }
+
+    /**
+     * What to show somebody who followed a link to something already gone.
+     *
+     * Same catalogue part first, because that is the same card; the rest of the
+     * category after, because somebody shopping for a 4070 will look at a 4070
+     * Super. Without this the page is a dead end with a sentence on it, which
+     * is barely better than the 404 it replaced.
+     */
+    public function similar(): \Illuminate\Support\Collection
+    {
+        $query = Listing::query()
+            ->active()
+            ->whereKeyNot($this->listing->getKey())
+            ->with(['images', 'city', 'part']);
+
+        $samePart = $this->listing->part_id
+            ? (clone $query)->where('part_id', $this->listing->part_id)->latest('bumped_at')->limit(6)->get()
+            : collect();
+
+        if ($samePart->count() >= 3) {
+            return $samePart;
+        }
+
+        // Topped up from the category rather than replaced, so the exact model
+        // still leads when there is one of it.
+        return $samePart->concat(
+            (clone $query)
+                ->where('category', $this->listing->category)
+                // whereNotIn rather than whereKeyNot: the array-handling of
+                // whereKeyNot was not verifiable from here, and an empty array
+                // is an explicit no-op for whereNotIn.
+                ->whereNotIn('id', $samePart->modelKeys())
+                ->latest('bumped_at')
+                ->limit(6 - $samePart->count())
+                ->get()
+        );
     }
 
     /**
@@ -315,10 +386,35 @@ class ShowListing extends Component
     #[Layout('components.layouts.app')]
     public function render()
     {
-        return view('livewire.show-listing')->layoutData([
-            'title'       => $this->listing->title,
+        return view('livewire.show-listing', [
+            // Resolved here rather than in the view: see the note in the blade
+            // about what a second @php block in that file would do.
+            'similar' => $this->isTombstone() ? $this->similar() : collect(),
+        ])->layoutData([
+            'title'       => $this->isTombstone()
+                ? $this->listing->title.' — '.$this->listing->status->label()
+                : $this->listing->title,
             'description' => $this->metaDescription(),
-            'canonical'   => route('listing', $this->listing),
+
+            /*
+             * A tombstone is noindex with its canonical pointing at the
+             * catalogue page for the same model.
+             *
+             * The SEO reason the page used to 404 is sound - a site full of
+             * "sold" pages competing with its own live listings ranks worse
+             * than one without them - and none of it required throwing away
+             * the human following a link somebody pasted in a Viber group.
+             * noindex keeps it out of the index; the canonical sends whatever
+             * authority the link earned to the page that will still be here
+             * next year.
+             *
+             * `follow`, not `nofollow`: the whole point is the links to what
+             * IS for sale.
+             */
+            'noindex'     => $this->isTombstone(),
+            'canonical'   => $this->isTombstone() && $this->listing->part
+                ? route('part', $this->listing->part)
+                : route('listing', $this->listing),
             'ogType'      => 'product',
             'ogImage'     => $this->ogImage(),
             'jsonLd'      => $this->jsonLd(),

@@ -144,13 +144,20 @@ class ChecklistTest extends TestCase
      */
     public function test_a_spec_answered_by_the_catalogue_counts_as_answered(): void
     {
-        $part = Part::where('category', 'psu')->first();
-
-        if (! $part) {
-            $this->markTestSkipped('no PSU in the seeded catalogue');
-        }
-
-        $part->forceFill(['specs' => ($part->specs ?? []) + ['has_all_cables' => true]])->save();
+        /*
+         * Built here rather than looked up. PartSeeder currently seeds GPUs and
+         * CPUs only, so `where('category', 'psu')->first()` was null every run
+         * and this test skipped permanently - which is the same as not having
+         * written it.
+         */
+        $part = Part::create([
+            'category'     => 'psu',
+            'manufacturer' => 'Seasonic',
+            'model'        => 'Focus GX-750',
+            'slug'         => 'seasonic-focus-gx-750',
+            'specs'        => ['wattage' => 750, 'has_all_cables' => true],
+            'is_published' => true,
+        ]);
 
         $listing = $this->listing('psu', []);
         $listing->forceFill(['part_id' => $part->id])->save();

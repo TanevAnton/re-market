@@ -32,6 +32,36 @@
     @endif
 @endif
 
+{{-- ------------------------------------------------------ tombstone
+
+     Public, and nothing here is for sale. The page exists because a link
+     pasted into a Viber group should not become a dead end the moment the
+     card sells - the person following it is actively shopping for exactly
+     this model, which makes them the most valuable visitor on the page. --}}
+@if ($this->isTombstone())
+    <div class="mb-5 rounded-lg border border-line bg-surface-alt p-4">
+        <p class="text-sm font-medium">
+            @if ($listing->status === \App\Enums\ListingStatus::Sold)
+                Продадено
+            @else
+                Обявата изтече
+            @endif
+        </p>
+        <p class="mt-1 text-xs leading-relaxed text-ink-muted">
+            @if ($listing->status === \App\Enums\ListingStatus::Sold)
+                Този артикул вече не се предлага. Виж какво друго има от същия модел по-долу.
+            @else
+                Продавачът не я поднови. Може да се появи отново — виж подобни по-долу.
+            @endif
+            @if ($listing->part)
+                <a href="{{ route('part', $listing->part) }}" wire:navigate class="link">
+                    Цени и обяви за {{ $listing->part->fullName() }}
+                </a>
+            @endif
+        </p>
+    </div>
+@endif
+
 <div class="grid gap-8 lg:grid-cols-[1fr_330px]">
 
     {{-- ------------------------------------------------ main --}}
@@ -195,8 +225,22 @@
     <aside class="space-y-4 lg:sticky lg:top-20 lg:self-start">
 
         <div class="card-pad">
-            <p class="price text-3xl">{{ $listing->formattedPrice() }}</p>
+            <p @class(['price text-3xl', 'text-ink-faint line-through' => $this->isTombstone()])>
+                {{ $listing->formattedPrice() }}
+            </p>
 
+            @if ($this->isTombstone())
+                {{-- No offer box, no message button, no favourite. Every one of
+                     them would start something the seller cannot finish, and a
+                     control that accepts a click and then refuses is worse than
+                     one that was never drawn. --}}
+                <p class="hint mt-1">Последна обявена цена.</p>
+
+                <a href="{{ route('browse', ['kat' => $listing->category]) }}" wire:navigate
+                   class="btn-primary mt-4 block w-full text-center">
+                    Виж активните обяви
+                </a>
+            @else
             {{-- Its own component so that placing an offer re-renders the box
                  and not the entire listing page, gallery and spec sheet
                  included. Keyed by listing so Livewire never reuses state
@@ -222,6 +266,7 @@
                     @livewire('favorites.favorite-button', ['listing' => $listing],
                         key('fav-detail-'.$listing->id))
                 </div>
+            @endif
             @endif
         </div>
 
@@ -391,4 +436,55 @@
         @endif
     </aside>
 </div>
+
+{{-- ------------------------------------------- what IS still for sale
+
+     The reason this page exists rather than a 404. Someone who followed a
+     link to a sold card is shopping for that exact model right now, and the
+     old behaviour answered them with nothing.
+
+     Full width, below the fold: the tombstone has to say "gone" first, or
+     this reads as a bait-and-switch. --}}
+@if ($this->isTombstone())
+    {{-- $similar comes from render(), NOT from an @php block here.
+
+         This file already contains an inline parenthesised @php further up.
+         A block one down here would pair with THAT opening directive - Blade
+         lifts raw PHP blocks out before compiling anything else, with a regex
+         that runs to the next closing directive anywhere in the file - and
+         every directive between them would silently stop compiling. --}}
+    @if ($similar->isNotEmpty())
+        <section class="mt-10">
+            <h2 class="text-sm font-semibold uppercase tracking-wider text-ink-muted">
+                Подобни активни обяви
+            </h2>
+
+            <div class="mt-3 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                @foreach ($similar as $other)
+                    @include('partials.listing-card', ['listing' => $other])
+                @endforeach
+            </div>
+        </section>
+    @else
+        {{-- Nothing to show is the case that matters most on a young site,
+             and "try again later" hands them nothing. A standing alert keeps
+             the buyer who is hardest to get back. --}}
+        <section class="card border-dashed mt-10 p-10 text-center">
+            <p class="font-medium">Няма активни обяви за този модел</p>
+            <p class="mx-auto mt-1 max-w-md text-sm text-ink-muted">
+                Пазарът за втора употреба се движи бързо — може да се появи утре.
+            </p>
+            <div class="mt-5 flex flex-wrap items-center justify-center gap-2">
+                @if ($listing->part)
+                    <a href="{{ route('part', $listing->part) }}" wire:navigate class="btn-primary">
+                        Извести ме при нова обява
+                    </a>
+                @endif
+                <a href="{{ route('browse', ['kat' => $listing->category]) }}" wire:navigate class="btn-ghost">
+                    Разгледай категорията
+                </a>
+            </div>
+        </section>
+    @endif
+@endif
 </div>

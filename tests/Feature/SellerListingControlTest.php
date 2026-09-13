@@ -95,8 +95,24 @@ class SellerListingControlTest extends TestCase
 
     public function test_the_owner_sees_their_listings(): void
     {
-        $mine    = $this->listing();
-        $theirs  = Listing::factory()->create(['user_id' => $this->stranger->id]);
+        /*
+         * Both titles pinned, because the factory draws them from the
+         * catalogue and two draws can be substrings of each other - "NVIDIA
+         * GeForce RTX 4060 Ti" inside "NVIDIA GeForce RTX 4060 Ti 16GB" is
+         * what failed here. assertDontSee is a substring match, so the test
+         * did not fail because the wrong listing was shown; it failed because
+         * the right one happened to contain the other one's name.
+         *
+         * A test that depends on a random draw not colliding passes by luck
+         * until somebody adds a test upstream and shifts the sequence.
+         */
+        $mine   = $this->listing();
+        $mine->forceFill(['title' => 'МОЯТА обява за проверка'])->save();
+
+        $theirs = Listing::factory()->create([
+            'user_id' => $this->stranger->id,
+            'title'   => 'ЧУЖДА обява, която не бива да се вижда',
+        ]);
 
         $this->actingAs($this->seller)
             ->get(route('listings.mine'))
