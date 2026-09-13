@@ -316,6 +316,24 @@
                 @endif
             </div>
 
+            {{-- The buyer's checklist, shown to the seller, immediately above
+                 the photo upload.
+
+                 Same config and the same words - no second copy to drift.
+                 Reading what buyers are told to check IS the brief for a good
+                 listing: half these lines are "photograph X" or "show the
+                 SMART screenshot", and they are most useful in the second
+                 before somebody chooses which pictures to take.
+
+                 This is the supply side of the same feature. An ad that
+                 answers these questions gets fewer messages, fewer lowballs
+                 and fewer abandoned deals. --}}
+            @include('partials.checklist', [
+                'items'   => \App\Support\Checklist::forCategory($category),
+                'heading' => 'Какво ще проверят купувачите',
+                'intro'   => 'Обява, която отговаря на това предварително, получава по-малко въпроси и по-сериозни оферти.',
+            ])
+
             {{-- ------------------------------------------------ photos --}}
             <div class="card-pad">
                 <div class="flex items-baseline justify-between">

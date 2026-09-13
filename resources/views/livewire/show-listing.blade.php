@@ -299,6 +299,13 @@
             </p>
         </div>
 
+        {{-- Sharpened against THIS listing: an item that names a facet the
+             seller left blank becomes the question to ask rather than a
+             generic tip. See App\Support\Checklist. --}}
+        @include('partials.checklist', [
+            'items' => \App\Support\Checklist::forListing($listing),
+        ])
+
         @if ($listing->delivery_options)
             <div class="card-pad">
                 <h2 class="label">Доставка</h2>

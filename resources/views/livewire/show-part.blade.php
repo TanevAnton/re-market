@@ -139,6 +139,23 @@
                     </dl>
                 </section>
             @endif
+
+            {{-- The generic form here: this page is about a model, not about
+                 one item, so there is no seller and nothing to mark as
+                 unanswered.
+
+                 It is also the part of the page worth the most to a search
+                 engine. Someone searching "rtx 4070 втора ръка на какво да
+                 внимавам" is a buyer at the exact moment they are deciding,
+                 and no listing can answer that question - a listing is one
+                 asking price and it disappears when the card sells. --}}
+            <div class="mt-6">
+                @include('partials.checklist', [
+                    'items'   => \App\Support\Checklist::forCategory($part->category),
+                    'heading' => 'Какво да провериш при втора употреба',
+                    'intro'   => 'Важи за всяка обява в тази категория, не само за тази страница.',
+                ])
+            </div>
         </div>
 
         {{-- ---------------------------------------------------- sidebar --}}
