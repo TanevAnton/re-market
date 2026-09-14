@@ -11,6 +11,7 @@ use App\Livewire\Favorites\MyFavorites;
 use App\Livewire\Home;
 use App\Livewire\SavedSearches\MySearches;
 use App\Livewire\ShowPart;
+use App\Livewire\Valuation;
 use App\Livewire\Listings\CreateListing;
 use App\Livewire\Listings\EditListing;
 use App\Livewire\Listings\MyListings;
@@ -60,6 +61,20 @@ Route::get('/profil/{username}', ShowProfile::class)->name('profile');
  * and it reads the same in both alphabets.
  */
 Route::get('/model/{part}', ShowPart::class)->name('part');
+
+/*
+ * „Колко струва техниката ми" - the same catalogue data pointed at a seller.
+ *
+ * Supply is the bottleneck on a marketplace this young, and the moment
+ * somebody decides to sell a card is the moment before they look up what it is
+ * worth. Today that search ends on a competitor or in a 2021 forum thread.
+ * This is the page that ends it here, and it is deliberately public: an
+ * acquisition page behind a login acquires nobody.
+ *
+ * The URL is the query, transliterated. `/kolko-struva` is what somebody would
+ * recognise in a result list; `/valuation` is a word no Bulgarian seller types.
+ */
+Route::get('/kolko-struva', Valuation::class)->name('valuation');
 
 /*
  * Landing pages nobody crawls are worth nothing, so the sitemap ships with

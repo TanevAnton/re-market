@@ -377,7 +377,9 @@ return [
                 'refresh_hz' => [
                     'type' => 'int', 'scope' => 'part', 'unit' => 'Hz',
                     'label' => ['bg' => 'Опресняване', 'en' => 'Refresh rate'],
-                    'facet' => 'terms', 'options' => [60,75,100,120,144,165,180,240,360,480],
+                    'facet' => 'terms', // 170 and 175 are as common as 165 on 1440p IPS and OLED panels;
+                    // leaving them out made those monitors unfilterable.
+                    'options' => [60,75,100,120,144,165,170,175,180,240,360,480],
                     'priority' => 3,
                 ],
                 'panel_type' => [

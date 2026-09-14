@@ -107,9 +107,31 @@ return [
         // they teach a crawler the site is thin. Below this, the page still
         // works for anyone with the link but stays out of the sitemap.
         'sitemap_min_listings'    => (int) env('PART_SITEMAP_MIN', 1),
+
+        /*
+         * The public „под средното за модела" badge, which is a stricter claim
+         * than the band and so has its own two thresholds.
+         *
+         * The band exists to inform; the badge exists to say a specific listing
+         * is a good buy, in public, in our own voice. Cheapest-of-three is not
+         * a deal, it is arithmetic about three people - hence a higher sample
+         * floor than the band's. And a badge that fires at 2% teaches buyers
+         * to ignore the badge, which costs more than never showing it.
+         */
+        'deal_badge_min_listings' => (int) env('PART_DEAL_BADGE_MIN', 5),
+        'deal_badge_min_percent'  => (int) env('PART_DEAL_BADGE_PERCENT', 7),
     ],
 
     'listings' => [
+        /*
+         * Below this many live listings in a signed-in visitor's own city, the
+         * browse page does NOT start them there. A local-first default is only
+         * a kindness while the local market has something in it; under a
+         * handful it is a page that says the site is dead, and the visitor has
+         * no way of knowing a filter they never set is the reason.
+         */
+        'home_city_min'       => (int) env('BROWSE_HOME_CITY_MIN', 3),
+
         'expire_after_days'   => 60,
         'bump_cooldown_hours' => 24,
         'max_images'          => 12,

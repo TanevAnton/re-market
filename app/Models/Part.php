@@ -143,6 +143,73 @@ class Part extends Model
      * matching when it misses. Doing it the other way round buries the right
      * answer under near-misses.
      */
+    /**
+     * The price band, or null when it cannot be stated honestly.
+     *
+     * Moved here from ShowPart the moment a second screen wanted it. Three
+     * things now ask this question - the catalogue page, the valuation page
+     * and the deal badge on a listing card - and a rule about when a number is
+     * too thin or too old to print is exactly the kind that must not exist in
+     * three versions.
+     *
+     * Two ways it is withheld, both more important than showing a number: too
+     * few listings for a median to mean anything (the refresh command refuses
+     * to compute one), and a band old enough to be wrong. A stale median is a
+     * specific kind of harmful - it looks current, it gets quoted back in
+     * negotiations, and nothing on the page says how old it is.
+     *
+     * @return array{p25: int, median: int, p75: int, at: \Illuminate\Support\Carbon}|null
+     */
+    public function priceBand(): ?array
+    {
+        if (! $this->price_median_cents || ! $this->price_stats_at) {
+            return null;
+        }
+
+        $maxAge = (int) config('remarket.parts.price_band_max_age_days', 7);
+
+        if ($this->price_stats_at->lt(now()->subDays($maxAge))) {
+            return null;
+        }
+
+        return [
+            'p25'    => (int) $this->price_p25_cents,
+            'median' => (int) $this->price_median_cents,
+            'p75'    => (int) $this->price_p75_cents,
+            'at'     => $this->price_stats_at,
+        ];
+    }
+
+    /**
+     * Where one asking price sits against this model's band.
+     *
+     * Returns the signed percentage away from the median and which third of
+     * the band it falls in. Deliberately NOT a verdict: "скъпо" is a judgement
+     * about somebody's own listing, and a marketplace that grades its sellers
+     * in public loses the sellers. The caller decides what, if anything, to
+     * say - the browse card says something only when a listing is notably
+     * CHEAP, because that is a buyer aid rather than a seller's report card.
+     *
+     * @return array{percent: int, position: string}|null
+     */
+    public function priceStanding(int $priceCents): ?array
+    {
+        $band = $this->priceBand();
+
+        if (! $band || $band['median'] <= 0 || $priceCents <= 0) {
+            return null;
+        }
+
+        return [
+            'percent'  => (int) round(($priceCents - $band['median']) / $band['median'] * 100),
+            'position' => match (true) {
+                $priceCents <= $band['p25'] => 'low',
+                $priceCents >= $band['p75'] => 'high',
+                default                     => 'mid',
+            },
+        ];
+    }
+
     public function scopeSearch(Builder $q, string $term): Builder
     {
         $variants = self::queryVariants($term);

@@ -71,34 +71,13 @@ class ShowPart extends Component
     }
 
     /**
-     * The price band, or null when it cannot be stated honestly.
-     *
-     * Two ways it is withheld, and both matter more than showing a number:
-     * too few listings to mean anything (the command refuses to compute one),
-     * and a band old enough to be wrong. A stale median is a specific kind of
-     * harmful - it looks current, it gets quoted in negotiations, and nothing
-     * on the page tells the reader how old it is.
-     *
-     * @return array{p25: int, median: int, p75: int, at: Carbon}|null
+     * Delegated to the model, where the rule now lives - the valuation page
+     * and the deal badge ask the same question, and a rule about when a
+     * number is too thin or too old to print must not exist in three places.
      */
     public function priceBand(): ?array
     {
-        if (! $this->part->price_median_cents || ! $this->part->price_stats_at) {
-            return null;
-        }
-
-        $maxAge = (int) config('remarket.parts.price_band_max_age_days', 7);
-
-        if ($this->part->price_stats_at->lt(now()->subDays($maxAge))) {
-            return null;
-        }
-
-        return [
-            'p25'    => (int) $this->part->price_p25_cents,
-            'median' => (int) $this->part->price_median_cents,
-            'p75'    => (int) $this->part->price_p75_cents,
-            'at'     => $this->part->price_stats_at,
-        ];
+        return $this->part->priceBand();
     }
 
     /**

@@ -121,6 +121,61 @@ class Listing extends Model
         return $this->warranty_until !== null && $this->warranty_until->isFuture();
     }
 
+    /**
+     * How far below the model's median this asking price sits, as a whole
+     * percent — or null when the site has no business making the claim.
+     *
+     * This is the ONLY home for that decision, because the badge it drives
+     * appears on the card, on the listing page and in the grid, and three
+     * copies of a rule this loaded would eventually disagree about what a good
+     * deal is.
+     *
+     * The rule is deliberately one-sided: a listing can be told it is cheap,
+     * never that it is expensive. The band already lets a buyer work that out
+     * for themselves, and a marketplace that publicly grades its own sellers'
+     * prices as too high stops having sellers - which costs the buyers more
+     * than the badge ever gave them.
+     *
+     * Four conditions, all of them about not making a claim we cannot support:
+     *  - the model has a band, and it is fresh (Part::priceBand)
+     *  - enough live listings that the median is a market and not an opinion
+     *  - the price is in the bottom quartile, not merely under the middle
+     *  - and far enough under it to be worth a buyer's attention
+     */
+    public function priceAdvantage(): ?int
+    {
+        // A sold or expired listing boasting about its price is advertising
+        // something nobody can buy.
+        if (! $this->status->isPubliclyVisible()) {
+            return null;
+        }
+
+        $part = $this->part;
+
+        if (! $part || ! $part->priceBand()) {
+            return null;
+        }
+
+        if ($part->active_listings_count < (int) config('remarket.parts.deal_badge_min_listings', 5)) {
+            return null;
+        }
+
+        $standing = $part->priceStanding((int) $this->price_cents);
+
+        if (! $standing || $standing['position'] !== 'low') {
+            return null;
+        }
+
+        // priceStanding returns a signed distance from the median; below it is
+        // negative. The badge speaks in positive percentages because that is
+        // how a person says it out loud.
+        $under = -$standing['percent'];
+
+        return $under >= (int) config('remarket.parts.deal_badge_min_percent', 7)
+            ? $under
+            : null;
+    }
+
     // --- relations -------------------------------------------------------
 
     public function user(): BelongsTo     { return $this->belongsTo(User::class); }

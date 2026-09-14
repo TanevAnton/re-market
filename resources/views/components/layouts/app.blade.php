@@ -156,6 +156,11 @@
 
         <nav class="ml-2 hidden items-center gap-1 md:flex">
             <a href="{{ route('browse') }}" wire:navigate class="btn-ghost btn-sm">Обяви</a>
+
+            {{-- Aimed at the half of the site that is short: people with
+                 hardware to sell. It is the one nav item that speaks to
+                 somebody who has not decided to sell yet. --}}
+            <a href="{{ route('valuation') }}" wire:navigate class="btn-ghost btn-sm">Колко струва?</a>
             @auth
                 {{-- The count is the whole reason a seller comes back to the
                      site. Auto-declined lowballs are excluded, so this number
@@ -296,6 +301,11 @@
         {{-- Reachable from every page: the DSA contact points are only
              "published" if someone can actually find them. --}}
         <nav class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            <a href="{{ route('browse') }}" wire:navigate class="text-ink-muted hover:text-ink">Всички обяви</a>
+            <a href="{{ route('valuation') }}" wire:navigate class="text-ink-muted hover:text-ink">Колко струва техниката ми</a>
+        </nav>
+
+        <nav class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
             <a href="{{ route('legal.terms') }}" wire:navigate class="text-ink-muted hover:text-ink">Общи условия</a>
             <a href="{{ route('legal.privacy') }}" wire:navigate class="text-ink-muted hover:text-ink">Поверителност</a>
             <a href="{{ route('legal.cookies') }}" wire:navigate class="text-ink-muted hover:text-ink">Бисквитки</a>

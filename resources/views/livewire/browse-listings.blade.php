@@ -253,6 +253,25 @@
             </select>
         </div>
 
+        {{-- A filter the visitor did not set has to say so.
+
+             Without this line the site simply looks like it has a third of the
+             listings it really has, and nothing on the page explains why - the
+             city dropdown is in a panel that is collapsed on a phone, which is
+             where most of this traffic is. --}}
+        @if ($cityDefaulted && $city !== '')
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md
+                        border border-line bg-surface-alt px-3 py-2 text-xs">
+                <span class="text-ink-muted">
+                    Показваме обявите в <strong class="text-ink">{{ $this->currentCity()?->name() ?? $city }}</strong>,
+                    защото това е твоят град.
+                </span>
+                <button type="button" wire:click="showWholeCountry" class="link shrink-0 font-medium">
+                    Виж цялата страна
+                </button>
+            </div>
+        @endif
+
         <div wire:loading.class="opacity-40" class="transition-opacity">
             @if ($listings->isEmpty())
                 {{-- The most valuable empty state on the site.

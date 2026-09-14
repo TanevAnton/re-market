@@ -64,6 +64,18 @@
             <div class="mt-auto flex items-end justify-between gap-2 pt-4">
                 <div>
                     <p class="price text-xl leading-none">{{ $listing->formattedPrice() }}</p>
+
+                    {{-- Directly under the price, because it is a statement
+                         ABOUT that number rather than a property of the item.
+                         Only ever appears when the listing is cheap - see
+                         Listing::priceAdvantage() for why there is no badge
+                         in the other direction. --}}
+                    @if ($advantage = $listing->priceAdvantage())
+                        <p class="mt-1 text-[11px] font-semibold text-good">
+                            {{ $advantage }}% под средното за модела
+                        </p>
+                    @endif
+
                     <p class="mt-1.5 text-xs text-ink-muted">
                         {{ $listing->city?->name() }}
                     </p>

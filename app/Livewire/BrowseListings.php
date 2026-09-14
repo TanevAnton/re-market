@@ -46,6 +46,86 @@ class BrowseListings extends Component
     #[Url(as: 'f', except: [])]
     public array $specs = [];
 
+    /**
+     * Set on the one page load where the city filter was applied for the user
+     * rather than by the user. Drives the notice that says so - a filter the
+     * visitor did not choose has to announce itself, or the site simply looks
+     * like it has a third of the listings it really has.
+     */
+    public bool $cityDefaulted = false;
+
+    /** Marks the session as having been offered the home-city default once. */
+    private const HOME_CITY_APPLIED = 'browse.home_city_applied';
+
+    public function mount(): void
+    {
+        $this->cityDefaulted = (bool) session()->pull('browse.city_defaulted', false);
+
+        $this->applyHomeCity();
+    }
+
+    /**
+     * Start a signed-in visitor in their own city.
+     *
+     * Half the exchanges on this site are hand-to-hand, so „мога ли да я взема
+     * лично" is one of the first two questions a buyer has - and answering it
+     * by default is most of the difference between a national wall of listings
+     * and a local market.
+     *
+     * Done as a REDIRECT rather than by assigning the property, for three
+     * reasons that all point the same way. The URL then honestly says what is
+     * being shown, so it can be shared and bookmarked; Livewire's own
+     * query-string handling stays the only thing that writes to a #[Url]
+     * property, so there is no ordering question about which runs first; and
+     * the back button works.
+     *
+     * Three guards, because a default that traps is worse than none:
+     *  - a URL that mentions `grad` has already decided, including `grad=`
+     *  - once per session, so clearing the filter is not undone on the next
+     *    page load
+     *  - and never when it would empty the page: a city with two listings in
+     *    it teaches the visitor the site is dead.
+     */
+    private function applyHomeCity(): void
+    {
+        /*
+         * Only when this component IS the page being served at /obiavi.
+         *
+         * Redirecting rewrites the address bar, which is only ever the right
+         * thing to do for the component that owns the address. It also keeps
+         * the behaviour out of every other context the grid is mounted in -
+         * an embed, or a test that mounts the component directly to exercise
+         * something else entirely.
+         */
+        if (! request()->routeIs('browse')) {
+            return;
+        }
+
+        if (request()->has('grad') || session()->get(self::HOME_CITY_APPLIED)) {
+            return;
+        }
+
+        $city = auth()->user()?->city;
+
+        if (! $city) {
+            return;
+        }
+
+        // Marked before the count, not after: a user in a quiet town should be
+        // asked once and then left alone, not re-counted on every page load.
+        session()->put(self::HOME_CITY_APPLIED, true);
+
+        $live = Listing::query()->visible()->where('city_id', $city->id)->count();
+
+        if ($live < (int) config('remarket.listings.home_city_min', 3)) {
+            return;
+        }
+
+        session()->flash('browse.city_defaulted', true);
+
+        $this->redirect(request()->fullUrlWithQuery(['grad' => $city->slug]), navigate: true);
+    }
+
     public function updated($name): void
     {
         // Any filter change invalidates the current page number.
@@ -57,11 +137,48 @@ class BrowseListings extends Component
         if ($name === 'category') {
             $this->specs = [];
         }
+
+        // Once the visitor has touched the city filter themselves, the notice
+        // is no longer telling them anything they did not do.
+        if ($name === 'city') {
+            $this->cityDefaulted = false;
+            $this->currentCity   = false;
+        }
+    }
+
+    /**
+     * The city currently filtered on, or null for the whole country.
+     *
+     * Memoised per request - the render path asks three times (the dropdown,
+     * the notice, and the union that keeps small towns in the dropdown) and
+     * `false` distinguishes "not looked up" from "looked up, no such city".
+     */
+    private City|null|false $currentCity = false;
+
+    public function currentCity(): ?City
+    {
+        if ($this->currentCity !== false) {
+            return $this->currentCity;
+        }
+
+        return $this->currentCity = $this->city
+            ? City::where('slug', $this->city)->first()
+            : null;
+    }
+
+    public function showWholeCountry(): void
+    {
+        $this->city          = '';
+        $this->cityDefaulted = false;
+        $this->currentCity   = false;
+        $this->resetPage();
     }
 
     public function clearFilters(): void
     {
         $this->reset(['q', 'priceMin', 'priceMax', 'condition', 'city', 'specs']);
+        $this->cityDefaulted = false;
+        $this->currentCity   = false;
         $this->resetPage();
     }
 
@@ -338,7 +455,21 @@ class BrowseListings extends Component
         return view('livewire.browse-listings', [
             'listings'   => $listings,
             'categories' => SpecFilter::categories(),
-            'cities'     => City::orderByDesc('population')->limit(40)->get(),
+            // The forty biggest towns, PLUS whichever one is being filtered on.
+            // Without the union, a visitor from a smaller town - exactly the
+            // person the home-city default is aimed at - finds their own city
+            // missing from the dropdown and the select showing "Цялата страна"
+            // while the results are filtered.
+            'cities'     => City::query()
+                ->orderByDesc('population')
+                ->limit(40)
+                ->get()
+                ->when(
+                    $this->currentCity() !== null,
+                    fn ($rows) => $rows->contains('slug', $this->city)
+                        ? $rows
+                        : $rows->push($this->currentCity())->sortByDesc('population')->values(),
+                ),
             'conditions' => ListingCondition::cases(),
             'facets'     => $filter->facets(),
             'filter'     => $filter,

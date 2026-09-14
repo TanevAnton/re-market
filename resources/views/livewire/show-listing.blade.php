@@ -229,6 +229,19 @@
                 {{ $listing->formattedPrice() }}
             </p>
 
+            {{-- Never shown on a tombstone: priceAdvantage() refuses one, so
+                 there is no second copy of that rule here. The link matters as
+                 much as the claim - a badge nobody can check is marketing. --}}
+            @if ($advantage = $listing->priceAdvantage())
+                <p class="mt-2 text-sm font-semibold text-good">
+                    {{ $advantage }}% под средното за модела
+                </p>
+                <a href="{{ route('part', $listing->part) }}" wire:navigate
+                   class="link mt-1 block text-xs">
+                    Виж от какво е сметнато →
+                </a>
+            @endif
+
             @if ($this->isTombstone())
                 {{-- No offer box, no message button, no favourite. Every one of
                      them would start something the seller cannot finish, and a
@@ -349,6 +362,16 @@
              generic tip. See App\Support\Checklist. --}}
         @include('partials.checklist', [
             'items' => \App\Support\Checklist::forListing($listing),
+        ])
+
+        {{-- „Тази карта иска захранване от 750 W нагоре", as a link.
+
+             Read from the MODEL rather than from this listing: compatibility
+             is a fact about the hardware, not about the unit in the
+             photographs, and a free-text listing with no catalogue model has
+             nothing to say here and says nothing. --}}
+        @include('partials.compatibility', [
+            'links' => \App\Support\Compatibility::forListing($listing),
         ])
 
         @if ($listing->delivery_options)

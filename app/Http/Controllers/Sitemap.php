@@ -39,6 +39,10 @@ class Sitemap
         $urls[] = $this->url(route('home'), now(), 'daily', '1.0');
         $urls[] = $this->url(route('browse'), now(), 'hourly', '0.9');
 
+        // The seller-side entry point. Only the bare page: every per-model URL
+        // it can wear canonicalises to /model/{slug}, which is already here.
+        $urls[] = $this->url(route('valuation'), now(), 'weekly', '0.7');
+
         foreach ($this->legalPages() as $name) {
             $urls[] = $this->url(route($name), null, 'yearly', '0.2');
         }

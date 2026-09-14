@@ -156,6 +156,16 @@
                     'intro'   => 'Важи за всяка обява в тази категория, не само за тази страница.',
                 ])
             </div>
+
+            {{-- The links only a typed catalogue can draw: this model's own
+                 numbers pointed at the categories they constrain. Also the
+                 internal linking that makes the catalogue a graph rather than
+                 a few thousand orphan pages. --}}
+            @include('partials.compatibility', [
+                'links'   => \App\Support\Compatibility::forPart($part),
+                'heading' => 'Какво пасва с този модел',
+                'class'   => 'mt-6',
+            ])
         </div>
 
         {{-- ---------------------------------------------------- sidebar --}}
