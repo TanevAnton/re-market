@@ -248,7 +248,7 @@ html[data-theme='dark']   .theme-icon-dark { display: block; }
     .tabular { font-variant-numeric: tabular-nums; }
 
     .btn {
-        @apply inline-flex select-none items-center justify-center gap-2 rounded-lg px-4 py-2.5
+        @apply inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5
                text-sm font-semibold transition-all duration-150
                disabled:cursor-not-allowed disabled:opacity-40;
     }
@@ -259,7 +259,7 @@ html[data-theme='dark']   .theme-icon-dark { display: block; }
      * dark interface feel responsive - opacity changes read as "disabled".
      */
     .btn-primary {
-        @apply inline-flex select-none items-center justify-center gap-2 rounded-lg px-4 py-2.5
+        @apply inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5
                text-sm font-semibold transition-all duration-150
                disabled:cursor-not-allowed disabled:opacity-40
                bg-accent text-[var(--accent-ink)]
@@ -269,7 +269,7 @@ html[data-theme='dark']   .theme-icon-dark { display: block; }
     }
 
     .btn-secondary {
-        @apply inline-flex select-none items-center justify-center gap-2 rounded-lg px-4 py-2.5
+        @apply inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5
                text-sm font-semibold transition-all duration-150
                disabled:cursor-not-allowed disabled:opacity-40
                border border-line-strong bg-surface text-ink
@@ -277,7 +277,7 @@ html[data-theme='dark']   .theme-icon-dark { display: block; }
     }
 
     .btn-ghost {
-        @apply inline-flex select-none items-center justify-center gap-2 rounded-lg px-3 py-2
+        @apply inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-lg px-3 py-2
                text-sm font-medium transition-all duration-150
                disabled:cursor-not-allowed disabled:opacity-40
                text-ink-muted hover:bg-surface-alt hover:text-ink;
@@ -339,6 +339,19 @@ html[data-theme='dark']   .theme-icon-dark { display: block; }
     }
 
     .link { @apply text-ink underline-offset-2 hover:text-accent hover:underline; }
+
+    /*
+     * A row in a dropdown menu.
+     *
+     * NOT .btn-ghost: inside .site-header that class is uppercased, bolded and
+     * tracked out - correct for a bar, wrong for a list of destinations, where
+     * it reads as ten headings stacked on top of each other.
+     */
+    .menu-item {
+        @apply flex items-center justify-between gap-3 rounded-md px-3 py-2
+               text-left text-sm font-medium text-ink-muted transition
+               hover:bg-surface-alt hover:text-ink;
+    }
 
     /* The header. Translucent over the canvas so content scrolling underneath
        is felt rather than hidden behind a solid bar. */

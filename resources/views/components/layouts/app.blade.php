@@ -146,32 +146,85 @@
 <body class="flex min-h-full flex-col">
 
 <header class="site-header">
-    <div class="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3.5">
+    {{-- ONE bar, three jobs, in this order left to right: what the site is,
+         what is waiting on you, what you came to do.
 
-        <a href="{{ route('home') }}" wire:navigate class="flex items-center gap-2">
+         It used to carry eleven items for a signed-in user and thirteen for an
+         admin, all as equals, and the labels wrapped mid-phrase. Uppercase
+         Cyrillic with letter-spacing is roughly a third wider than the sentence
+         case these were written in, so the bar ran out of room long before the
+         window did.
+
+         Everything that belongs to ONE PERSON now lives in the account menu.
+         That is also what finally makes this work on a phone: the old header
+         hid its whole nav below `md`, so a phone got no way to reach Обяви at
+         all - the menu carries those entries at small widths instead. --}}
+    <div class="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3.5">
+
+        <a href="{{ route('home') }}" wire:navigate class="flex shrink-0 items-center gap-2">
             <span class="grid h-8 w-8 place-items-center rounded-lg bg-accent font-mono text-[11px]
                          font-bold text-[var(--accent-ink)]">RM</span>
             <span class="hidden text-[15px] font-extrabold tracking-tight sm:inline">{{ config('app.name') }}</span>
         </a>
 
-        <nav class="ml-2 hidden items-center gap-1 md:flex">
+        @auth
+            {{-- Every count the bar and the menu need, in one place and one
+                 pass. Four separate blocks used to compute these inline, which
+                 made it impossible to see that the menu needed a roll-up of
+                 the ones it hides. --}}
+            @php
+                // Everything waiting on THIS user - offers they received as a
+                // seller AND counters they were sent as a buyer. Counting only
+                // the seller side left a countered buyer with no signal
+                // anywhere on the site that it was their move.
+                $pendingOffers = \App\Models\Offer::awaitingResponseFrom(auth()->id())->count();
+
+                $openDeals = \App\Models\Deal::where('status', \App\Enums\DealStatus::Open)
+                    ->where(fn ($q) => $q->where('buyer_id', auth()->id())
+                                         ->orWhere('seller_id', auth()->id()))
+                    ->count();
+
+                // One query, not one per thread - this renders on every page.
+                $unread = \App\Models\Thread::unreadTotalFor(auth()->id());
+
+                $isAdmin      = auth()->user()->is_admin;
+                $queued       = $isAdmin ? \App\Models\ModerationItem::queue()->count() : 0;
+                $uncatalogued = $isAdmin ? \App\Models\Listing::awaitingCatalogue()->count() : 0;
+
+                /*
+                 * What the closed menu owes the user.
+                 *
+                 * The sum of the ACCENT badges hidden inside it, and nothing
+                 * else: those mean somebody is waiting. The catalogue queue is
+                 * work that is available rather than work that is late, which
+                 * is why it wears a neutral badge inside and stays out of this
+                 * number. A roll-up that counts things nobody is waiting on is
+                 * a dot that never goes away, and a dot that never goes away
+                 * stops being read.
+                 */
+                $menuBadge = $openDeals + $queued;
+            @endphp
+        @endauth
+
+        {{-- What the site IS. Two items, and they stay two. --}}
+        <nav class="ml-1 hidden shrink-0 items-center gap-1 lg:flex">
             <a href="{{ route('browse') }}" wire:navigate class="btn-ghost btn-sm">Обяви</a>
 
             {{-- Aimed at the half of the site that is short: people with
-                 hardware to sell. It is the one nav item that speaks to
-                 somebody who has not decided to sell yet. --}}
+                 hardware to sell. The one nav item that speaks to somebody who
+                 has not decided to sell yet. --}}
             <a href="{{ route('valuation') }}" wire:navigate class="btn-ghost btn-sm">Колко струва?</a>
-            @auth
-                {{-- The count is the whole reason a seller comes back to the
-                     site. Auto-declined lowballs are excluded, so this number
-                     only ever means "someone is waiting on you". --}}
-                @php
-                    // Everything waiting on THIS user - offers they received as
-                    // a seller AND counters they were sent as a buyer. Counting
-                    // only the seller side left a countered buyer with no signal
-                    // anywhere on the site that it was their move.
-                    $pendingOffers = \App\Models\Offer::awaitingResponseFrom(auth()->id())->count();
-                @endphp
+        </nav>
+
+        <div class="flex-1"></div>
+
+        @auth
+            {{-- The two signals that mean somebody is waiting on YOU, and the
+                 only personal items still in the bar. Deals are one rung down:
+                 an open deal already sent a notification and has a 72-hour
+                 window, so it does not need to be on screen every second - it
+                 keeps its badge inside the menu and inside the roll-up. --}}
+            <nav class="hidden shrink-0 items-center gap-1 md:flex">
                 <a href="{{ route('offers') }}" wire:navigate class="btn-ghost btn-sm">
                     Оферти
                     @if ($pendingOffers)
@@ -179,71 +232,14 @@
                     @endif
                 </a>
 
-                @php
-                    $openDeals = \App\Models\Deal::where('status', \App\Enums\DealStatus::Open)
-                        ->where(fn ($q) => $q->where('buyer_id', auth()->id())
-                                             ->orWhere('seller_id', auth()->id()))
-                        ->count();
-                @endphp
-                <a href="{{ route('deals') }}" wire:navigate class="btn-ghost btn-sm">
-                    Сделки
-                    @if ($openDeals)
-                        <span class="badge-accent ml-1 font-mono">{{ $openDeals }}</span>
-                    @endif
-                </a>
-
-                @php
-                    // One query, not one per thread - this badge renders on
-                    // every page in the site.
-                    $unread = \App\Models\Thread::unreadTotalFor(auth()->id());
-                @endphp
                 <a href="{{ route('messages') }}" wire:navigate class="btn-ghost btn-sm">
                     Съобщения
                     @if ($unread)
                         <span class="badge-accent ml-1 font-mono">{{ $unread }}</span>
                     @endif
                 </a>
-
-                {{-- Discoverability is the whole point: a seller who cannot
-                     find their own listings cannot fix a price. --}}
-                <a href="{{ route('listings.mine') }}" wire:navigate class="btn-ghost btn-sm">Моите обяви</a>
-
-                {{-- The buyer's side of "come back later". Everything else in
-                     this nav belongs to selling; without this a buyer has no
-                     reason to return until they need something again. --}}
-                <a href="{{ route('favorites') }}" wire:navigate class="btn-ghost btn-sm">Запазени</a>
-
-                @if (auth()->user()->is_admin)
-                    {{-- A queue nobody can see the size of is a queue nobody
-                         works. Sellers are sitting invisible until it is. --}}
-                    @php $queued = \App\Models\ModerationItem::queue()->count(); @endphp
-                    <a href="{{ route('moderation') }}" wire:navigate class="btn-ghost btn-sm">
-                        Модерация
-                        @if ($queued)
-                            <span class="badge-accent ml-1 font-mono">{{ $queued }}</span>
-                        @endif
-                    </a>
-
-                    {{-- Same reasoning as the moderation badge: a queue nobody
-                         can see the size of is a queue nobody works, and this
-                         one quietly costs the catalogue a row per listing for
-                         as long as it sits there.
-
-                         Counts LISTINGS, not clusters - one indexed count
-                         instead of grouping five thousand strings on every page
-                         an admin loads. --}}
-                    @php $uncatalogued = \App\Models\Listing::awaitingCatalogue()->count(); @endphp
-                    <a href="{{ route('catalogue') }}" wire:navigate class="btn-ghost btn-sm">
-                        Каталог
-                        @if ($uncatalogued)
-                            <span class="badge-neutral ml-1 font-mono">{{ $uncatalogued }}</span>
-                        @endif
-                    </a>
-                @endif
-            @endauth
-        </nav>
-
-        <div class="flex-1"></div>
+            </nav>
+        @endauth
 
         {{-- Three states, not two. "Follow the system" has to be reachable
              again after someone has picked a fixed theme, or the only way back
@@ -253,7 +249,7 @@
                 onclick="window.__cycleTheme()"
                 aria-label="Смени темата"
                 title="Тема: системна / светла / тъмна"
-                class="btn-ghost btn-sm h-8 w-8 px-0!">
+                class="btn-ghost btn-sm h-8 w-8 shrink-0 px-0!">
             {{-- system: half-filled --}}
             <svg class="theme-icon theme-icon-system h-4 w-4" viewBox="0 0 24 24" fill="none"
                  stroke="currentColor" stroke-width="1.7">
@@ -274,23 +270,155 @@
         </button>
 
         @auth
-            <a href="{{ route('listing.create') }}" wire:navigate class="btn-primary btn-sm">
+            {{-- The accent appears on exactly one control per screen, and in
+                 the header it is this: the site is short of supply, not demand. --}}
+            <a href="{{ route('listing.create') }}" wire:navigate class="btn-primary btn-sm shrink-0">
                 Публикувай
             </a>
 
-            <div class="flex items-center gap-1">
-                <a href="{{ route('profile', auth()->user()->username) }}" wire:navigate
-                   class="btn-ghost btn-sm hidden sm:inline-flex">
-                    {{ auth()->user()->username }}
-                </a>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="btn-ghost btn-sm">Изход</button>
-                </form>
+            {{-- ------------------------------------------- account menu --}}
+            <div class="relative shrink-0"
+                 x-data="{ open: false }"
+                 x-on:keydown.escape.window="open = false">
+
+                <button type="button"
+                        x-on:click="open = ! open"
+                        x-bind:aria-expanded="open ? 'true' : 'false'"
+                        aria-haspopup="true"
+                        class="btn-ghost btn-sm">
+                    <span class="hidden sm:inline">{{ auth()->user()->username }}</span>
+                    <svg class="h-4 w-4 sm:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                        <path d="M4 7h16M4 12h16M4 17h16"/>
+                    </svg>
+                    <span class="sr-only sm:hidden">Меню</span>
+
+                    @if ($menuBadge)
+                        <span class="badge-accent ml-1 font-mono">{{ $menuBadge }}</span>
+                    @endif
+
+                    {{-- Below `sm` the trigger is already an icon; a chevron
+                         next to a hamburger is two symbols for one idea. --}}
+                    <svg class="hidden h-3 w-3 opacity-60 sm:block" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                         stroke-linejoin="round" aria-hidden="true">
+                        <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                </button>
+
+                {{-- The items below deliberately do NOT use .btn-ghost: inside
+                     .site-header that class is uppercased, bolded and tracked
+                     out, which is right for a bar and wrong for a list. --}}
+                <div x-show="open" x-cloak x-transition
+                     x-on:click.outside="open = false"
+                     class="card absolute right-0 z-40 mt-2 w-60 p-1.5">
+
+                    {{-- Only at the widths where the bar is not already showing
+                         these. The divider hides with them, or it is a line
+                         under nothing. --}}
+                    <a href="{{ route('browse') }}" wire:navigate class="menu-item lg:hidden">Обяви</a>
+                    <a href="{{ route('valuation') }}" wire:navigate class="menu-item lg:hidden">Колко струва?</a>
+                    <hr class="my-1.5 lg:hidden">
+
+                    <a href="{{ route('offers') }}" wire:navigate class="menu-item md:hidden">
+                        <span>Оферти</span>
+                        @if ($pendingOffers)
+                            <span class="badge-accent font-mono">{{ $pendingOffers }}</span>
+                        @endif
+                    </a>
+                    <a href="{{ route('messages') }}" wire:navigate class="menu-item md:hidden">
+                        <span>Съобщения</span>
+                        @if ($unread)
+                            <span class="badge-accent font-mono">{{ $unread }}</span>
+                        @endif
+                    </a>
+                    <hr class="my-1.5 md:hidden">
+
+                    <a href="{{ route('deals') }}" wire:navigate class="menu-item">
+                        <span>Сделки</span>
+                        @if ($openDeals)
+                            <span class="badge-accent font-mono">{{ $openDeals }}</span>
+                        @endif
+                    </a>
+
+                    {{-- Discoverability is the whole point: a seller who cannot
+                         find their own listings cannot fix a price. --}}
+                    <a href="{{ route('listings.mine') }}" wire:navigate class="menu-item">Моите обяви</a>
+
+                    {{-- The buyer's side of "come back later". Everything else
+                         here belongs to selling; without these a buyer has no
+                         reason to return until they need something again. --}}
+                    <a href="{{ route('favorites') }}" wire:navigate class="menu-item">Запазени</a>
+
+                    {{-- Neither of these was reachable from the header at all
+                         before - the bar was simultaneously overcrowded and
+                         missing two of its own pages. --}}
+                    <a href="{{ route('searches') }}" wire:navigate class="menu-item">Запазени търсения</a>
+
+                    <hr class="my-1.5">
+
+                    <a href="{{ route('profile', auth()->user()->username) }}" wire:navigate class="menu-item">
+                        Моят профил
+                    </a>
+                    <a href="{{ route('profile.edit') }}" wire:navigate class="menu-item">Настройки</a>
+
+                    @if ($isAdmin)
+                        <hr class="my-1.5">
+
+                        {{-- A queue nobody can see the size of is a queue nobody
+                             works. Sellers sit invisible until it is worked. --}}
+                        <a href="{{ route('moderation') }}" wire:navigate class="menu-item">
+                            <span>Модерация</span>
+                            @if ($queued)
+                                <span class="badge-accent font-mono">{{ $queued }}</span>
+                            @endif
+                        </a>
+
+                        {{-- Neutral, not accent: this is work that is available
+                             rather than work that is late. Nobody is waiting on
+                             it, and it stays out of the roll-up for that reason. --}}
+                        <a href="{{ route('catalogue') }}" wire:navigate class="menu-item">
+                            <span>Каталог</span>
+                            @if ($uncatalogued)
+                                <span class="badge-neutral font-mono">{{ $uncatalogued }}</span>
+                            @endif
+                        </a>
+                    @endif
+
+                    <hr class="my-1.5">
+
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="menu-item w-full">Изход</button>
+                    </form>
+                </div>
             </div>
         @else
-            <a href="{{ route('login') }}" wire:navigate class="btn-ghost btn-sm">Вход</a>
-            <a href="{{ route('register') }}" wire:navigate class="btn-primary btn-sm">Регистрация</a>
+            {{-- Guests have no account menu, so the two site links need a home
+                 below `lg` or a phone cannot reach the listings at all. --}}
+            <div class="relative shrink-0 lg:hidden"
+                 x-data="{ open: false }"
+                 x-on:keydown.escape.window="open = false">
+                <button type="button" x-on:click="open = ! open"
+                        x-bind:aria-expanded="open ? 'true' : 'false'"
+                        aria-haspopup="true" aria-label="Меню"
+                        class="btn-ghost btn-sm h-8 w-8 px-0!">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                        <path d="M4 7h16M4 12h16M4 17h16"/>
+                    </svg>
+                </button>
+
+                <div x-show="open" x-cloak x-transition
+                     x-on:click.outside="open = false"
+                     class="card absolute right-0 z-40 mt-2 w-52 p-1.5">
+                    <a href="{{ route('browse') }}" wire:navigate class="menu-item">Обяви</a>
+                    <a href="{{ route('valuation') }}" wire:navigate class="menu-item">Колко струва?</a>
+                </div>
+            </div>
+
+            <a href="{{ route('login') }}" wire:navigate class="btn-ghost btn-sm shrink-0">Вход</a>
+            <a href="{{ route('register') }}" wire:navigate class="btn-primary btn-sm shrink-0">Регистрация</a>
         @endauth
     </div>
 </header>
