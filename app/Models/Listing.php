@@ -20,7 +20,7 @@ class Listing extends Model
     use HasFactory, HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'user_id', 'part_id', 'category', 'city_id', 'title', 'description',
+        'user_id', 'part_id', 'custom_part', 'category', 'city_id', 'title', 'description',
         'condition', 'quantity', 'price_cents', 'offers_enabled', 'min_offer_cents',
         'warranty_until', 'has_receipt', 'mining_use', 'mining_months',
         'validation_url', 'accepts_inspect_test', 'specs', 'delivery_options',
@@ -202,6 +202,28 @@ class Listing extends Model
     public function scopeActive(Builder $q): Builder
     {
         return $q->where('status', ListingStatus::Active);
+    }
+
+    /**
+     * Listings whose seller named a model the catalogue does not have.
+     *
+     * The raw material of the promotion queue, and the definition lives here so
+     * the nav badge and the queue itself can never disagree about what is
+     * waiting - a count that says 12 over a screen showing 5 is how a queue
+     * stops being trusted.
+     *
+     * Removed is excluded: a moderator decided that listing should not exist,
+     * and its text should not steer the catalogue. Sold and Expired are kept -
+     * a model that sold is still a model.
+     */
+    public function scopeAwaitingCatalogue(Builder $q): Builder
+    {
+        return $q->whereNull('part_id')
+            ->whereNotNull('custom_part')
+            ->whereIn('status', [
+                ListingStatus::Active, ListingStatus::Reserved, ListingStatus::Sold,
+                ListingStatus::Expired, ListingStatus::PendingReview,
+            ]);
     }
 
     /** Filters on the attached part's typed specs - the catalogue payoff. */

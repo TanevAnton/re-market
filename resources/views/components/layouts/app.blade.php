@@ -223,6 +223,22 @@
                             <span class="badge-accent ml-1 font-mono">{{ $queued }}</span>
                         @endif
                     </a>
+
+                    {{-- Same reasoning as the moderation badge: a queue nobody
+                         can see the size of is a queue nobody works, and this
+                         one quietly costs the catalogue a row per listing for
+                         as long as it sits there.
+
+                         Counts LISTINGS, not clusters - one indexed count
+                         instead of grouping five thousand strings on every page
+                         an admin loads. --}}
+                    @php $uncatalogued = \App\Models\Listing::awaitingCatalogue()->count(); @endphp
+                    <a href="{{ route('catalogue') }}" wire:navigate class="btn-ghost btn-sm">
+                        Каталог
+                        @if ($uncatalogued)
+                            <span class="badge-neutral ml-1 font-mono">{{ $uncatalogued }}</span>
+                        @endif
+                    </a>
                 @endif
             @endauth
         </nav>

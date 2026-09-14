@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Support\Cyrillic;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -580,22 +581,9 @@ class PartCatalogueSeeder extends Seeder
         ));
     }
 
-    /** Token-based, for the same reason PartSeeder's version is. */
+    /** The shared map - see the note on PartSeeder::toCyrillic(). */
     private function toCyrillic(string $s): string
     {
-        $map = [
-            'asus' => 'асус', 'msi' => 'мси', 'gigabyte' => 'гигабайт',
-            'asrock' => 'асрок', 'corsair' => 'корсар', 'kingston' => 'кингстон',
-            'samsung' => 'самсунг', 'seagate' => 'сигейт', 'toshiba' => 'тошиба',
-            'noctua' => 'ноктуа', 'logitech' => 'логитек', 'razer' => 'рейзър',
-            'sony' => 'сони', 'microsoft' => 'майкрософт', 'nintendo' => 'нинтендо',
-            'playstation' => 'плейстейшън', 'xbox' => 'иксбокс', 'switch' => 'суич',
-            'tomahawk' => 'томахоук', 'pro' => 'про', 'evo' => 'ево',
-        ];
-
-        return implode(' ', array_map(
-            fn ($t) => $map[$t] ?? $t,
-            preg_split('/\s+/', trim($s))
-        ));
+        return Cyrillic::toCyrillic($s);
     }
 }

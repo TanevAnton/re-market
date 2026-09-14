@@ -297,6 +297,23 @@
                     Пазарни цени, спецификации и всички обяви за този модел.
                 </p>
             </div>
+        @elseif ($listing->custom_part)
+            {{-- No catalogue row, but the seller named the model. Shown as
+                 theirs rather than as ours: there is no page behind it, no
+                 price band and no verified specs, and dressing it up as a
+                 catalogue entry would promise all three.
+
+                 It is also the field the admin promotion queue is built on, so
+                 putting it on the page keeps the thing being harvested visible
+                 to the person who wrote it. --}}
+            <div class="card-pad">
+                <h2 class="label">Модел по думите на продавача</h2>
+                <p class="mt-2 text-sm font-semibold">{{ $listing->custom_part }}</p>
+                <p class="hint mt-1">
+                    Този модел още го няма в каталога, затова няма страница с пазарни цени.
+                    Провери спецификациите с продавача.
+                </p>
+            </div>
         @endif
 
         @if ($listing->accepts_inspect_test)

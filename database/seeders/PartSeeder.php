@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Support\Cyrillic;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -270,22 +271,15 @@ class PartSeeder extends Seeder
     }
 
     /**
-     * Token-based, deliberately NOT strtr(): a substring map would rewrite
-     * "ti" inside unrelated words and silently corrupt half the catalogue.
+     * One map for the whole site, in App\Support\Cyrillic.
+     *
+     * This used to be a private table here and a second, different private
+     * table on PartCatalogueSeeder. The promotion queue needed the same
+     * knowledge in reverse, and a third copy would have meant three
+     * disagreeing answers to "is „про" the same word as pro".
      */
     private function toCyrillic(string $s): string
     {
-        $map = [
-            'geforce' => 'джифорс', 'radeon' => 'радеон', 'ryzen' => 'райзен',
-            'core'    => 'кор',     'arc'    => 'арк',    'rtx'   => 'ртх',
-            'gtx'     => 'гтх',     'rx'     => 'рх',     'super' => 'супер',
-            'ti'      => 'ти',      'xtx'    => 'хтх',    'xt'    => 'хт',
-            'ultra'   => 'ултра',
-        ];
-
-        return implode(' ', array_map(
-            fn ($t) => $map[$t] ?? $t,
-            preg_split('/\s+/', trim($s))
-        ));
+        return Cyrillic::toCyrillic($s);
     }
 }

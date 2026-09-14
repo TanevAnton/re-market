@@ -167,6 +167,11 @@ class CreateListing extends Component
         $this->category             = $source->category;
         $this->partId               = $source->part_id;
         $this->partNotListed        = $source->part_id === null;
+        // Copied, unlike the photos and the warranty: it is a fact about the
+        // model rather than about the physical item, and a seller listing a
+        // second one of something the catalogue still lacks should not have to
+        // type its name again.
+        $this->customPart           = (string) $source->custom_part;
         $this->title                = $source->title;
         $this->description          = $source->description;
         $this->condition            = $source->condition->value;
@@ -582,6 +587,21 @@ class CreateListing extends Component
             $listing = Listing::create([
                 'user_id'              => $user->id,
                 'part_id'              => $this->partId,
+
+                /*
+                 * The answer to „Име на модела" is kept, verbatim, whenever
+                 * there is no catalogue row behind it. Until now it was
+                 * validated and then dropped on the floor - which meant the one
+                 * moment a seller tells us, unprompted, exactly what the
+                 * catalogue is missing produced nothing at all.
+                 *
+                 * Stored only when it is actually the answer: a leftover string
+                 * from someone who typed a model, changed their mind and picked
+                 * from the catalogue is not a gap in the catalogue.
+                 */
+                'custom_part'          => $this->partNotListed && trim($this->customPart) !== ''
+                    ? trim($this->customPart)
+                    : null,
                 'category'             => $this->category,
                 'city_id'              => $this->city_id,
                 'title'                => $this->title,

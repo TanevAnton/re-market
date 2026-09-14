@@ -17,6 +17,7 @@ use App\Livewire\Listings\EditListing;
 use App\Livewire\Listings\MyListings;
 use App\Livewire\Deals\MyDeals;
 use App\Livewire\Messages\Inbox;
+use App\Livewire\Moderation\CatalogueQueue;
 use App\Livewire\Moderation\Queue as ModerationQueue;
 use App\Livewire\Messages\ShowThread;
 use App\Livewire\Offers\OfferInbox;
@@ -208,6 +209,19 @@ Route::middleware('auth')->group(function () {
     Route::get('/moderaciya', ModerationQueue::class)
         ->middleware('admin')
         ->name('moderation');
+
+    /*
+     * The catalogue's own queue: model names sellers typed because the
+     * catalogue did not have them.
+     *
+     * Admin-gated for the same reason as moderation - it edits other people's
+     * listings - but it is curation rather than judgement, which is why it is a
+     * separate screen rather than another tab of the moderation queue. Nobody
+     * is being told no here.
+     */
+    Route::get('/katalog', CatalogueQueue::class)
+        ->middleware('admin')
+        ->name('catalogue');
 
     Route::post('/izhod', function () {
         Auth::logout();
