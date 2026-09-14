@@ -226,6 +226,46 @@ class HeaderTest extends TestCase
         }
     }
 
+    /**
+     * A panel opens toward the side that has room.
+     *
+     * The guest trigger sits against the left edge of the bar, so its panel
+     * must be anchored left; the account trigger is the last thing in the bar,
+     * so its panel is anchored right. Anchored the wrong way, a 208px panel on
+     * a 411px phone hangs off the screen — which is exactly what happened, and
+     * only a screenshot caught it.
+     *
+     * Asserting class names is a weak proxy for a layout, and it is here
+     * because the alternative is no guard at all: nothing else in the suite
+     * can see a panel leave the viewport.
+     */
+    public function test_each_menu_opens_toward_the_side_that_has_room(): void
+    {
+        $guest = $this->header();
+        $auth  = $this->header($this->user);
+
+        $this->assertStringContainsString('absolute left-0', $guest,
+            'the guest menu is not left-anchored, so on a phone it opens off the left edge');
+        $this->assertStringNotContainsString('absolute right-0', $guest);
+
+        $this->assertStringContainsString('absolute right-0', $auth,
+            'the account menu is not right-anchored, so it opens off the right edge');
+    }
+
+    /** Neither panel may be wider than the screen it opens on. */
+    public function test_neither_menu_can_be_wider_than_the_viewport(): void
+    {
+        foreach ([$this->header(), $this->header($this->user)] as $html) {
+            preg_match_all('/class="card absolute[^"]*"/', $html, $panels);
+
+            $this->assertNotEmpty($panels[0], 'no dropdown panel found in the header');
+
+            foreach ($panels[0] as $panel) {
+                $this->assertStringContainsString('max-w-[calc(100vw-2rem)]', $panel);
+            }
+        }
+    }
+
     private function openDeal(): void
     {
         $listing = Listing::factory()->create([

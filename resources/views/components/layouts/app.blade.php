@@ -206,6 +206,41 @@
             @endphp
         @endauth
 
+        {{-- Guests have no account menu, so below `lg` the two site links need a
+             home of their own or a phone cannot reach the listings at all.
+
+             It sits HERE, immediately after the logo, for two reasons. It is
+             where a hamburger belongs and where a thumb goes looking for it —
+             and it is on the left, which is the side its panel opens toward.
+             Parked next to Вход instead, the trigger ended up mid-bar and the
+             panel, anchored to its right edge, hung off the left of the screen. --}}
+        @guest
+            <div class="relative shrink-0 lg:hidden"
+                 x-data="{ open: false }"
+                 x-on:keydown.escape.window="open = false">
+                <button type="button" x-on:click="open = ! open"
+                        x-bind:aria-expanded="open ? 'true' : 'false'"
+                        aria-haspopup="true" aria-label="Меню"
+                        class="btn-ghost btn-sm h-8 w-8 px-0!">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                        <path d="M4 7h16M4 12h16M4 17h16"/>
+                    </svg>
+                </button>
+
+                {{-- left-0, not right-0: a panel opens toward the side that has
+                     room, and this trigger is against the left edge. The
+                     account menu below is the mirror image and keeps right-0
+                     because it is the last thing in the bar. --}}
+                <div x-show="open" x-cloak x-transition
+                     x-on:click.outside="open = false"
+                     class="card absolute left-0 z-40 mt-2 w-52 max-w-[calc(100vw-2rem)] p-1.5">
+                    <a href="{{ route('browse') }}" wire:navigate class="menu-item">Обяви</a>
+                    <a href="{{ route('valuation') }}" wire:navigate class="menu-item">Колко струва?</a>
+                </div>
+            </div>
+        @endguest
+
         {{-- What the site IS. Two items, and they stay two. --}}
         <nav class="ml-1 hidden shrink-0 items-center gap-1 lg:flex">
             <a href="{{ route('browse') }}" wire:navigate class="btn-ghost btn-sm">Обяви</a>
@@ -287,11 +322,18 @@
                         aria-haspopup="true"
                         class="btn-ghost btn-sm">
                     <span class="hidden sm:inline">{{ auth()->user()->username }}</span>
-                    <svg class="h-4 w-4 sm:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                         stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                        <path d="M4 7h16M4 12h16M4 17h16"/>
-                    </svg>
-                    <span class="sr-only sm:hidden">Меню</span>
+
+                    {{-- An initial below `sm`, NOT a second hamburger. A guest
+                         gets a hamburger on the left of the bar for the site
+                         menu; this one is on the right and is an account. Two
+                         identical glyphs in two places, meaning two different
+                         things, is the part that reads as broken. --}}
+                    <span aria-hidden="true"
+                          class="grid h-5 w-5 place-items-center rounded-md bg-surface-alt
+                                 font-mono text-[11px] font-bold text-ink sm:hidden">
+                        {{ mb_strtoupper(mb_substr(auth()->user()->username, 0, 1)) }}
+                    </span>
+                    <span class="sr-only sm:hidden">Профил и меню</span>
 
                     @if ($menuBadge)
                         <span class="badge-accent ml-1 font-mono">{{ $menuBadge }}</span>
@@ -311,7 +353,7 @@
                      out, which is right for a bar and wrong for a list. --}}
                 <div x-show="open" x-cloak x-transition
                      x-on:click.outside="open = false"
-                     class="card absolute right-0 z-40 mt-2 w-60 p-1.5">
+                     class="card absolute right-0 z-40 mt-2 w-60 max-w-[calc(100vw-2rem)] p-1.5">
 
                     {{-- Only at the widths where the bar is not already showing
                          these. The divider hides with them, or it is a line
@@ -394,29 +436,6 @@
                 </div>
             </div>
         @else
-            {{-- Guests have no account menu, so the two site links need a home
-                 below `lg` or a phone cannot reach the listings at all. --}}
-            <div class="relative shrink-0 lg:hidden"
-                 x-data="{ open: false }"
-                 x-on:keydown.escape.window="open = false">
-                <button type="button" x-on:click="open = ! open"
-                        x-bind:aria-expanded="open ? 'true' : 'false'"
-                        aria-haspopup="true" aria-label="Меню"
-                        class="btn-ghost btn-sm h-8 w-8 px-0!">
-                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                         stroke-width="2" stroke-linecap="round" aria-hidden="true">
-                        <path d="M4 7h16M4 12h16M4 17h16"/>
-                    </svg>
-                </button>
-
-                <div x-show="open" x-cloak x-transition
-                     x-on:click.outside="open = false"
-                     class="card absolute right-0 z-40 mt-2 w-52 p-1.5">
-                    <a href="{{ route('browse') }}" wire:navigate class="menu-item">Обяви</a>
-                    <a href="{{ route('valuation') }}" wire:navigate class="menu-item">Колко струва?</a>
-                </div>
-            </div>
-
             <a href="{{ route('login') }}" wire:navigate class="btn-ghost btn-sm shrink-0">Вход</a>
             <a href="{{ route('register') }}" wire:navigate class="btn-primary btn-sm shrink-0">Регистрация</a>
         @endauth
