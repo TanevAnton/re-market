@@ -113,12 +113,46 @@ class RefreshPartStats extends Command
               ) < ?
         ", [$this->minimumSample()]);
 
+        /*
+         * The history point for today.
+         *
+         * Everything above overwrites: `parts` carries one current band and
+         * last night's is gone. This is the only statement in the codebase that
+         * writes something which cannot be recomputed later — a day that passes
+         * without it is a day of the Bulgarian used-hardware market that no
+         * longer exists anywhere.
+         *
+         * LAST on purpose. It reads the columns the three statements above have
+         * just settled, including the clearing pass, so a part that dropped
+         * below the minimum sample today correctly records nothing rather than
+         * yesterday's figures with today's date on them.
+         *
+         * ON CONFLICT because this command must be safe to run twice — after a
+         * failed deploy, by hand while debugging, or because a timer fired
+         * twice. The second run of a day corrects that day; it does not add a
+         * second point to it.
+         */
+        $captured = DB::affectingStatement("
+            INSERT INTO part_price_points
+                (part_id, captured_on, p25_cents, median_cents, p75_cents, sample_size, created_at)
+            SELECT id, CURRENT_DATE,
+                   price_p25_cents, price_median_cents, price_p75_cents,
+                   active_listings_count, now()
+              FROM parts
+             WHERE price_median_cents IS NOT NULL
+            ON CONFLICT (part_id, captured_on) DO UPDATE SET
+                p25_cents    = EXCLUDED.p25_cents,
+                median_cents = EXCLUDED.median_cents,
+                p75_cents    = EXCLUDED.p75_cents,
+                sample_size  = EXCLUDED.sample_size
+        ");
+
         $priced = DB::table('parts')->whereNotNull('price_median_cents')->count();
         $live   = DB::table('parts')->where('active_listings_count', '>', 0)->count();
 
         $this->info(sprintf(
-            'Parts refreshed in %.1fs — %d with live listings, %d with a price band.',
-            microtime(true) - $started, $live, $priced,
+            'Parts refreshed in %.1fs — %d with live listings, %d with a price band, %d history points written.',
+            microtime(true) - $started, $live, $priced, $captured,
         ));
 
         return self::SUCCESS;

@@ -123,6 +123,16 @@
             </section>
         @endif
 
+        {{-- The band says what to ask. This says whether to ask it this week or
+             next — which, for somebody deciding whether to sell at all, is the
+             more useful of the two. --}}
+        @include('partials.price-trend', [
+            'trend'   => $trend,
+            'history' => $history,
+            'tone'    => 'seller',
+            'class'   => 'mt-6',
+        ])
+
         {{-- ------------------------------------------------- the evidence --}}
         @if ($asks->isNotEmpty())
             <section class="card-pad mt-6">

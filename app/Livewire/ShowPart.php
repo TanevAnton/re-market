@@ -241,6 +241,12 @@ class ShowPart extends Component
             'related'   => $this->relatedParts(),
             'rows'      => $this->specRows(),
             'liveCount' => $this->liveCount(),
+
+            // The band says what this costs today; these say which way it has
+            // been going. Resolved here rather than in the view so the Blade
+            // needs no raw PHP to draw a chart.
+            'history'   => $this->part->priceHistory(),
+            'trend'     => $this->part->priceTrend(),
         ])->layoutData([
             'title'       => $this->metaTitle(),
             'description' => $this->metaDescription(),

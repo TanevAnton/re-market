@@ -76,6 +76,17 @@
                 </section>
             @endif
 
+            {{-- Directly under the band, because it answers the question the
+                 band provokes. „Средна цена 750 €" invites „и вчера ли беше?",
+                 and until this table existed the site had no way to answer —
+                 `parts` carries one current figure and overwrites it nightly. --}}
+            @include('partials.price-trend', [
+                'trend'   => $trend,
+                'history' => $history,
+                'tone'    => 'buyer',
+                'class'   => $band ? 'mt-6' : '',
+            ])
+
             {{-- Listings ------------------------------------------------- --}}
             <section class="{{ $band ? 'mt-6' : '' }}">
                 <div class="flex flex-wrap items-baseline justify-between gap-3">

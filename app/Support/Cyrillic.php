@@ -40,6 +40,17 @@ class Cyrillic
         // product words
         'playstation' => 'плейстейшън', 'xbox' => 'иксбокс', 'switch' => 'суич',
         'tomahawk'    => 'томахоук',    'pro'  => 'про',     'evo'    => 'ево',
+
+        /*
+         * Apple. „айфон" is how the device is written in Bulgarian far more
+         * often than „iPhone" - it has been a loanword for fifteen years - so
+         * without these the entire Apple catalogue is unfindable to anyone
+         * whose keyboard is on Cyrillic, which on a Bulgarian phone is most of
+         * the time.
+         */
+        'apple'   => 'епъл',   'iphone' => 'айфон', 'ipad' => 'айпад',
+        'macbook' => 'макбук', 'air'    => 'еър',   'max'  => 'макс',
+        'mini'    => 'мини',   'plus'   => 'плюс',  'pencil' => 'пенсил',
     ];
 
     public static function toCyrillic(string $s): string

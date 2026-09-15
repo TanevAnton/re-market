@@ -466,6 +466,7 @@
         <nav class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
             <a href="{{ route('browse') }}" wire:navigate class="text-ink-muted hover:text-ink">Всички обяви</a>
             <a href="{{ route('valuation') }}" wire:navigate class="text-ink-muted hover:text-ink">Колко струва техниката ми</a>
+            <a href="{{ route('apple') }}" wire:navigate class="text-ink-muted hover:text-ink">Apple втора употреба</a>
         </nav>
 
         <nav class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Cyrillic;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -42,6 +43,92 @@ class Part extends Model
     public function listings(): HasMany
     {
         return $this->hasMany(Listing::class);
+    }
+
+    /** One row per day, written nightly. See the migration for why it exists. */
+    public function pricePoints(): HasMany
+    {
+        return $this->hasMany(PartPricePoint::class);
+    }
+
+    /**
+     * The recorded band, oldest first.
+     *
+     * Gaps are real and are left in: a day with no row is a day this model had
+     * too few live listings to price, and closing the gap by interpolation
+     * would be drawing a price nobody asked.
+     *
+     * @return \Illuminate\Support\Collection<int, PartPricePoint>
+     */
+    public function priceHistory(?int $days = null): \Illuminate\Support\Collection
+    {
+        $days ??= (int) config('remarket.parts.history_days', 90);
+
+        return $this->pricePoints()
+            ->where('captured_on', '>=', now()->subDays($days)->toDateString())
+            ->orderBy('captured_on')
+            ->get();
+    }
+
+    /**
+     * Which way the price has moved, or null when the series cannot support an
+     * answer.
+     *
+     * Two separate refusals, and both matter more than having something to
+     * show. Too FEW points and the "trend" is two numbers with a line between
+     * them. Too SHORT a span and it is Tuesday against Thursday - on a market
+     * where one seller relisting moves a thin median several percent, that is
+     * noise reported as news, and a seller who drops their price because of it
+     * has been actively misled.
+     *
+     * `direction` is flat inside the same 3% the price-drop notification uses,
+     * because the threshold for "worth telling somebody" should not depend on
+     * which screen they are looking at.
+     *
+     * @return array{from: int, to: int, percent: int, direction: string,
+     *     days: int, points: int, sample: int}|null
+     */
+    public function priceTrend(?int $days = null): ?array
+    {
+        $history = $this->priceHistory($days);
+
+        $minPoints = (int) config('remarket.parts.history_min_points', 4);
+        $minDays   = (int) config('remarket.parts.history_min_days', 14);
+
+        if ($history->count() < $minPoints) {
+            return null;
+        }
+
+        $first = $history->first();
+        $last  = $history->last();
+        $span  = (int) $first->captured_on->diffInDays($last->captured_on);
+
+        if ($span < $minDays || $first->median_cents <= 0) {
+            return null;
+        }
+
+        $percent = (int) round(
+            ($last->median_cents - $first->median_cents) / $first->median_cents * 100
+        );
+
+        $flat = (int) config('remarket.parts.history_flat_percent', 3);
+
+        return [
+            'from'      => (int) $first->median_cents,
+            'to'        => (int) $last->median_cents,
+            'percent'   => $percent,
+            'direction' => match (true) {
+                $percent <= -$flat => 'down',
+                $percent >= $flat  => 'up',
+                default            => 'flat',
+            },
+            'days'   => $span,
+            'points' => $history->count(),
+            // The thinnest day in the window. A series built from three
+            // listings a day is a different claim from one built from forty,
+            // and the caption is the only place that can still say so.
+            'sample' => (int) $history->min('sample_size'),
+        ];
     }
 
     public function fullName(): string
@@ -93,12 +180,34 @@ class Part extends Model
         ));
     }
 
-    /** Both spellings worth trying: as typed, and with o/0 corrected. */
+    /**
+     * Every spelling worth trying: as typed, with o/0 corrected, and folded
+     * back to Latin.
+     *
+     * THE LATIN FOLD IS WHAT MAKES A CYRILLIC QUERY WORK AT ALL BEYOND AN EXACT
+     * ALIAS. `model` is stored in Latin, and trigram similarity cannot bridge
+     * scripts — „макбук еър" and "MacBook Air" share not one character, so
+     * word_similarity scores them at zero and ILIKE finds nothing. Without this
+     * fold, a Cyrillic search only ever matches an alias somebody seeded by
+     * hand, which means it works for „айфон 13 про" (a seeded tail) and fails
+     * for „макбук еър" and for the bare word „айпад" — the two shapes a real
+     * buyer types most, because they are how you start a search before you know
+     * which model you want.
+     *
+     * Cyrillic::toLatin is the reverse of the table the seeders already use, so
+     * the two directions cannot drift apart.
+     */
     public static function queryVariants(string $term): array
     {
-        $raw = mb_strtolower(trim($term));
+        $raw   = mb_strtolower(trim($term));
+        $latin = Cyrillic::toLatin($raw);
 
-        return array_values(array_unique([$raw, self::normalizeQuery($raw)]));
+        return array_values(array_unique(array_filter([
+            $raw,
+            self::normalizeQuery($raw),
+            $latin,
+            self::normalizeQuery($latin),
+        ])));
     }
 
     /** Exact alias hit - Cyrillic, Latin or shlyokavitsa. Uses the GIN index. */

@@ -40,7 +40,22 @@ class ImageProcessor
      */
     public function store(UploadedFile $file, string $folder = 'listings'): array
     {
-        $image = $this->manager->decodePath($file->getRealPath())
+        return $this->storeFile($file->getRealPath(), $folder);
+    }
+
+    /**
+     * The same pipeline, from a path already on disk.
+     *
+     * Extracted for the bulk importer, which reads a folder of photographs next
+     * to a CSV and has no HTTP upload to wrap. The alternative was constructing
+     * an UploadedFile around a local path in test mode, which works and is a
+     * lie about where the bytes came from.
+     *
+     * @return array{path: string, thumb: string, width: int, height: int, bytes: int, phash: int}
+     */
+    public function storeFile(string $source, string $folder = 'listings'): array
+    {
+        $image = $this->manager->decodePath($source)
             // EXIF orientation must be applied before metadata is dropped, or
             // phone photos land sideways.
             ->orient()

@@ -43,6 +43,11 @@ class Sitemap
         // it can wear canonicalises to /model/{slug}, which is already here.
         $urls[] = $this->url(route('valuation'), now(), 'weekly', '0.7');
 
+        // The Apple section. A brand-level door in front of three categories,
+        // and the only surface that can answer „apple втора употреба" - which
+        // no individual listing and no single model page ever will.
+        $urls[] = $this->url(route('apple'), now(), 'weekly', '0.7');
+
         foreach ($this->legalPages() as $name) {
             $urls[] = $this->url(route($name), null, 'yearly', '0.2');
         }

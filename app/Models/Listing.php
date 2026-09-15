@@ -20,7 +20,7 @@ class Listing extends Model
     use HasFactory, HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'user_id', 'part_id', 'custom_part', 'category', 'city_id', 'title', 'description',
+        'user_id', 'part_id', 'custom_part', 'external_ref', 'category', 'city_id', 'title', 'description',
         'condition', 'quantity', 'price_cents', 'offers_enabled', 'min_offer_cents',
         'warranty_until', 'has_receipt', 'mining_use', 'mining_months',
         'validation_url', 'accepts_inspect_test', 'specs', 'delivery_options',

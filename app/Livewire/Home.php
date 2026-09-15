@@ -25,29 +25,25 @@ class Home extends Component
     private const RAIL = 8;
 
     /**
-     * Short codes instead of icons.
-     *
-     * Sixteen hand-drawn category icons would be sixteen chances to draw a
-     * power supply that looks like a hard drive. GPU / CPU / RAM are what the
-     * audience already calls these things, set in the same monospace as the
-     * spec sheets - which says "this site knows what a GPU is" more clearly
-     * than any icon set would.
-     */
-    private const CODES = [
-        'gpu' => 'GPU', 'cpu' => 'CPU', 'motherboard' => 'MB', 'ram' => 'RAM',
-        'psu' => 'PSU', 'storage' => 'SSD', 'monitor' => 'LCD', 'cooler' => 'FAN',
-        'case' => 'ATX', 'laptop' => 'NB', 'keyboard' => 'KBD', 'mouse' => 'MSE',
-        'headset' => 'AUD', 'console' => 'CON', 'prebuilt' => 'PC', 'other' => '...',
-    ];
-
-    /**
-     * Categories with a live count, in one grouped query rather than sixteen.
+     * Categories with a live count, in one grouped query rather than nineteen.
      *
      * Empty categories stay visible: a marketplace that hides what it has none
      * of tells a visitor nothing about what it is for, and the count being
      * honestly zero is better than the category being missing.
      *
-     * @return list<array{key: string, label: string, code: string, count: int}>
+     * WHERE THE THREE-LETTER CODES WENT. This grid used to carry a mono badge
+     * per category - GPU, CPU, RAM - on the argument that those are what the
+     * audience already calls these things. That held at sixteen categories of
+     * components. It stopped holding twice over: the tail was never as obvious
+     * as the head (ATX for a case, MSE for a mouse, AUD for a headset are
+     * guesses, not names), and the Apple lines brought in a buyer who does not
+     * read spec sheets and for whom PHN / TAB / MAC say nothing at all. Shape
+     * is also simply faster to scan than three letters when the real label sits
+     * beside it either way. The drawings live in one Blade partial keyed by
+     * category - see resources/views/partials/category-icon.blade.php, which
+     * explains why they are inline SVG rather than the generated PNG sheet.
+     *
+     * @return list<array{key: string, label: string, count: int}>
      */
     public function categories(): array
     {
@@ -66,7 +62,6 @@ class Home extends Component
             ->map(fn (array $c) => [
                 'key'   => $c['key'],
                 'label' => $c['label'],
-                'code'  => self::CODES[$c['key']] ?? '—',
                 'count' => (int) ($counts[$c['key']] ?? 0),
             ])
             ->sortByDesc('count')

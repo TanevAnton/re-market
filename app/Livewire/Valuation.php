@@ -198,6 +198,15 @@ class Valuation extends Component
             'guidance'   => $this->guidance(),
             'asks'       => $this->recentAsks(),
             'live'       => $this->liveCount(),
+
+            /*
+             * The one number a seller wants that the band cannot give them.
+             * „Струва 750 €" answers what to ask; „пада с 8% на месец" answers
+             * whether to ask it this week or next, which is the decision they
+             * actually came here to make.
+             */
+            'history'    => $part?->priceHistory() ?? collect(),
+            'trend'      => $part?->priceTrend(),
             'categories' => SpecFilter::categories(),
         ])->layoutData([
             'title'       => $part

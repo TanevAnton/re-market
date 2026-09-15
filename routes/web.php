@@ -6,6 +6,7 @@ use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\VerifyEmailNotice;
 use App\Livewire\Auth\VerifyPhone;
+use App\Livewire\AppleSection;
 use App\Livewire\BrowseListings;
 use App\Livewire\Favorites\MyFavorites;
 use App\Livewire\Home;
@@ -76,6 +77,20 @@ Route::get('/model/{part}', ShowPart::class)->name('part');
  * recognise in a result list; `/valuation` is a word no Bulgarian seller types.
  */
 Route::get('/kolko-struva', Valuation::class)->name('valuation');
+
+/*
+ * „Специален раздел" for Apple — one door in front of three ordinary
+ * categories rather than a fourth category of its own.
+ *
+ * iPhone, iPad and MacBook already have their own schemas and their own
+ * catalogue; this is the entrance for somebody who knows the brand before they
+ * know the device, and the only surface that can rank for „apple втора
+ * употреба" - a phrase no individual listing will ever answer.
+ *
+ * The URL is the word people type. It is the same in both alphabets, which is
+ * why it is one of the few routes here that is not Bulgarian.
+ */
+Route::get('/apple', AppleSection::class)->name('apple');
 
 /*
  * Landing pages nobody crawls are worth nothing, so the sitemap ships with

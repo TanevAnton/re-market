@@ -84,10 +84,17 @@
                 @foreach ($categories as $category)
                     <a href="{{ route('browse', ['kat' => $category['key']]) }}" wire:navigate
                        class="card-interactive group flex items-center gap-3 p-3">
+                        {{-- The icon inherits `currentColor` from this span, which is
+                             the whole reason it is drawn rather than loaded: the
+                             hover state already flips the text colour, so the
+                             drawing flips with it and there is no second asset. --}}
                         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-surface-alt
-                                     font-mono text-[11px] font-bold text-ink-muted transition-colors
+                                     text-ink-muted transition-colors
                                      group-hover:bg-accent group-hover:text-[var(--accent-ink)]">
-                            {{ $category['code'] }}
+                            @include('partials.category-icon', [
+                                'category' => $category['key'],
+                                'class'    => 'h-5 w-5',
+                            ])
                         </span>
                         <span class="min-w-0">
                             <span class="block truncate text-sm font-semibold">{{ $category['label'] }}</span>

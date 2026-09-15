@@ -120,6 +120,27 @@ return [
          */
         'deal_badge_min_listings' => (int) env('PART_DEAL_BADGE_MIN', 5),
         'deal_badge_min_percent'  => (int) env('PART_DEAL_BADGE_PERCENT', 7),
+
+        /*
+         * Price history — the window the pages read, and what the series has to
+         * contain before anybody is told a direction.
+         *
+         * `min_points` and `min_days` are two different refusals. Four points
+         * spread over three days is not a trend, and neither is two points a
+         * month apart; a series has to be both long enough and dense enough
+         * before a percentage off it means anything. On a thin market one
+         * seller relisting moves a median several percent, so a number
+         * published without those guards is noise reported as news - and a
+         * seller who cuts their price because of it has been misled by us.
+         *
+         * `flat_percent` matches the price-drop notification's threshold on
+         * purpose: what counts as "worth telling somebody" should not depend on
+         * which screen they happen to be looking at.
+         */
+        'history_days'         => (int) env('PART_HISTORY_DAYS', 90),
+        'history_min_points'   => (int) env('PART_HISTORY_MIN_POINTS', 4),
+        'history_min_days'     => (int) env('PART_HISTORY_MIN_DAYS', 14),
+        'history_flat_percent' => (int) env('PART_HISTORY_FLAT_PERCENT', 3),
     ],
 
     'listings' => [

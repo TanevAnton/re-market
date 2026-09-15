@@ -610,6 +610,238 @@ return [
             ],
         ],
 
+        /*
+        |----------------------------------------------------------------------
+        | Apple — three categories, not one
+        |----------------------------------------------------------------------
+        |
+        | An iPhone, an iPad and a MacBook share a manufacturer and almost
+        | nothing else a buyer filters on, so one „apple" bucket would leave
+        | most facets blank on most listings - the same reason `prebuilt` has no
+        | catalogue. Three product lines, three schemas.
+        |
+        | WHY THIS FITS THE SITE AT ALL. After GPUs, Apple is the most
+        | catalogueable hardware there is: a small, fixed, published SKU list
+        | where the configuration IS the product. „iPhone 13 Pro 256GB" is one
+        | thing everywhere in the world, which is exactly what a catalogue,
+        | a price band and a facet filter need and exactly what a free-text
+        | classifieds listing throws away.
+        |
+        | STORAGE IS PART-SCOPED on all three, and that is the important call.
+        | A 128GB and a 512GB of the same model are hundreds of euros apart, so
+        | one shared median would be useless to both - the same reasoning that
+        | makes „GeForce RTX 3080 12GB" its own catalogue row rather than a
+        | variant of the 10GB. One row per configuration.
+        |
+        | REQUIRED IS ONLY EVER SET ON PART-SCOPED SPECS, here as everywhere.
+        | The wizard does not enforce `required` on a listing-scoped spec -
+        | PartCatalogueTest enforces it on seeded parts, and nothing enforces it
+        | on a seller. The mechanism that actually makes a seller answer is the
+        | checklist: a blank facet becomes „без отговор", badged and shown as
+        | urgent, which is why every risk below has a checklist line pointing at
+        | its spec. Marking these `required` would be decoration that reads like
+        | a guarantee.
+        |
+        | THE RISKS ARE DIFFERENT FROM PC PARTS, and they are what the schema is
+        | built around. A graphics card cannot be remotely bricked; an iPhone
+        | can. Activation Lock, a carrier lock, a non-genuine screen that kills
+        | Face ID, and - on ex-corporate MacBooks - an MDM enrolment that
+        | survives a wipe, are this category's mining_use and power_on_hours.
+        */
+
+        'iphone' => [
+            'label' => ['bg' => 'iPhone', 'en' => 'iPhone'],
+            'slug'  => ['bg' => 'iphone', 'en' => 'iphone'],
+            'specs' => [
+                'storage_gb' => ['type' => 'int', 'scope' => 'part', 'unit' => 'GB', 'required' => true,
+                    'label' => ['bg' => 'Памет', 'en' => 'Storage'],
+                    'facet' => 'terms', 'options' => [16,32,64,128,256,512,1024], 'priority' => 1],
+                'chip' => ['type' => 'select', 'scope' => 'part', 'required' => true,
+                    'label' => ['bg' => 'Процесор', 'en' => 'Chip'],
+                    'facet' => 'terms', 'priority' => 2],
+                'screen_inch' => ['type' => 'decimal', 'scope' => 'part', 'unit' => '"',
+                    'label' => ['bg' => 'Екран', 'en' => 'Screen'],
+                    'facet' => 'terms', 'priority' => 8],
+                'connector' => ['type' => 'select', 'scope' => 'part',
+                    'label' => ['bg' => 'Порт', 'en' => 'Connector'],
+                    'options' => ['Lightning', 'USB-C'],
+                    'facet' => 'terms', 'priority' => 9],
+                'biometrics' => ['type' => 'select', 'scope' => 'part',
+                    'label' => ['bg' => 'Отключване', 'en' => 'Biometrics'],
+                    'options' => ['Face ID', 'Touch ID'],
+                    'facet' => 'terms', 'priority' => 10],
+                'five_g' => ['type' => 'bool', 'scope' => 'part',
+                    'label' => ['bg' => '5G', 'en' => '5G'],
+                    'facet' => 'bool', 'priority' => 11],
+
+                // --- this particular handset ---------------------------------
+                'battery_health' => ['type' => 'int', 'scope' => 'listing', 'unit' => '%',
+                    'label' => ['bg' => 'Здраве на батерията', 'en' => 'Battery health'],
+                    'help'  => ['bg' => 'Настройки → Батерия → Здраве на батерията',
+                                'en' => 'Settings → Battery → Battery Health'],
+                    'facet' => 'range', 'priority' => 3],
+                'icloud_signed_out' => ['type' => 'bool', 'scope' => 'listing',
+                    'label' => ['bg' => 'Излязъл от iCloud', 'en' => 'Signed out of iCloud'],
+                    'help'  => ['bg' => 'Без това телефонът остава заключен за новия собственик',
+                                'en' => 'Without this the phone stays locked to the old owner'],
+                    'facet' => 'bool', 'priority' => 4],
+                'network_locked' => ['type' => 'bool', 'scope' => 'listing',
+                    'label' => ['bg' => 'Заключен за оператор', 'en' => 'Carrier locked'],
+                    'facet' => 'bool', 'priority' => 5],
+                'parts_status' => ['type' => 'select', 'scope' => 'listing',
+                    'label' => ['bg' => 'Части', 'en' => 'Parts'],
+                    'options' => ['Всички оригинални', 'Сменен екран', 'Сменена батерия',
+                                  'Сменени няколко части', 'Не знам'],
+                    'facet' => 'terms', 'priority' => 6],
+                'biometrics_work' => ['type' => 'bool', 'scope' => 'listing',
+                    'label' => ['bg' => 'Face ID / Touch ID работи', 'en' => 'Face ID / Touch ID works'],
+                    'facet' => 'bool', 'priority' => 7],
+                'imei_provided' => ['type' => 'bool', 'scope' => 'listing', 'sparse' => true,
+                    'label' => ['bg' => 'Дава IMEI за проверка', 'en' => 'IMEI available to check'],
+                    'facet' => 'bool', 'priority' => 12],
+                'box_included' => ['type' => 'bool', 'scope' => 'listing', 'sparse' => true,
+                    'label' => ['bg' => 'С кутия', 'en' => 'Original box'],
+                    'priority' => 13],
+            ],
+        ],
+
+        'ipad' => [
+            'label' => ['bg' => 'iPad', 'en' => 'iPad'],
+            'slug'  => ['bg' => 'ipad', 'en' => 'ipad'],
+            'specs' => [
+                'storage_gb' => ['type' => 'int', 'scope' => 'part', 'unit' => 'GB', 'required' => true,
+                    'label' => ['bg' => 'Памет', 'en' => 'Storage'],
+                    'facet' => 'terms', 'options' => [16,32,64,128,256,512,1024,2048], 'priority' => 1],
+                'chip' => ['type' => 'select', 'scope' => 'part', 'required' => true,
+                    'label' => ['bg' => 'Процесор', 'en' => 'Chip'],
+                    'facet' => 'terms', 'priority' => 2],
+                // Wi-Fi and Wi-Fi+Cellular are different SKUs at different
+                // prices, so this belongs to the catalogue row rather than to
+                // the unit - and each gets its own band.
+                'cellular' => ['type' => 'bool', 'scope' => 'part', 'required' => true,
+                    'label' => ['bg' => 'С SIM (Cellular)', 'en' => 'Cellular'],
+                    'facet' => 'bool', 'priority' => 3],
+                'screen_inch' => ['type' => 'decimal', 'scope' => 'part', 'unit' => '"',
+                    'label' => ['bg' => 'Екран', 'en' => 'Screen'],
+                    'facet' => 'terms', 'priority' => 4],
+                'pencil_support' => ['type' => 'select', 'scope' => 'part',
+                    'label' => ['bg' => 'Apple Pencil', 'en' => 'Apple Pencil'],
+                    'options' => ['Няма', 'Pencil 1', 'Pencil 2', 'Pencil USB-C', 'Pencil Pro'],
+                    'facet' => 'terms', 'priority' => 9],
+                'connector' => ['type' => 'select', 'scope' => 'part',
+                    'label' => ['bg' => 'Порт', 'en' => 'Connector'],
+                    'options' => ['Lightning', 'USB-C'],
+                    'facet' => 'terms', 'priority' => 10],
+
+                // --- this particular tablet ----------------------------------
+                'icloud_signed_out' => ['type' => 'bool', 'scope' => 'listing',
+                    'label' => ['bg' => 'Излязъл от iCloud', 'en' => 'Signed out of iCloud'],
+                    'help'  => ['bg' => 'Без това таблетът остава заключен за новия собственик',
+                                'en' => 'Without this the tablet stays locked to the old owner'],
+                    'facet' => 'bool', 'priority' => 5],
+                'battery_health' => ['type' => 'int', 'scope' => 'listing', 'unit' => '%', 'sparse' => true,
+                    'label' => ['bg' => 'Здраве на батерията', 'en' => 'Battery health'],
+                    // iPadOS does not show this the way iOS does, so it is
+                    // sparse rather than expected: demanding a number nobody
+                    // can read off the device teaches sellers to invent one.
+                    'help'  => ['bg' => 'По желание, от coconutBattery или 3uTools',
+                                'en' => 'Optional, from coconutBattery or 3uTools'],
+                    'facet' => 'range', 'priority' => 6],
+                'parts_status' => ['type' => 'select', 'scope' => 'listing',
+                    'label' => ['bg' => 'Части', 'en' => 'Parts'],
+                    'options' => ['Всички оригинални', 'Сменен екран', 'Сменена батерия',
+                                  'Сменени няколко части', 'Не знам'],
+                    'facet' => 'terms', 'priority' => 7],
+                'pencil_included' => ['type' => 'bool', 'scope' => 'listing', 'sparse' => true,
+                    'label' => ['bg' => 'С Apple Pencil', 'en' => 'Pencil included'],
+                    'facet' => 'bool', 'priority' => 8],
+                'box_included' => ['type' => 'bool', 'scope' => 'listing', 'sparse' => true,
+                    'label' => ['bg' => 'С кутия', 'en' => 'Original box'],
+                    'priority' => 11],
+            ],
+        ],
+
+        /*
+        | MacBooks are the exception the `laptop` category was written around.
+        |
+        | That seeder's note says no two configurations of one laptop model are
+        | alike, so a row per SKU would be enormous and still miss most
+        | listings. Apple soldered the RAM and the SSD: an M2 Air 13" is one of
+        | about six configurations, every one of them published, and the
+        | configuration is most of the price. So a MacBook gets what a Dell
+        | cannot - a model page, a price band, and facets that actually filter.
+        */
+        'macbook' => [
+            'label' => ['bg' => 'MacBook', 'en' => 'MacBook'],
+            'slug'  => ['bg' => 'macbook', 'en' => 'macbook'],
+            'specs' => [
+                'chip' => ['type' => 'select', 'scope' => 'part', 'required' => true,
+                    'label' => ['bg' => 'Чип', 'en' => 'Chip'],
+                    'facet' => 'terms', 'priority' => 1],
+                'ram_gb' => ['type' => 'int', 'scope' => 'part', 'unit' => 'GB', 'required' => true,
+                    'label' => ['bg' => 'Памет', 'en' => 'Memory'],
+                    // Soldered, which is why it is part of the model rather
+                    // than a fact about the unit - and why it cannot be fixed
+                    // later, which is why buyers filter on it this hard.
+                    'facet' => 'terms', 'options' => [8,16,18,24,32,36,48,64,96,128], 'priority' => 2],
+                'storage_gb' => ['type' => 'int', 'scope' => 'part', 'unit' => 'GB', 'required' => true,
+                    'label' => ['bg' => 'Диск', 'en' => 'Storage'],
+                    'facet' => 'terms', 'options' => [128,256,512,1024,2048,4096,8192], 'priority' => 3],
+                'screen_inch' => ['type' => 'decimal', 'scope' => 'part', 'unit' => '"', 'required' => true,
+                    'label' => ['bg' => 'Екран', 'en' => 'Screen'],
+                    'facet' => 'terms', 'options' => [11,12,13.3,13.6,14,14.2,15,15.3,16,16.2],
+                    'priority' => 4],
+                'model_year' => ['type' => 'int', 'scope' => 'part',
+                    'label' => ['bg' => 'Година', 'en' => 'Year'],
+                    'facet' => 'terms', 'priority' => 5],
+                'keyboard_type' => ['type' => 'select', 'scope' => 'part',
+                    'label' => ['bg' => 'Клавиатура', 'en' => 'Keyboard'],
+                    // The butterfly generation (2016-2019) fails on dust and was
+                    // the subject of Apple's own repair programme. It is a
+                    // buying criterion, not trivia.
+                    'options' => ['Magic Keyboard', 'Butterfly'],
+                    'facet' => 'terms', 'priority' => 10],
+                'ports' => ['type' => 'multiselect', 'scope' => 'part', 'sparse' => true,
+                    'label' => ['bg' => 'Портове', 'en' => 'Ports'],
+                    'options' => ['Thunderbolt 4', 'Thunderbolt 3', 'USB-C', 'USB-A', 'HDMI',
+                                  'SD карта', 'MagSafe 3', 'MagSafe 2', '3.5mm'],
+                    'facet' => 'terms', 'priority' => 11],
+
+                // --- this particular machine ---------------------------------
+                'battery_cycles' => ['type' => 'int', 'scope' => 'listing',
+                    'label' => ['bg' => 'Цикли на батерията', 'en' => 'Battery cycles'],
+                    // The power_on_hours of a MacBook: macOS reports it exactly,
+                    // every informed buyer asks for it, and it is the one number
+                    // that separates a light machine from a worked one.
+                    'help'  => ['bg' => 'Информация за системата → Захранване',
+                                'en' => 'System Information → Power'],
+                    'facet' => 'range', 'priority' => 6],
+                'battery_health' => ['type' => 'int', 'scope' => 'listing', 'unit' => '%', 'sparse' => true,
+                    'label' => ['bg' => 'Здраве на батерията', 'en' => 'Battery health'],
+                    'facet' => 'range', 'priority' => 7],
+                'icloud_signed_out' => ['type' => 'bool', 'scope' => 'listing',
+                    'label' => ['bg' => 'Изключен Find My', 'en' => 'Find My switched off'],
+                    'facet' => 'bool', 'priority' => 8],
+                'mdm_free' => ['type' => 'bool', 'scope' => 'listing',
+                    'label' => ['bg' => 'Без фирмена регистрация (MDM)', 'en' => 'Not MDM enrolled'],
+                    // Ex-corporate machines from liquidations re-enrol
+                    // themselves after a wipe and cannot be used. This is the
+                    // MacBook's Activation Lock, and it is invisible until the
+                    // buyer gets home.
+                    'help'  => ['bg' => 'Машините от фирми се заключват отново след изтриване',
+                                'en' => 'Company machines re-lock themselves after an erase'],
+                    'facet' => 'bool', 'priority' => 9],
+                'parts_status' => ['type' => 'select', 'scope' => 'listing',
+                    'label' => ['bg' => 'Части', 'en' => 'Parts'],
+                    'options' => ['Всички оригинални', 'Сменена батерия', 'Сменен екран',
+                                  'Сменена клавиатура', 'Сменени няколко части', 'Не знам'],
+                    'facet' => 'terms', 'priority' => 12],
+                'charger_included' => ['type' => 'bool', 'scope' => 'listing',
+                    'label' => ['bg' => 'С оригинално зарядно', 'en' => 'Original charger'],
+                    'facet' => 'bool', 'priority' => 13],
+            ],
+        ],
+
         'other' => [
             'label' => ['bg' => 'Други', 'en' => 'Other'],
             'slug'  => ['bg' => 'drugi', 'en' => 'other'],
