@@ -11,6 +11,13 @@ php artisan remarket:import-listings docs/bulk-import.csv --user=re-tech
 which is how a misspelt category or a missing photograph gets found before two
 hundred listings exist rather than after.
 
+`--force` skips the confirmation. It is there for terminals where a prompt
+cannot run at all — Symfony saves and restores the terminal with `stty -g`
+around a question, and some shells reject that string with „invalid argument",
+which kills the command before it can ask. Do **not** reach for
+`--no-interaction` instead: that answers the question with its default, which is
+*no*, so the import quietly does nothing and still exits successfully.
+
 ## The file
 
 `docs/bulk-import.csv` is a working example. Semicolon or comma separated —

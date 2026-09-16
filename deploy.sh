@@ -46,6 +46,44 @@ green "==> Building assets"
 npm ci
 npm run build
 
+green "==> Permissions"
+#
+# BEFORE THE FIRST ARTISAN CALL, NOT AFTER THE LAST ONE.
+#
+# This block used to sit near the end, which meant it could not do its job:
+# `php artisan migrate` runs above it, and the very first thing any artisan
+# command does on an error is write to storage/logs/laravel.log. If that file
+# is owned by www-data and the deploying user is not in that group, the command
+# dies with "failed to open stream: Permission denied" - and the fix for that
+# was three steps further down the same script.
+#
+# php-fpm writes logs, compiled views, sessions and uploads as www-data.
+# Everything else stays owned by the deploying user so git pull keeps working.
+if [ "$(id -u)" -eq 0 ] || sudo -n true 2>/dev/null; then
+    sudo chgrp -R www-data storage bootstrap/cache
+    sudo chmod -R ug+rwX storage bootstrap/cache
+
+    # setgid on the directories, which is the part that makes it STAY fixed.
+    # Without it every file created afterwards - a new day's log, a compiled
+    # view, an uploaded photo - gets the creating user's primary group instead,
+    # and whichever of php-fpm or the deploying user did not create it cannot
+    # write to it. That is why this keeps coming back after being "fixed".
+    sudo find storage bootstrap/cache -type d -exec chmod g+s {} \;
+
+    # And the deploying user needs to BE in the group for any of it to help.
+    # Takes effect on the next login, so it is reported rather than assumed.
+    if ! id -nG "$(id -un)" | tr ' ' '\n' | grep -qx www-data; then
+        sudo usermod -aG www-data "$(id -un)" \
+            && warn "Added $(id -un) to the www-data group. Log out and back in for it to take effect."
+    fi
+else
+    warn "No sudo - skipping the ownership fix. If artisan dies with"
+    warn "'failed to open stream: Permission denied', run:"
+    warn "  sudo chgrp -R www-data storage bootstrap/cache"
+    warn "  sudo chmod -R ug+rwX storage bootstrap/cache"
+    warn "  sudo find storage bootstrap/cache -type d -exec chmod g+s {} \\;"
+fi
+
 green "==> Database"
 php artisan migrate --force
 
@@ -77,17 +115,6 @@ php artisan optimize:clear
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
-
-green "==> Permissions"
-# php-fpm writes logs, compiled views, sessions and uploads as www-data.
-# Everything else stays owned by the deploying user so git pull keeps working.
-if [ "$(id -u)" -eq 0 ] || sudo -n true 2>/dev/null; then
-    sudo chgrp -R www-data storage bootstrap/cache
-    sudo chmod -R ug+rwX storage bootstrap/cache
-else
-    warn "No sudo - skipping ownership fix. If you see 'failed to open stream:"
-    warn "Permission denied', run:  sudo chgrp -R www-data storage bootstrap/cache"
-fi
 
 green "==> Restarting the queue worker"
 # Not optional. The worker boots the framework once and holds it in memory, so

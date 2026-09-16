@@ -27,7 +27,8 @@ class ImportListings extends Command
         {--user= : username or email of the seller these listings belong to}
         {--photos= : folder the `images` column resolves against (default: next to the CSV)}
         {--dry-run : validate and report, write nothing}
-        {--update : correct rows whose `ref` already exists instead of skipping them}';
+        {--update : correct rows whose `ref` already exists instead of skipping them}
+        {--force : skip the confirmation, for terminals where a prompt cannot run}';
 
     protected $description = 'Import listings for one seller from a CSV of stock';
 
@@ -63,7 +64,24 @@ class ImportListings extends Command
         $this->line('  Режим    : '.($dryRun ? '<comment>пробен, нищо не се записва</comment>' : '<options=bold>запис</>'));
         $this->line('');
 
-        if (! $dryRun && ! $this->confirm('Импортиране в базата. Продължаваш ли?', false)) {
+        /*
+         * The confirmation is the point of this command's safety, so --force
+         * is deliberately not a convenience: it exists because a prompt is not
+         * always POSSIBLE.
+         *
+         * Symfony saves and restores the terminal with `stty -g` around a
+         * question, and on a shell whose stty rejects that string the prompt
+         * dies with „invalid argument" before it can ask anything. Without an
+         * escape hatch the command is simply unrunnable there — and the
+         * alternative people reach for, --no-interaction, is worse: it answers
+         * this question with its default, which is `false`, so the import
+         * silently does nothing and reports success.
+         *
+         * The report above still prints either way, so --force skips the
+         * question and not the summary of what is about to happen.
+         */
+        if (! $dryRun && ! $this->option('force')
+            && ! $this->confirm('Импортиране в базата. Продължаваш ли?', false)) {
             $this->line('Отказано.');
 
             return self::SUCCESS;

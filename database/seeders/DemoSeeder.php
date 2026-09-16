@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\ListingCondition;
 use App\Enums\ListingStatus;
 use App\Enums\MiningUse;
+use App\Enums\SellerType;
 use App\Models\City;
 use App\Models\Listing;
 use App\Models\ListingImage;
@@ -14,6 +15,7 @@ use App\Models\User;
 use App\Services\Images\ImageProcessor;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
@@ -188,20 +190,75 @@ class DemoSeeder extends Seeder
             return $existing;
         }
 
-        $names = ['plamen', 'georgi', 'nikolay', 'dimitar', 'stoyan',
-                  'viktoria', 'kaloyan', 'radoslav', 'yana', 'boris'];
+        /*
+         * BUILT BY HAND, NOT BY THE FACTORY — and this is not a style choice.
+         *
+         * `deploy.sh` runs `composer install --no-dev`, which is correct: faker,
+         * phpunit and pint have no business on a server. But factories ARE
+         * faker, so `User::factory()` dies there with „Call to a member function
+         * unique() on null" — a message that says nothing about the actual
+         * cause. This seeder is explicitly meant to run on the staging box, so
+         * it cannot use a single dev-only tool.
+         *
+         * Nothing here is random for the same reason: a fixed set of sellers
+         * means two runs on two machines produce the same people, which is what
+         * you want when comparing a page locally against the server.
+         */
+        $names = [
+            ['plamen',   'Пламен Тодоров'],
+            ['georgi',   'Георги Иванов'],
+            ['nikolay',  'Николай Стоянов'],
+            ['dimitar',  'Димитър Петров'],
+            ['stoyan',   'Стоян Колев'],
+            ['viktoria', 'Виктория Илиева'],
+            ['kaloyan',  'Калоян Митев'],
+            ['radoslav', 'Радослав Ганчев'],
+            ['yana',     'Яна Кирилова'],
+            ['boris',    'Борис Ангелов'],
+        ];
 
         $ids = [];
 
-        foreach ($names as $i => $name) {
-            $ids[] = User::factory()
-                ->when($i < 2, fn ($f) => $f->trader())
-                ->create([
-                    'username'          => "demo-{$name}",
-                    'email'             => "{$name}@demo.invalid",
-                    'email_verified_at' => now(),
-                    'city_id'           => $this->cityIds[array_rand($this->cityIds)],
-                ])->id;
+        foreach ($names as $i => [$handle, $name]) {
+            $user = User::create([
+                'name'        => $name,
+                'username'    => "demo-{$handle}",
+                'email'       => "{$handle}@demo.invalid",
+                'password'    => Hash::make('password'),
+                'city_id'     => $this->cityIds[array_rand($this->cityIds)],
+
+                // The first two are shops, so the trader badge and the
+                // trader-only legal copy have somewhere to appear.
+                'seller_type' => $i < 2 ? SellerType::Trader : SellerType::Private,
+                'trader_details' => $i < 2 ? [
+                    'company' => $i === 0 ? 'РЕ-ТЕХ ДЕМО ЕООД' : 'ПИСИ СЕРВИЗ ДЕМО ЕООД',
+                    'uic'     => (string) (200000000 + $i),
+                    'address' => 'гр. Горна Оряховица, ул. Демо 1',
+                ] : null,
+            ]);
+
+            /*
+             * Verification and the reputation figures are not fillable — they
+             * are earned, and a mass-assignable `deals_completed` would be a
+             * seller able to award themselves a track record. forceFill is the
+             * seeder saying it knows that and is placing the state directly.
+             */
+            $deals = [0, 3, 7, 12, 19, 24, 31, 5, 16, 41][$i];
+
+            $user->forceFill([
+                'email_verified_at' => now(),
+                'phone_verified_at' => now(),
+                'phone_hash'        => hash('sha256', "demo-{$handle}"),
+                'phone_last4'       => (string) (1000 + $i * 111),
+                'phone_country'     => 'BG',
+                'deals_completed'   => $deals,
+                'deals_abandoned'   => (int) floor($deals * 0.12),
+                'rating_count'      => $deals,
+                'rating_avg'        => $deals > 0 ? round(4.2 + ($i % 8) * 0.1, 2) : null,
+                'remember_token'    => Str::random(10),
+            ])->save();
+
+            $ids[] = $user->id;
         }
 
         return $ids;
