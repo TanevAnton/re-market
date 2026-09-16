@@ -233,4 +233,29 @@ return [
             'password' => env('SPEEDY_PASSWORD'),
         ],
     ],
+
+    /*
+     * DemoSeeder's scale. Nothing reads these outside the seeder, and the
+     * seeder refuses to run at all when `seo.indexable` is true.
+     *
+     * They exist because the seed is EXPENSIVE, and the cost is almost entirely
+     * photographs: each one goes through the real ImageProcessor, which decodes
+     * and re-encodes four times (full, thumbnail, and the hash's own reduction).
+     * At the defaults that is ~190 listings and ~380 photographs, which is what
+     * you want to look at and emphatically not what you want a test suite
+     * repeating for every assertion.
+     */
+    'demo' => [
+        'per_category' => (int) env('DEMO_PER_CATEGORY', 10),
+
+        // Photos per listing, 1..N. Lower is faster; zero is not allowed,
+        // because a listing with no photograph is the bug this seeder was
+        // rewritten to fix.
+        'photos_max'   => max(1, (int) env('DEMO_PHOTOS_MAX', 3)),
+
+        // History depth for the backfilled sparkline. Must stay above
+        // `parts.history_min_days` or the trend refuses to draw and the demo
+        // silently loses the feature.
+        'history_days' => (int) env('DEMO_HISTORY_DAYS', 45),
+    ],
 ];
