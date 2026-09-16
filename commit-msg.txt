@@ -1,0 +1,130 @@
+feat: price history, bulk import, Apple section, category icons
+
+Four features that were built while the PC was offline and are landing
+together because they share files. 647 tests, 0 skipped.
+
+--- PRICE HISTORY -------------------------------------------------------
+
+`parts` carried p25 / median / p75 as a snapshot that every RefreshPartStats
+run overwrote. Yesterday's number was gone the moment today's was written,
+which meant the one question both sides of every trade actually ask — is
+this going up or down? — had no answer, and no way to backfill one later.
+This is the only item on the list that could not be caught up afterwards:
+every day it did not exist is a day of data that no longer exists either.
+
+  - part_price_points: one row per part per day. `captured_on` is a DATE,
+    not a timestamp, with a unique index on (part_id, captured_on), so a
+    second run on the same day updates rather than duplicates.
+  - RefreshPartStats appends the capture AFTER its clearing pass, in one
+    INSERT … ON CONFLICT DO UPDATE using CURRENT_DATE — the database
+    clock, so it is unaffected by $this->travel() in tests.
+  - Part::priceTrend() refuses to draw below 4 points or 14 days of span
+    and calls anything inside 3% flat. A sparkline from two points a day
+    apart is not information, it is a shape.
+  - Rendered on the model page under the band (which is the question the
+    band provokes) and on /kolko-struva for the seller, where "falling 8%
+    a month" answers whether to sell this week — the decision they came
+    for, and one the band alone cannot answer.
+
+--- BULK IMPORT ---------------------------------------------------------
+
+The wizard is the right tool for one listing and the wrong one for three
+hundred. Supply is the only thing standing between this site and being
+useful, so the cost of the first few hundred listings is the cost of the
+project starting.
+
+`php artisan listings:import file.csv --user=… [--dry-run] [--update]`
+
+  - external_ref with a PARTIAL unique index on (user_id, external_ref)
+    WHERE external_ref IS NOT NULL AND deleted_at IS NULL. A shop re-runs
+    the same file and updates instead of duplicating; two shops may use
+    the same internal SKU; a deleted listing does not block re-import.
+  - Delimiter sniffed from the header, because an operator who has to know
+    which one their spreadsheet chose will get it wrong once and lose an
+    evening. UTF-8 BOM stripped — otherwise it becomes part of the first
+    header's NAME and `ref` silently does not exist.
+  - `|` separates values inside a cell. Not `,` (the decimal separator
+    here) and not `;` (the delimiter).
+  - No fuzzy catalogue matching, no publishing without a photograph, no
+    silently ignored column. An import runs unattended over hundreds of
+    rows and every one of those failures is invisible on the resulting
+    pages, which is exactly why they are refusals rather than guesses.
+
+--- APPLE SECTION -------------------------------------------------------
+
+iphone / ipad / macbook, and /apple as a brand-level door in front of
+them — the only surface that can answer „apple втора употреба", which no
+individual listing and no single model page ever will.
+
+The decision worth keeping: WHAT IS SOLDERED BELONGS TO THE MODEL. Storage
+and RAM sit on the catalogue row, not the listing, because on Apple
+hardware the configuration IS the product — a 128GB and a 1TB iPhone 13
+Pro sharing one median would give a useless number to both sides of every
+trade. What wears out belongs to the unit: battery health, iCloud status,
+MDM enrolment. 217 configurations seeded (81 iPhone / 76 iPad / 60 MacBook).
+
+`required` on a listing-scoped spec is enforced nowhere — the wizard
+validates the scalar fields and leaves the spec blob alone — so what
+actually makes a seller answer is the checklist turning a blank into
+„без отговор". Every Apple-specific risk has a checklist line behind it,
+and the tests assert the line rather than the flag, because the flag is
+decorative.
+
+KNOWN AND DELIBERATE, for now: iCloud status is optional on all three
+categories. A device locked to someone else's Apple ID is a brick that no
+service, carrier or Apple Store unlocks without the original receipt, and
+it is the most expensive mistake a buyer can make here. Today the wizard
+warns rather than requires.
+
+--- CYRILLIC SEARCH (a real bug, found by the Apple tests) ---------------
+
+A bare Cyrillic query found nothing. „макбук", „айпад", „ртх" — `model` is
+stored in Latin and trigram similarity cannot bridge scripts, so
+„макбук еър" and "MacBook Air" share not one character: word_similarity
+scores them at zero and ILIKE finds nothing. Cyrillic search only ever
+worked where a seeder had hand-written that exact alias, which covered
+„айфон 13 про" and very little else.
+
+Cyrillic::toLatin() already existed — it is array_flip of the same table
+the seeders use, so the two directions cannot drift — but queryVariants()
+never called it. Now a Cyrillic query folds to Latin and matches the model
+column directly. This fixes far more than the Apple lines.
+
+--- CATEGORY ICONS ------------------------------------------------------
+
+19 monoline SVGs in one Blade partial keyed by category, on the same 24px
+grid and stroke as the header's theme toggle.
+
+THIS REVERSES A DECISION. The home grid carried three-letter mono badges
+(GPU, CPU, RAM) on the argument that those are what this audience already
+calls these things. The head of the list was never the problem; the tail
+was — ATX for a case, MSE for a mouse, AUD for a headset are guesses, not
+names anyone uses — and the Apple lines brought in a buyer who does not
+read spec sheets and for whom PHN / TAB / MAC say nothing at all.
+
+SVG rather than the generated PNG sheet because these render at 40px: a
+raster icon is soft there, cannot inherit currentColor — so it neither
+inverts with the theme nor flips to accent-ink on hover, the way the badge
+behind it does — and needs a light and a dark copy of every file. The PNG
+sheet is the right asset at 64px and up.
+
+Three to five strokes each. The reference sheet draws motherboard
+capacitors and individual keyboard keys, which is correct at illustration
+size and grey mush at forty pixels, so the keyboard draws rows.
+
+Unknown categories fall through to the „other" box, so a category added to
+config/catalog.php renders an icon the day it is added and before anybody
+draws for it.
+
+--- STILL OPEN ----------------------------------------------------------
+
+  - `required` is decorative on listing-scoped specs. monitor.dead_pixels,
+    prebuilt.cpu_model and prebuilt.gpu_model are marked required and
+    nothing enforces them. Enforce it or drop the flag; right now it reads
+    as a guarantee that is not one.
+  - parts.search_vector and listings.search_vector are tsvector columns
+    with GIN indexes that nothing populates. Search runs on pg_trgm
+    instead. Decide whether they are the plan or the leftovers.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01NqnVJrQTxeQTaHU7nqGDyg

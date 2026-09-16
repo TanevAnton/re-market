@@ -51,8 +51,19 @@ php artisan migrate --force
 
 # Cities and the parts catalogue are reference data, not demo data - the site
 # cannot filter or search without them. Seeding is safe to repeat.
+#
+# ALL FOUR, in this order. This listed only the first two for a while, which is
+# a failure with no symptom: the site comes up, the pages render, and eleven
+# categories simply have no catalogue behind them - no model pages, no price
+# bands, no spec filters - while the two that were seeded look perfect. Nothing
+# errors, nothing is logged, and the deploy prints green.
+#
+# The same shape as the bugs in the status doc: a queue nothing filled, a field
+# that went nowhere. If a seeder is added to DatabaseSeeder, it belongs here too.
 php artisan db:seed --force --class=Database\\Seeders\\CitySeeder
 php artisan db:seed --force --class=Database\\Seeders\\PartSeeder
+php artisan db:seed --force --class=Database\\Seeders\\PartCatalogueSeeder
+php artisan db:seed --force --class=Database\\Seeders\\AppleCatalogueSeeder
 
 green "==> Storage"
 # Listing photos live in storage/app/public and are served through this link.
