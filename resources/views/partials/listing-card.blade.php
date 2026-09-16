@@ -49,7 +49,7 @@
             @if ($listing->part)
                 <p class="mt-1.5 font-mono text-[11px] leading-relaxed text-ink-muted">
                     @foreach (array_slice($listing->part->specs, 0, 3) as $v)
-                        <span class="whitespace-nowrap">{{ is_bool($v) ? ($v ? 'да' : 'не') : $v }}</span>@if (! $loop->last) <span class="text-ink-faint">·</span> @endif
+                        <span class="whitespace-nowrap">{{ \App\Models\Part::specLabel($v) }}</span>@if (! $loop->last) <span class="text-ink-faint">·</span> @endif
                     @endforeach
                 </p>
             @endif

@@ -129,7 +129,7 @@
                         <div class="mt-2 flex flex-wrap gap-1">
                             @foreach (array_slice($part->specs, 0, 5) as $k => $v)
                                 <span class="badge-neutral font-mono">
-                                    {{ is_bool($v) ? ($v ? 'да' : 'не') : $v }}
+                                    {{ \App\Models\Part::specLabel($v) }}
                                 </span>
                             @endforeach
                         </div>

@@ -141,6 +141,43 @@ class Part extends Model
         return $this->specs[$key] ?? null;
     }
 
+    /**
+     * One spec value, as a string a view can print.
+     *
+     * THIS EXISTS BECAUSE `{{ $v }}` IS NOT TOTAL OVER A SPEC VALUE. Four specs
+     * in the schema are `multiselect` and hold arrays — `cooler.sockets`,
+     * `case.form_factor`, `gpu.outputs`, `macbook.ports` — and Blade's echo runs
+     * htmlspecialchars(), which fatals on an array rather than degrading. Two
+     * views were slicing the first few specs off a part and printing them raw,
+     * so a browse page or a wizard step containing one cooler took the whole
+     * page down with a 500.
+     *
+     * It was invisible for a long time because whether it fires depends on
+     * where the array-valued spec happens to sit in its category's schema: the
+     * card prints the first three, and `sockets` is the second cooler spec
+     * while `outputs` is the ninth GPU one. Adding a spec at the top of a
+     * category would have been enough to break a page that had always worked.
+     *
+     * So the rule lives here, once, rather than as a ternary repeated in every
+     * view that touches a spec — which is how the three of them managed to
+     * disagree about arrays in the first place.
+     */
+    public static function specLabel(mixed $value): string
+    {
+        if (is_bool($value)) {
+            return $value ? 'да' : 'не';
+        }
+
+        if (is_array($value)) {
+            return implode(' · ', array_map(
+                static fn ($v) => self::specLabel($v),
+                $value,
+            ));
+        }
+
+        return $value === null ? '' : (string) $value;
+    }
+
     /** The schema for this part's category, from config/catalog.php. */
     public function specSchema(): array
     {
