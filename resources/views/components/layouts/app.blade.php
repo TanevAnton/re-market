@@ -236,18 +236,34 @@
                      x-on:click.outside="open = false"
                      class="card absolute left-0 z-40 mt-2 w-52 max-w-[calc(100vw-2rem)] p-1.5">
                     <a href="{{ route('browse') }}" wire:navigate class="menu-item">Обяви</a>
+                    <a href="{{ route('build') }}" wire:navigate class="menu-item">Сглоби компютър</a>
+                    <a href="{{ route('apple') }}" wire:navigate class="menu-item">Apple</a>
                     <a href="{{ route('valuation') }}" wire:navigate class="menu-item">Колко струва?</a>
                 </div>
             </div>
         @endguest
 
-        {{-- What the site IS. Two items, and they stay two. --}}
+        {{-- What the site IS. Four items now, and the breakpoints are what keep
+             that from becoming the eleven-item bar this replaced: only the two
+             shortest are here below `xl`, and every one of them is in the menus
+             at the widths where the bar hides it.
+
+             The order is not alphabetical. „Обяви" is what the site has,
+             „Сглоби" is what makes it different from OLX, and „Колко струва?"
+             is the one item aimed at the half of the market that is short -
+             people with hardware to sell who have not decided to sell yet. --}}
         <nav class="ml-1 hidden shrink-0 items-center gap-1 lg:flex">
             <a href="{{ route('browse') }}" wire:navigate class="btn-ghost btn-sm">Обяви</a>
+            <a href="{{ route('build') }}" wire:navigate class="btn-ghost btn-sm">Сглоби</a>
 
-            {{-- Aimed at the half of the site that is short: people with
-                 hardware to sell. The one nav item that speaks to somebody who
-                 has not decided to sell yet. --}}
+            {{-- Apple last and only at `xl`: it is a door into three categories
+                 rather than a thing the site does, so it loses to the other
+                 three when the bar runs out of room. Uppercase Cyrillic with
+                 this tracking is about a third wider than it looks in the
+                 Blade, which is how the old bar overflowed. --}}
+            <a href="{{ route('apple') }}" wire:navigate
+               class="btn-ghost btn-sm hidden xl:inline-flex">Apple</a>
+
             <a href="{{ route('valuation') }}" wire:navigate class="btn-ghost btn-sm">Колко струва?</a>
         </nav>
 
@@ -359,8 +375,15 @@
                          these. The divider hides with them, or it is a line
                          under nothing. --}}
                     <a href="{{ route('browse') }}" wire:navigate class="menu-item lg:hidden">Обяви</a>
+                    <a href="{{ route('build') }}" wire:navigate class="menu-item lg:hidden">Сглоби компютър</a>
                     <a href="{{ route('valuation') }}" wire:navigate class="menu-item lg:hidden">Колко струва?</a>
-                    <hr class="my-1.5 lg:hidden">
+
+                    {{-- xl:hidden, not lg:hidden: Apple only reaches the bar one
+                         breakpoint later than the other three, so it has to stay
+                         in the menu for that whole range or it is unreachable
+                         between lg and xl. --}}
+                    <a href="{{ route('apple') }}" wire:navigate class="menu-item xl:hidden">Apple</a>
+                    <hr class="my-1.5 xl:hidden">
 
                     <a href="{{ route('offers') }}" wire:navigate class="menu-item md:hidden">
                         <span>Оферти</span>

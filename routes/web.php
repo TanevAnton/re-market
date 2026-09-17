@@ -8,6 +8,7 @@ use App\Livewire\Auth\VerifyEmailNotice;
 use App\Livewire\Auth\VerifyPhone;
 use App\Livewire\AppleSection;
 use App\Livewire\BrowseListings;
+use App\Livewire\BuildGuide;
 use App\Livewire\Favorites\MyFavorites;
 use App\Livewire\Home;
 use App\Livewire\SavedSearches\MySearches;
@@ -91,6 +92,25 @@ Route::get('/kolko-struva', Valuation::class)->name('valuation');
  * why it is one of the few routes here that is not Bulgarian.
  */
 Route::get('/apple', AppleSection::class)->name('apple');
+
+/*
+ * „Сглоби компютър от втора употреба."
+ *
+ * The compatibility links have existed on every listing and model page for a
+ * while and nobody sees them, because they sit beneath a listing somebody
+ * arrived at already knowing what they wanted - they answer a question the
+ * visitor did not come with. This page asks it for them.
+ *
+ * It is also the only surface that can rank for „сглоби компютър втора
+ * употреба" or „компютър на части": a listing is one part and vanishes when it
+ * sells, a model page is one model, and this page is about the idea - so it
+ * survives every listing on it selling, which none of the others do.
+ *
+ * `/sglobi` rather than `/build` or `/konfigurator`: it is the imperative a
+ * Bulgarian actually types, and it promises assembling rather than configuring
+ * - which matters, because this page does not configure anything yet.
+ */
+Route::get('/sglobi', BuildGuide::class)->name('build');
 
 /*
  * Landing pages nobody crawls are worth nothing, so the sitemap ships with

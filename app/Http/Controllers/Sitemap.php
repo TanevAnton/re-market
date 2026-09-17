@@ -48,6 +48,12 @@ class Sitemap
         // no individual listing and no single model page ever will.
         $urls[] = $this->url(route('apple'), now(), 'weekly', '0.7');
 
+        // The build guide. Highest-priority non-catalogue page after browse:
+        // it is the only surface that can answer „сглоби компютър втора
+        // употреба", and unlike a listing it does not disappear when the
+        // hardware on it sells.
+        $urls[] = $this->url(route('build'), now(), 'weekly', '0.8');
+
         foreach ($this->legalPages() as $name) {
             $urls[] = $this->url(route($name), null, 'yearly', '0.2');
         }

@@ -57,6 +57,59 @@ class Compatibility
         return self::forPart($listing->part);
     }
 
+    /**
+     * The same rules, as raw filters rather than as sentences.
+     *
+     * `forPart()` answers „what should I link to from this page"; this answers
+     * „what would actually fit next to this part", which is what the build
+     * guide needs in order to pick a motherboard for a CPU it has already
+     * chosen. Same config, same arithmetic, same `resolve()` — because the day
+     * these two disagree is the day the page recommends hardware the link text
+     * on the very same site says will not work.
+     *
+     * Unlike `link()` this does NOT drop a rule whose result has no listings
+     * behind it: an empty slot is a real answer here, and the caller needs to
+     * be able to say „nothing on the site fits this yet" rather than silently
+     * dropping the constraint and proposing something that does not fit.
+     *
+     * @return list<array{facet: string, filter: array<string, mixed>|list<string>}>
+     */
+    public static function filtersBetween(Part $from, string $toCategory): array
+    {
+        $out = [];
+
+        foreach (config("compatibility.{$from->category}", []) as $rule) {
+            if (($rule['to'] ?? null) !== $toCategory) {
+                continue;
+            }
+
+            $source = $from->spec($rule['from'] ?? '');
+
+            if ($source === null || $source === '' || $source === []) {
+                continue;
+            }
+
+            $value = self::resolve($source, $rule);
+
+            if ($value === null) {
+                continue;
+            }
+
+            $filter = match ($rule['op']) {
+                'min'   => ['min' => $value],
+                'max'   => ['max' => $value],
+                'is'    => array_values((array) $value),
+                default => null,
+            };
+
+            if ($filter !== null) {
+                $out[] = ['facet' => $rule['facet'], 'filter' => $filter];
+            }
+        }
+
+        return $out;
+    }
+
     /** @param  array<string, mixed>  $rule */
     private static function link(Part $part, array $rule): ?array
     {

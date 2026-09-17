@@ -143,15 +143,29 @@ class CategoryIconTest extends TestCase
 
     // --- the two places they are used -------------------------------------
 
-    public function test_the_home_grid_shows_one_icon_per_category(): void
+    /**
+     * Every category is drawn somewhere on the home page.
+     *
+     * Deliberately NOT a count of `<svg>` elements. That is what this asserted
+     * first, and it broke the moment the page grew two promo cards that draw
+     * their own icons — a true failure about a page that was perfectly fine.
+     * A test that has to be edited every time the page around it changes stops
+     * being read, and the property worth defending was never „exactly nineteen
+     * icons": it is that no category is missing its drawing.
+     */
+    public function test_the_home_page_draws_every_category(): void
     {
-        $html = Livewire::test(Home::class)->html();
+        $html = preg_replace('/\s+/', ' ', Livewire::test(Home::class)->html());
 
-        $this->assertSame(
-            count($this->categories()),
-            substr_count($html, 'viewBox="0 0 24 24"'),
-            'the category grid is not drawing exactly one icon per category',
-        );
+        foreach ($this->categories() as $category) {
+            preg_match('/<svg[^>]*>(.*?)<\/svg>/s', $this->render($category), $shapes);
+
+            $this->assertStringContainsString(
+                trim(preg_replace('/\s+/', ' ', $shapes[1])),
+                $html,
+                "[{$category}] has no icon anywhere on the home page",
+            );
+        }
     }
 
     public function test_each_apple_tile_carries_its_own_silhouette(): void

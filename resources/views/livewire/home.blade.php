@@ -107,6 +107,58 @@
             </div>
         </section>
 
+        {{-- ── The two doors ─────────────────────────────────────────────────
+             Directly under the categories, because both answer „what can I
+             actually do here" and the category grid only answers „what is
+             here".
+
+             The build guide is the one thing on this site a general classifieds
+             board cannot copy, and until now it existed only as small links at
+             the bottom of listing pages — where it answers a question the
+             visitor did not arrive with. Apple is the same problem in the other
+             direction: three categories that most people look for by brand
+             first, reachable only by knowing to scroll the grid. --}}
+        <section class="grid gap-4 border-t border-line py-12 sm:grid-cols-2">
+
+            <a href="{{ route('build') }}" wire:navigate
+               class="card-interactive group flex flex-col p-6">
+                <span class="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
+                    Само тук
+                </span>
+                <span class="mt-2 text-xl font-bold tracking-tight transition-colors group-hover:text-accent">
+                    Сглоби компютър от втора употреба
+                </span>
+                <span class="mt-2 text-sm leading-relaxed text-ink-muted">
+                    Обявите тук знаят сокет, вата и размери — затова сайтът може да
+                    ти каже кои части си пасват. Виж цели машини, сглобени от обяви,
+                    които са налични в момента.
+                </span>
+                <span class="link mt-4 text-sm">Виж машините →</span>
+            </a>
+
+            <a href="{{ route('apple') }}" wire:navigate
+               class="card-interactive group flex flex-col p-6">
+                <span class="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
+                    Специален раздел
+                </span>
+                <span class="mt-2 text-xl font-bold tracking-tight transition-colors group-hover:text-accent">
+                    Apple втора употреба
+                </span>
+                <span class="mt-2 text-sm leading-relaxed text-ink-muted">
+                    iPhone, iPad и MacBook — с паметта и конфигурацията в каталога,
+                    и с въпросите, които решават дали устройството изобщо ще
+                    проработи при теб.
+                </span>
+
+                <span class="mt-4 flex items-center gap-3 text-ink-faint">
+                    @include('partials.category-icon', ['category' => 'iphone', 'class' => 'h-6 w-6'])
+                    @include('partials.category-icon', ['category' => 'ipad', 'class' => 'h-6 w-6'])
+                    @include('partials.category-icon', ['category' => 'macbook', 'class' => 'h-6 w-6'])
+                    <span class="link ml-auto text-sm">Към раздела →</span>
+                </span>
+            </a>
+        </section>
+
         {{-- ── Newest ────────────────────────────────────────────────────────
              The reason a returning visitor opens the site at all. --}}
         @if ($newest->isNotEmpty())
