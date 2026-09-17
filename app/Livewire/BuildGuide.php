@@ -5,7 +5,6 @@ namespace App\Livewire;
 use App\Support\BuildPlanner;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -29,10 +28,21 @@ use Livewire\Component;
  * needs supply this site does not have, and shipping a builder whose slots are
  * all empty would argue against the idea rather than for it.
  */
-#[Layout('components.layouts.app')]
-#[Title('Сглоби компютър от втора употреба')]
 class BuildGuide extends Component
 {
+    /**
+     * `#[Layout]` on the METHOD and the page metadata through `layoutData()`,
+     * which is how the other ten page components here do it.
+     *
+     * This was written with a class-level `#[Layout]` and a `#[Title]`
+     * attribute instead — the only component in the codebase doing either — and
+     * the deviation cost more than the tidiness was worth. `#[Title]` also only
+     * sets the document title, while the layout reads `description` and
+     * `canonical` as layout data; a page whose entire purpose is to rank for
+     * „сглоби компютър втора употреба" shipping without a meta description is
+     * the feature failing quietly at the one job it was built for.
+     */
+    #[Layout('components.layouts.app')]
     public function render()
     {
         /*
@@ -67,8 +77,12 @@ class BuildGuide extends Component
                     ]))
                 ->values()
                 ->all(),
-
-            'ogImage' => null,
+        ])->layoutData([
+            'title'       => 'Сглоби компютър от втора употреба',
+            'description' => 'Цели компютри, сглобени от обяви за части втора употреба в '
+                .'България. Сайтът знае сокета, консумацията и размерите на всеки модел, '
+                .'затова показва само части, които наистина си пасват.',
+            'canonical'   => route('build'),
         ]);
     }
 }
