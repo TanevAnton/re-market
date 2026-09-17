@@ -46,19 +46,29 @@ class BuildGuide extends Component
     public function render()
     {
         /*
-         * Cached, and the cache is the reason this page can be linked from the
-         * header. Eight constrained queries per machine times three machines is
-         * a lot to pay on every visit for a page whose contents change when
-         * somebody posts a graphics card, which is not often.
+         * THE PLAN IS CACHED. THE LISTINGS ARE NOT.
+         *
+         * This cached the assembled builds, models and all, and the page worked
+         * exactly once: the first request was a cache miss and rendered fine,
+         * and every request after it unserialised the Eloquent models into
+         * `__PHP_Incomplete_Class` and 500'd. Nothing in the test suite could
+         * catch it, because a test never reads back what a previous request
+         * wrote — it is a bug that needs two page loads to exist.
+         *
+         * What is worth caching is the expensive part anyway: twenty-four
+         * constrained queries to decide WHICH listing fills which slot. Reading
+         * those listings back is one `whereIn`, so it happens every request —
+         * which also means a part that sells drops out of the machine
+         * immediately instead of being quoted for another ten minutes.
          *
          * Ten minutes matches the facet cache on browse, so the two cannot
          * disagree for long about what is on the site.
          */
-        $builds = Cache::remember(
-            'build-guide:showcase',
+        $builds = BuildPlanner::hydrate(Cache::remember(
+            'build-guide:plan',
             now()->addMinutes(10),
-            fn () => BuildPlanner::showcase(3),
-        );
+            fn () => BuildPlanner::plan(3),
+        ));
 
         return view('livewire.build-guide', [
             'builds' => $builds,

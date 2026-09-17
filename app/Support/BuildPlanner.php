@@ -100,6 +100,29 @@ class BuildPlanner
      */
     public static function showcase(int $count = 3): array
     {
+        return self::hydrate(self::plan($count));
+    }
+
+    /**
+     * The same walk, as ids and strings — nothing but scalars.
+     *
+     * THIS EXISTS BECAUSE ELOQUENT MODELS MUST NOT BE CACHED. The page put the
+     * assembled builds straight into `Cache::remember()`, which serialises
+     * whatever it is given: the first request was a cache MISS and rendered
+     * perfectly, and every request after it unserialised the models into
+     * `__PHP_Incomplete_Class` and died with „tried to access a property on an
+     * incomplete object". A bug that only appears on the second page load is
+     * one that passes every test and every manual check.
+     *
+     * So the cacheable thing is the PLAN — which listing fills which slot — and
+     * the listings themselves are fetched fresh on every request. That also
+     * fixes a staleness bug nobody had noticed yet: a cached build would have
+     * gone on showing a card for ten minutes after it sold.
+     *
+     * @return list<array{anchor_id: int, slots: list<array{category: string, listing_id: ?int, blocked: bool, requires: ?string, url: string}>}>
+     */
+    public static function plan(int $count = 3): array
+    {
         $cards = self::liveIn('gpu')
             ->orderBy('price_cents')
             ->with('part')
@@ -115,22 +138,108 @@ class BuildPlanner
     }
 
     /**
-     * One machine built around a chosen card.
+     * Turn a plan back into listings, in one query for the whole page.
      *
-     * @return array{
-     *     anchor: \App\Models\Listing,
-     *     slots: list<array{category: string, listing: ?\App\Models\Listing, blocked: bool, requires: ?string, url: string}>,
-     *     total_cents: int,
-     *     filled: int,
-     *     complete: bool,
-     * }
+     * Totals and counts are recomputed from what is ACTUALLY still there rather
+     * than carried in the plan, so a part that sold since the plan was cached
+     * drops out of the machine and out of its price instead of being quoted at
+     * a number nobody can pay.
+     *
+     * @param  list<array{anchor_id: int, slots: list<array<string, mixed>>}>  $plan
+     * @return list<array<string, mixed>>
+     */
+    public static function hydrate(array $plan): array
+    {
+        $ids = collect($plan)
+            ->flatMap(fn (array $build) => collect($build['slots'])->pluck('listing_id'))
+            ->filter()
+            ->unique()
+            ->all();
+
+        if ($ids === []) {
+            return [];
+        }
+
+        $listings = Listing::query()
+            ->visible()
+            ->with('part')
+            ->whereIn('id', $ids)
+            ->get()
+            ->keyBy('id');
+
+        $out = [];
+
+        foreach ($plan as $build) {
+            $anchor = $listings[$build['anchor_id']] ?? null;
+
+            // The card the machine is built around is gone: so is the machine.
+            // Everything else in it was chosen to fit THAT card.
+            if (! $anchor) {
+                continue;
+            }
+
+            $slots  = [];
+            $total  = 0;
+            $filled = 0;
+
+            foreach ($build['slots'] as $slot) {
+                $listing = $slot['listing_id'] ? ($listings[$slot['listing_id']] ?? null) : null;
+
+                if ($listing) {
+                    $total += $listing->price_cents;
+                    $filled++;
+                }
+
+                $slots[] = [
+                    'category' => $slot['category'],
+                    'listing'  => $listing,
+                    'blocked'  => $slot['blocked'] && ! $listing,
+                    'requires' => $slot['requires'],
+                    'url'      => $slot['url'],
+                ];
+            }
+
+            /*
+             * Keyed first, and the null coalesce is not paranoia: a plan read
+             * back from the cache was written by whatever version of this class
+             * was deployed ten minutes ago, so a slot that has since been added
+             * or renamed is simply absent. Indexing the result of firstWhere()
+             * directly would warn on that rather than treating it as missing,
+             * which is what it is.
+             */
+            $byCategory = collect($slots)->keyBy('category');
+
+            $missing = array_values(array_filter(
+                self::ESSENTIAL,
+                fn (string $c) => ! ($byCategory[$c]['listing'] ?? null),
+            ));
+
+            $out[] = [
+                'anchor'      => $anchor,
+                'slots'       => $slots,
+                'total_cents' => $total,
+                'filled'      => $filled,
+                'complete'    => $missing === [],
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * One machine built around a chosen card, as ids.
+     *
+     * Deliberately returns no models. This is the value that gets cached, and
+     * an Eloquent model in a cache entry is a page that works exactly once —
+     * see plan().
+     *
+     * @return array{anchor_id: int, slots: list<array{category: string, listing_id: ?int, blocked: bool, requires: ?string, url: string}>}
      */
     public static function around(Listing $anchor): array
     {
         /** @var array<string, \App\Models\Listing> $chosen */
         $chosen = ['gpu' => $anchor];
         $slots  = [];
-        $total  = 0;
 
         foreach (self::SLOTS as $category) {
             $listing = $category === 'gpu'
@@ -139,12 +248,11 @@ class BuildPlanner
 
             if ($listing) {
                 $chosen[$category] = $listing;
-                $total += $listing->price_cents;
             }
 
             $slots[] = [
-                'category' => $category,
-                'listing'  => $listing,
+                'category'   => $category,
+                'listing_id' => $listing?->id,
 
                 /*
                  * Two different kinds of empty, and the page should not say the
@@ -153,29 +261,23 @@ class BuildPlanner
                  * chosen" is a fact about the build. Collapsing them would have
                  * the page report a shortage that does not exist.
                  */
-                'blocked'  => $listing === null
+                'blocked'    => $listing === null
                     && isset(self::REQUIRES[$category])
                     && ! isset($chosen[self::REQUIRES[$category]]),
 
-                'requires' => self::REQUIRES[$category] ?? null,
+                'requires'   => self::REQUIRES[$category] ?? null,
 
                 // Where to go when the slot is empty, or when the visitor wants
-                // a different one: the same constrained search, as a URL.
-                'url'      => self::browseUrl($category, $chosen, $listing),
+                // a different one: the same constrained search, as a URL. A
+                // string, so it caches; and it is built once rather than on
+                // every render.
+                'url'        => self::browseUrl($category, $chosen, $listing),
             ];
         }
 
-        $missing = array_values(array_filter(
-            self::ESSENTIAL,
-            fn (string $c) => ! isset($chosen[$c]),
-        ));
-
         return [
-            'anchor'      => $anchor,
-            'slots'       => $slots,
-            'total_cents' => $total,
-            'filled'      => count($chosen),
-            'complete'    => $missing === [],
+            'anchor_id' => $anchor->id,
+            'slots'     => $slots,
         ];
     }
 

@@ -289,6 +289,113 @@ class BuildGuideTest extends TestCase
         $this->assertSame(900_00, $anchors->max());
     }
 
+    // --- the cache, which is where this broke in production ---------------
+
+    /**
+     * The cached value must survive a serialising cache driver.
+     *
+     * THE BUG THIS EXISTS FOR ONLY APPEARS ON THE SECOND PAGE LOAD. The page
+     * cached the assembled builds, Eloquent models and all. The first request
+     * was a cache MISS, computed them, rendered perfectly and wrote the
+     * serialised payload; every request after that unserialised the models into
+     * `__PHP_Incomplete_Class` and 500'd on „tried to access a property on an
+     * incomplete object".
+     *
+     * No test in this suite could have caught that, because a test never reads
+     * back what an earlier request wrote — which is exactly the shape of bug
+     * worth writing a test for once you have seen it. So: round-trip the plan
+     * through serialize() the way a file or database cache would, and build
+     * from what comes back.
+     */
+    public function test_the_cached_plan_survives_being_serialised(): void
+    {
+        $w = $this->buildableWorld();
+
+        $this->listing($w['gpu'], 300);
+        $this->listing($w['cpu'], 150);
+        foreach ($w['good'] as $part) {
+            $this->listing($part, 100);
+        }
+
+        $plan = BuildPlanner::plan();
+
+        $builds = BuildPlanner::hydrate(unserialize(serialize($plan)));
+
+        $this->assertCount(1, $builds);
+        $this->assertSame(750_00, $builds[0]['total_cents']);
+        $this->assertNotNull($builds[0]['anchor']->part,
+            'the rebuilt machine lost its catalogue data on the way through the cache');
+    }
+
+    /** And the reason it survives: there is nothing in it but scalars. */
+    public function test_the_plan_holds_no_objects_at_all(): void
+    {
+        $w = $this->buildableWorld();
+
+        $this->listing($w['gpu'], 300);
+        $this->listing($w['cpu'], 150);
+
+        $walk = function (array $node) use (&$walk): void {
+            foreach ($node as $key => $value) {
+                if (is_array($value)) {
+                    $walk($value);
+
+                    continue;
+                }
+
+                $this->assertFalse(
+                    is_object($value),
+                    "[{$key}] is a ".(is_object($value) ? $value::class : 'object')
+                    .'; anything cached has to be a scalar or it works exactly once',
+                );
+            }
+        };
+
+        $walk(BuildPlanner::plan());
+    }
+
+    /**
+     * A plan outlives the listings in it, so hydration has to re-check.
+     *
+     * Ten minutes is a long time on a marketplace, and quoting a total that
+     * includes a card somebody already bought is the one number on this page
+     * that must not be wrong.
+     */
+    public function test_a_part_that_sells_drops_out_of_a_cached_build(): void
+    {
+        $w = $this->buildableWorld();
+
+        $this->listing($w['gpu'], 300);
+        $this->listing($w['cpu'], 150);
+        $psu = $this->listing($w['good']['psu'], 100);
+
+        $plan = BuildPlanner::plan();
+
+        $psu->forceFill(['status' => ListingStatus::Sold, 'sold_at' => now()])->save();
+
+        $builds = BuildPlanner::hydrate($plan);
+        $slots  = collect($builds[0]['slots'])->keyBy('category');
+
+        $this->assertNull($slots['psu']['listing'], 'a sold listing stayed in the build');
+        $this->assertSame(450_00, $builds[0]['total_cents'],
+            'the total still included a part that is no longer for sale');
+    }
+
+    /** The whole machine goes when its anchor does — everything fitted THAT card. */
+    public function test_a_build_disappears_when_its_card_sells(): void
+    {
+        $w = $this->buildableWorld();
+
+        $card = $this->listing($w['gpu'], 300);
+        $this->listing($w['cpu'], 150);
+
+        $plan = BuildPlanner::plan();
+
+        $card->forceFill(['status' => ListingStatus::Sold, 'sold_at' => now()])->save();
+
+        $this->assertSame([], BuildPlanner::hydrate($plan));
+    }
+
     // --- one engine, not two ----------------------------------------------
 
     /**
