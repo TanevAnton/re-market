@@ -249,6 +249,22 @@
                  supply the marketplace does not get. The specs still matter
                  (they are what makes a listing filterable), so the toggle says
                  what they buy rather than just "advanced". --}}
+            {{-- The specs the schema marks required, OUTSIDE the „по желание"
+                 panel and above it.
+
+                 They used to sit inside it, unvalidated. Validating them where
+                 they were would have rejected the listing over a field in a
+                 collapsed panel headed „by choice" — a field the seller cannot
+                 see and was told was optional. A required field does not live
+                 under that heading. --}}
+            @if (count($mustSpecs))
+                <div class="space-y-5">
+                    @foreach ($mustSpecs as $key => $spec)
+                        @include('partials.spec-field', ['key' => $key, 'spec' => $spec, 'required' => true])
+                    @endforeach
+                </div>
+            @endif
+
             <div class="rounded-lg border border-line">
                 <button type="button" wire:click="toggleOptional"
                         class="flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
@@ -267,31 +283,8 @@
                 @if ($showOptional)
                     <div class="space-y-5 border-t border-line p-4">
 
-            @foreach ($itemSpecs as $key => $spec)
-                <div>
-                    <label class="label" for="spec-{{ $key }}">
-                        {{ $spec['label'][app()->getLocale()] ?? $spec['label']['en'] }}
-                        @if (! empty($spec['unit'])) <span class="normal-case">({{ $spec['unit'] }})</span> @endif
-                    </label>
-                    @if ($spec['type'] === 'bool')
-                        <label class="mt-1 flex items-center gap-2 text-sm">
-                            <input type="checkbox" wire:model="specs.{{ $key }}"> да
-                        </label>
-                    @elseif ($spec['type'] === 'select')
-                        <select id="spec-{{ $key }}" wire:model="specs.{{ $key }}" class="mt-1">
-                            <option value="">—</option>
-                            @foreach ($spec['options'] ?? [] as $opt)
-                                <option value="{{ $opt }}">{{ $opt }}</option>
-                            @endforeach
-                        </select>
-                    @else
-                        <input id="spec-{{ $key }}" type="{{ $spec['type'] === 'int' ? 'number' : 'text' }}"
-                               wire:model.blur="specs.{{ $key }}" class="mt-1">
-                    @endif
-                    @if (! empty($spec['help']))
-                        <p class="hint">{{ $spec['help'][app()->getLocale()] ?? $spec['help']['en'] }}</p>
-                    @endif
-                </div>
+            @foreach ($maySpecs as $key => $spec)
+                @include('partials.spec-field', ['key' => $key, 'spec' => $spec, 'required' => false])
             @endforeach
 
             <div class="grid gap-4 sm:grid-cols-2">

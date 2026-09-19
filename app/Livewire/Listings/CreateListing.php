@@ -14,6 +14,7 @@ use App\Models\Part;
 use App\Services\Images\ImageProcessor;
 use App\Services\Moderation\ListingScreener;
 use App\Services\Moderation\ModerationService;
+use App\Support\RequiredSpecs;
 use App\Support\SpecFilter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -294,6 +295,37 @@ class CreateListing extends Component
         );
     }
 
+    /**
+     * The listing-scoped specs marked `required`, which until now were not.
+     *
+     * `required` was decorative on this side of the schema: the wizard
+     * validated the scalar fields and left the spec blob alone, so
+     * `monitor.dead_pixels`, `prebuilt.cpu_model` and `prebuilt.gpu_model` were
+     * marked required and nothing enforced them. A flag that looks like a
+     * guarantee and is not one is worse than no flag.
+     *
+     * They are also PULLED OUT of „Подробности по желание". Leaving them there
+     * and merely validating them would reject a listing over a field inside a
+     * collapsed panel labelled „by choice" — a field the seller cannot see and
+     * was told was optional. If it is required it does not live under that
+     * heading.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function requiredItemSpecs(): array
+    {
+        return RequiredSpecs::forCategory($this->category);
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function optionalItemSpecs(): array
+    {
+        return array_filter(
+            $this->itemSpecs(),
+            fn ($s) => ! ($s['required'] ?? false),
+        );
+    }
+
     public function partResults()
     {
         if (! $this->category || mb_strlen($this->partSearch) < 2) {
@@ -464,6 +496,10 @@ class CreateListing extends Component
                 'warranty_until' => ['nullable', 'date', 'after:today'],
                 'validation_url' => ['nullable', 'url', 'max:255'],
                 'stored'         => ['array', 'min:1'],
+
+                // The specs the schema says are required. Category-dependent,
+                // so they are merged in rather than listed.
+                ...RequiredSpecs::rules($this->category),
             ],
             4 => [
                 'price'            => ['required', 'numeric', 'min:1', 'max:100000'],
@@ -477,7 +513,7 @@ class CreateListing extends Component
 
     protected function messages(): array
     {
-        return [
+        return RequiredSpecs::messages($this->category) + [
             'stored.min'       => 'Добави поне една снимка.',
             'title.min'        => 'Заглавието трябва да е поне 8 знака.',
             'description.min'  => 'Опиши състоянието с поне 20 знака - това спестява въпроси.',
@@ -702,6 +738,11 @@ class CreateListing extends Component
             'results'    => $this->partResults(),
             'part'       => $this->selectedPart(),
             'itemSpecs'  => $this->itemSpecs(),
+
+            // Split, because the required ones render outside the „по желание"
+            // panel. See requiredItemSpecs().
+            'mustSpecs'  => $this->requiredItemSpecs(),
+            'maySpecs'   => $this->optionalItemSpecs(),
         ]);
     }
 }

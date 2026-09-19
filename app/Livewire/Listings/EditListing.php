@@ -8,6 +8,7 @@ use App\Enums\MiningUse;
 use App\Enums\OfferStatus;
 use App\Models\City;
 use App\Models\Listing;
+use App\Support\RequiredSpecs;
 use App\Models\ListingImage;
 use App\Services\Images\ImageProcessor;
 use App\Services\Listings\ListingService;
@@ -243,7 +244,17 @@ class EditListing extends Component
             'mining_months'        => ['nullable', 'integer', 'min:1', 'max:120'],
             'validation_url'       => ['nullable', 'url', 'max:255'],
             'delivery_options'     => ['array'],
-        ], [
+
+            /*
+             * The same required specs the wizard enforces.
+             *
+             * Enforcing them only on the way in would be the hole with an extra
+             * step: publish with the field filled, then blank it here. The
+             * offer floor lives in the service for exactly this reason — no
+             * caller gets to route around a rule.
+             */
+            ...RequiredSpecs::rules($this->listing()->category),
+        ], RequiredSpecs::messages($this->listing()->category) + [
             'title.required'       => 'Заглавието е задължително.',
             'description.required' => 'Описанието е задължително.',
             'price.required'       => 'Цената е задължителна.',
