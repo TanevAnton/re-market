@@ -20,7 +20,7 @@ class Listing extends Model
     use HasFactory, HasUuids, SoftDeletes;
 
     protected $fillable = [
-        'user_id', 'part_id', 'custom_part', 'external_ref', 'category', 'city_id', 'title', 'description',
+        'user_id', 'part_id', 'bundle_id', 'custom_part', 'external_ref', 'category', 'city_id', 'title', 'description',
         'condition', 'quantity', 'price_cents', 'offers_enabled', 'min_offer_cents',
         'warranty_until', 'has_receipt', 'mining_use', 'mining_months',
         'validation_url', 'accepts_inspect_test', 'specs', 'delivery_options',
@@ -181,6 +181,15 @@ class Listing extends Model
     public function user(): BelongsTo     { return $this->belongsTo(User::class); }
     public function seller(): BelongsTo   { return $this->belongsTo(User::class, 'user_id'); }
     public function part(): BelongsTo     { return $this->belongsTo(Part::class); }
+
+    /**
+     * The bundle this listing is part of, if any.
+     *
+     * Nullable both ways and deliberately loose: a listing is perfectly
+     * saleable on its own, and deleting a bundle frees its members rather than
+     * taking them with it.
+     */
+    public function bundle(): BelongsTo   { return $this->belongsTo(Bundle::class); }
     public function city(): BelongsTo     { return $this->belongsTo(City::class); }
     public function images(): HasMany     { return $this->hasMany(ListingImage::class)->orderBy('position'); }
     public function offers(): HasMany     { return $this->hasMany(Offer::class); }

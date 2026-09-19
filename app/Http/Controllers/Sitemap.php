@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Bundle;
 use App\Models\Listing;
 use App\Models\Part;
 use Illuminate\Http\Response;
@@ -88,6 +89,30 @@ class Sitemap
                         $listing->bumped_at ?? $listing->published_at,
                         'weekly',
                         '0.5',
+                    );
+                }
+            });
+
+        /*
+         * Bundles, above listings at 0.6 and below the catalogue.
+         *
+         * notEmpty() is not a nicety: members leave on their own — a listing
+         * sells, or its seller detaches it — so a bundle can end up with
+         * nothing in it without anybody deleting anything, and submitting an
+         * empty page to a crawler is how a site teaches Google it has thin
+         * content.
+         */
+        Bundle::query()
+            ->visible()
+            ->notEmpty()
+            ->orderByDesc('published_at')
+            ->chunk(500, function ($bundles) use (&$urls) {
+                foreach ($bundles as $bundle) {
+                    $urls[] = $this->url(
+                        route('bundle', $bundle),
+                        $bundle->published_at ?? $bundle->updated_at,
+                        'weekly',
+                        '0.6',
                     );
                 }
             });

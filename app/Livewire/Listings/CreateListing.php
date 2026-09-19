@@ -14,6 +14,7 @@ use App\Models\Part;
 use App\Services\Images\ImageProcessor;
 use App\Services\Moderation\ListingScreener;
 use App\Services\Moderation\ModerationService;
+use App\Support\PriceGuidance;
 use App\Support\RequiredSpecs;
 use App\Support\SpecFilter;
 use Illuminate\Support\Facades\DB;
@@ -615,9 +616,9 @@ class CreateListing extends Component
         $user = auth()->user();
 
         // New accounts are held for review. Cheap, and it is the highest-value
-        // anti-spam measure we have.
-        $reviewed = $user->listings()->count()
-            < config('remarket.antispam.moderated_listings_for_new_accounts', 2);
+        // anti-spam measure we have. The rule lives in ModerationService so
+        // that bundles hold the same sellers this does.
+        $reviewed = app(ModerationService::class)->holdsNewSeller($user);
 
         $listing = DB::transaction(function () use ($user, $reviewed) {
             $listing = Listing::create([
@@ -742,6 +743,17 @@ class CreateListing extends Component
             // Split, because the required ones render outside the „по желание"
             // panel. See requiredItemSpecs().
             'mustSpecs'  => $this->requiredItemSpecs(),
+
+            /*
+             * What the model is going for, for step 4. Null unless a catalogue
+             * part was chosen AND it has a fresh enough band — an uncatalogued
+             * listing has nothing to compare against, which is one more reason
+             * the promotion queue matters.
+             */
+            'guidance'   => PriceGuidance::for(
+                $this->selectedPart(),
+                $this->price !== '' ? (int) round((float) str_replace(',', '.', $this->price) * 100) : null,
+            ),
             'maySpecs'   => $this->optionalItemSpecs(),
         ]);
     }

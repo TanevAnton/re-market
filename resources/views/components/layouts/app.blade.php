@@ -410,6 +410,11 @@
                          find their own listings cannot fix a price. --}}
                     <a href="{{ route('listings.mine') }}" wire:navigate class="menu-item">Моите обяви</a>
 
+                    {{-- Directly under the listings, because that is what a
+                         bundle is made of and where somebody realises they
+                         have four parts from the same machine. --}}
+                    <a href="{{ route('bundles.mine') }}" wire:navigate class="menu-item">Моите комплекти</a>
+
                     {{-- The buyer's side of "come back later". Everything else
                          here belongs to selling; without these a buyer has no
                          reason to return until they need something again. --}}

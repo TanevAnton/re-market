@@ -21,6 +21,7 @@
                 $subject = $item->subject;
                 $listing = $subject instanceof \App\Models\Listing ? $subject : null;
                 $person  = $subject instanceof \App\Models\User ? $subject : null;
+                $bundle  = $subject instanceof \App\Models\Bundle ? $subject : null;
             @endphp
 
             <div class="card-pad" wire:key="item-{{ $item->id }}">
@@ -82,6 +83,45 @@
                             </p>
                             <p class="mt-2 text-xs text-ink-faint">
                                 Отхвърлянето ограничава профила. Обявите му остават — премахни ги поотделно.
+                            </p>
+                        </div>
+                    @endif
+
+                    @if ($bundle)
+                        {{-- The members were each moderated on their own way
+                             in. What is being judged here is the seller's own
+                             title and the price claim on it — so that is what
+                             the screen shows, and rejecting removes the group
+                             without touching a single listing inside it. --}}
+                        <div class="mt-3">
+                            <a href="{{ route('bundle', $bundle) }}" target="_blank" rel="noopener"
+                               class="link font-medium">{{ $bundle->title }}</a>
+
+                            <p class="mt-1 text-xs text-ink-muted">
+                                {{ $bundle->listings->count() }} обяви ·
+                                поотделно {{ $bundle->formattedSum() }}
+                                @if ($bundle->price_cents)
+                                    · за комплект
+                                    {{ number_format($bundle->price_cents / 100, 2, ',', ' ') }} €
+                                @else
+                                    · без обща цена
+                                @endif
+                            </p>
+
+                            @if ($bundle->description)
+                                <p class="mt-2 whitespace-pre-line text-xs leading-relaxed text-ink-muted">
+                                    {{ $bundle->description }}
+                                </p>
+                            @endif
+
+                            <ul class="mt-2 space-y-0.5 text-xs text-ink-faint">
+                                @foreach ($bundle->listings as $member)
+                                    <li>· {{ $member->title }} — {{ $member->formattedPrice() }}</li>
+                                @endforeach
+                            </ul>
+
+                            <p class="mt-2 text-xs text-ink-faint">
+                                Отхвърлянето маха само комплекта. Обявите в него остават активни.
                             </p>
                         </div>
                     @endif

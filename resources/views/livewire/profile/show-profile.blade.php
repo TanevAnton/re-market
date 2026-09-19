@@ -63,6 +63,8 @@
             </div>
         </dl>
 
+        @include('partials.reply-speed', ['seller' => $user, 'class' => 'mt-3'])
+
         {{-- A brand-new seller and a bad one produce the same row of dashes,
              and a buyer looking at "0 / — / —" reads it as the second one.
              Saying "new" is both true and the more useful of the two, and it

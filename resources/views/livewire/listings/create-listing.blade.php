@@ -435,6 +435,11 @@
                 </div>
             </div>
 
+            {{-- Under the price box, not beside it: the seller has just typed
+                 a number and this is the check on it. Renders nothing when the
+                 model has no band, which is most of them on a young site. --}}
+            @include('partials.price-guidance', ['guidance' => $guidance])
+
             {{-- The offer floor: the mechanism that removes haggling without
                  removing negotiation. --}}
             <div class="card-pad">

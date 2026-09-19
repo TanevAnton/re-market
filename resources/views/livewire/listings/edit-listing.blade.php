@@ -129,11 +129,14 @@
         <div class="card-pad space-y-4">
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
-                    <label class="label" for="price">Цена (лв)</label>
+                    {{-- € and not „лв": Listing::formattedPrice(), the wizard,
+                         the browse card and the price band all render euros, so
+                         this label was the only place on the site naming a
+                         different currency over the same number. --}}
+                    <label class="label" for="price">Цена (€)</label>
                     <input id="price" type="number" step="0.01" min="1" wire:model.live="price" class="mt-1 w-full">
                     @error('price') <p class="error">{{ $message }}</p> @enderror
                 </div>
-
                 <div>
                     <label class="label" for="min_offer">Минимална оферта</label>
                     <input id="min_offer" type="number" step="0.01" min="1" wire:model="min_offer" class="mt-1 w-full">
@@ -141,6 +144,12 @@
                     @error('min_offer') <p class="error">{{ $message }}</p> @enderror
                 </div>
             </div>
+
+            {{-- The same guidance the wizard shows. A price being CHANGED is a
+                 price being decided, and this screen is also where somebody
+                 reacts to „не се продава" — which is exactly when knowing the
+                 band matters. --}}
+            @include('partials.price-guidance', ['guidance' => $guidance])
 
             {{-- The one consequence of this form a seller could not guess.
                  Warned before saving, not explained afterwards. --}}
@@ -215,6 +224,7 @@
                     @error('validation_url') <p class="error">{{ $message }}</p> @enderror
                 </div>
             </div>
+
 
             <label class="flex items-center gap-2 text-sm">
                 <input type="checkbox" wire:model="has_receipt">

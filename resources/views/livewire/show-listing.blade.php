@@ -348,6 +348,11 @@
                 </div>
             </a>
 
+            {{-- Next to the seller and above „Питай продавача", because it is
+                 the answer to the question that button asks: is it worth
+                 typing this and waiting. --}}
+            @include('partials.reply-speed', ['seller' => $listing->user, 'class' => 'mt-3'])
+
             <dl class="mt-4 space-y-1.5 text-sm">
                 <div class="flex justify-between">
                     <dt class="text-ink-muted">Завършени сделки</dt>
@@ -373,6 +378,11 @@
                 {{ $listing->user->seller_type->consumerNotice() }}
             </p>
         </div>
+
+        {{-- Above the checklist on purpose: „the rest of this machine is also
+             for sale" changes what somebody is shopping for, and a buyer who
+             reads it after deciding on one card has already decided. --}}
+        @include('partials.bundle-link', ['listing' => $listing])
 
         {{-- Sharpened against THIS listing: an item that names a facet the
              seller left blank becomes the question to ask rather than a

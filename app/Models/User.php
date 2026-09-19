@@ -148,6 +148,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function city(): BelongsTo          { return $this->belongsTo(City::class); }
     public function listings(): HasMany        { return $this->hasMany(Listing::class); }
+    public function bundles(): HasMany         { return $this->hasMany(Bundle::class); }
     public function favorites(): HasMany       { return $this->hasMany(Favorite::class); }
     public function savedSearches(): HasMany   { return $this->hasMany(SavedSearch::class); }
     public function sentOffers(): HasMany      { return $this->hasMany(Offer::class, 'buyer_id'); }

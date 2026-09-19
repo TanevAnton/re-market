@@ -3,6 +3,7 @@
 namespace App\Livewire\Moderation;
 
 use App\Enums\RejectionReason;
+use App\Models\Bundle;
 use App\Models\Listing;
 use App\Models\ModerationItem;
 use App\Models\User;
@@ -124,6 +125,7 @@ class Queue extends Component
             ->with(['subject' => fn (MorphTo $morphTo) => $morphTo->morphWith([
                 Listing::class => ['user', 'images', 'city', 'part'],
                 User::class    => [],
+                Bundle::class  => ['listings'],
             ])])
             ->paginate(10);
 

@@ -2,12 +2,15 @@
 
 namespace App\Services\Moderation;
 
+use App\Enums\BundleStatus;
 use App\Enums\ListingStatus;
 use App\Enums\ModerationTrigger;
 use App\Enums\RejectionReason;
+use App\Models\Bundle;
 use App\Models\Listing;
 use App\Models\ModerationItem;
 use App\Models\User;
+use App\Notifications\BundleDecision;
 use App\Notifications\ModerationDecision;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -92,6 +95,17 @@ class ModerationService
                 ])->save();
             }
 
+            /*
+             * Bundles go through this same door, and a branch that is missing
+             * here does not throw - it silently marks the item approved and
+             * leaves the bundle PendingReview forever, with nothing left in the
+             * queue to notice. No expiry clock: a bundle lives exactly as long
+             * as its members do.
+             */
+            if ($subject instanceof Bundle && $subject->status === BundleStatus::PendingReview) {
+                $subject->forceFill(['status' => BundleStatus::Active])->save();
+            }
+
             $item->forceFill([
                 'status'     => 'approved',
                 'decided_by' => $moderator->id,
@@ -111,6 +125,10 @@ class ModerationService
 
         if (($listing = $item->subject) instanceof Listing) {
             $listing->user->notify(new ModerationDecision($listing, approved: true));
+        }
+
+        if (($bundle = $item->subject) instanceof Bundle) {
+            $bundle->user->notify(new BundleDecision($bundle, approved: true));
         }
 
         // Art. 16(5). Outside the transaction for the same reason as every
@@ -151,6 +169,17 @@ class ModerationService
 
             if ($subject instanceof Listing) {
                 $subject->forceFill(['status' => ListingStatus::Removed])->save();
+            }
+
+            /*
+             * Removing the group, NOT its members. What is being rejected here
+             * is the seller's own text and the price claim on it; the parts
+             * themselves were each approved on their own and are still
+             * perfectly saleable. Taking them down with it would punish eight
+             * honest listings for one bad headline.
+             */
+            if ($subject instanceof Bundle) {
+                $subject->forceFill(['status' => BundleStatus::Removed])->save();
             }
 
             /*
@@ -199,6 +228,14 @@ class ModerationService
             ));
         }
 
+        if (($bundle = $item->subject) instanceof Bundle) {
+            $bundle->user->notify(new BundleDecision(
+                $bundle,
+                approved: false,
+                statement: $item->statement_of_reasons,
+            ));
+        }
+
         $this->reports()->notifySettled($settled);
 
         return $item;
@@ -215,6 +252,7 @@ class ModerationService
 
         [$title, $measure] = match (true) {
             $subject instanceof Listing => [$subject->title, 'обявата „%s“ е премахната от платформата'],
+            $subject instanceof Bundle  => [$subject->title, 'комплектът „%s“ е премахнат от платформата'],
             $subject instanceof User    => [$subject->username, 'профилът „%s“ е ограничен'],
             default                     => ['—', 'съдържанието „%s“ е премахнато'],
         };
@@ -266,6 +304,23 @@ class ModerationService
      * silently overwrite the first - including its statement of reasons.
      */
     /**
+     * Is this seller still new enough that what they publish is held?
+     *
+     * Counted in listings rather than account age: an account created a year
+     * ago and used for the first time today is exactly as unknown as one
+     * created this morning, and age is the easier of the two to wait out.
+     *
+     * Lives here rather than in the wizard because bundles ask the same
+     * question, and two copies of the threshold is how the two screens end up
+     * disagreeing about who is trusted.
+     */
+    public function holdsNewSeller(User $user): bool
+    {
+        return $user->listings()->count()
+            < config('remarket.antispam.moderated_listings_for_new_accounts', 2);
+    }
+
+    /**
      * Resolved on demand rather than injected: ReportService depends on this
      * class, and constructor-injecting it back would be a container loop.
      */
@@ -286,6 +341,7 @@ class ModerationService
 
         // An admin approving their own listing is the check reviewing itself.
         $isOwn = ($subject instanceof Listing && $subject->user_id === $moderator->id)
+              || ($subject instanceof Bundle && $subject->user_id === $moderator->id)
               || ($subject instanceof User && $subject->id === $moderator->id);
 
         if ($isOwn) {

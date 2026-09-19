@@ -235,6 +235,32 @@ return [
     ],
 
     /*
+     * „Обикновено отговаря до 2 часа."
+     *
+     * Measured from the message timestamps, never stored. See
+     * App\Support\ReplySpeed for why the answered RATE is in here too: reply
+     * time can only be measured on threads that got a reply, so without a floor
+     * on the rate a seller who answers one message in five and answers it fast
+     * outscores one who answers all five within a day.
+     */
+    'replies' => [
+        'window_days'     => (int) env('REPLY_WINDOW_DAYS', 90),
+
+        // Below this many threads there is no habit to report, only an anecdote.
+        'min_threads'     => (int) env('REPLY_MIN_THREADS', 3),
+
+        // Answer at least this share of them, or the median is flattering.
+        'min_answer_rate' => (float) env('REPLY_MIN_ANSWER_RATE', 0.6),
+
+        /*
+         * One-sided, like the deal badge: shown when it is good, absent when it
+         * is not. „Отговаря до 6 дни" reads as a punishment for a seller with a
+         * job, and the absence of a badge is not a claim about anybody.
+         */
+        'max_hours'       => (int) env('REPLY_MAX_HOURS', 24),
+    ],
+
+    /*
      * DemoSeeder's scale. Nothing reads these outside the seeder, and the
      * seeder refuses to run at all when `seo.indexable` is true.
      *

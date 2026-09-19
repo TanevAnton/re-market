@@ -9,6 +9,9 @@ use App\Livewire\Auth\VerifyPhone;
 use App\Livewire\AppleSection;
 use App\Livewire\BrowseListings;
 use App\Livewire\BuildGuide;
+use App\Livewire\Bundles\ManageBundle;
+use App\Livewire\Bundles\MyBundles;
+use App\Livewire\Bundles\ShowBundle;
 use App\Livewire\Favorites\MyFavorites;
 use App\Livewire\Home;
 use App\Livewire\SavedSearches\MySearches;
@@ -51,6 +54,22 @@ Route::get('/', Home::class)->name('home');
 Route::get('/obiavi', BrowseListings::class)->name('browse');
 Route::get('/obiava/{listing}', ShowListing::class)->name('listing');
 Route::get('/profil/{username}', ShowProfile::class)->name('profile');
+
+/*
+ * „Комплект" rather than „набор" or „пакет": it is the word a Bulgarian seller
+ * already writes in the description when they are selling a whole machine.
+ *
+ * Public, and deliberately NOT under /obiava. A bundle is a grouping of
+ * listings, not a listing — giving it a listing URL is the first step towards
+ * something treating it as one, and mark-sold, the offer floor and the
+ * moderation gate all assume a listing is one item.
+ *
+ * whereUuid is load-bearing, not decoration. This route is registered before
+ * `/komplekt/nov`, which lives in the authenticated group further down, and
+ * Laravel matches in registration order — without the constraint, „nov" would
+ * be read as a bundle uuid and the create screen would answer 404.
+ */
+Route::get('/komplekt/{bundle}', ShowBundle::class)->whereUuid('bundle')->name('bundle');
 
 /*
  * The catalogue landing pages - the entire organic-search strategy.
@@ -236,6 +255,28 @@ Route::middleware('auth')->group(function () {
     Route::get('/obiava/{listing}/redakciya', EditListing::class)
         ->middleware('verified')
         ->name('listing.edit');
+
+    /*
+     * Bundles. Reading your own list needs nothing beyond being logged in;
+     * creating and changing one needs a verified email, same as listings —
+     * a bundle publishes seller-written text and a price claim, so it is
+     * creating content by any definition that matters.
+     *
+     * Both management routes point at ONE component. {bundle} is optional in
+     * the component's mount() rather than in the route, because two routes
+     * with clear names read better in a link than one route with a nullable
+     * parameter — and ManageBundle::mount() checks ownership itself, which is
+     * the check that survives a refactor of this file.
+     */
+    Route::get('/moite-komplekti', MyBundles::class)->name('bundles.mine');
+
+    Route::get('/komplekt/nov', ManageBundle::class)
+        ->middleware('verified')
+        ->name('bundle.create');
+
+    Route::get('/komplekt/{bundle}/redakciya', ManageBundle::class)
+        ->middleware('verified')
+        ->name('bundle.edit');
 
     /*
      * Moderation. The middleware answers 404 rather than 403 to anyone who is

@@ -8,6 +8,7 @@ use App\Enums\MiningUse;
 use App\Enums\OfferStatus;
 use App\Models\City;
 use App\Models\Listing;
+use App\Support\PriceGuidance;
 use App\Support\RequiredSpecs;
 use App\Models\ListingImage;
 use App\Services\Images\ImageProcessor;
@@ -308,6 +309,12 @@ class EditListing extends Component
             'conditions' => ListingCondition::cases(),
             'miningUses' => MiningUse::cases(),
             'cities'     => City::orderByDesc('population')->get(),
+            // The same band the wizard shows, for the same reason: a price
+            // being CHANGED is a price being decided.
+            'guidance'   => PriceGuidance::for(
+                $listing->part,
+                $this->price !== '' ? $this->cents($this->price) : null,
+            ),
             'itemSpecs'  => array_filter(
                 (new SpecFilter($listing->category))->schema(),
                 fn ($s) => ($s['scope'] ?? 'part') === 'listing',
