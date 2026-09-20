@@ -1,0 +1,19 @@
+[Unit]
+Description=Nightly RE-MARKET backup
+
+[Timer]
+# 03:10, after the 04:10 stats refresh has NOT yet run and well clear of any
+# evening deploy. The exact minute matters less than it being a time when the
+# box is idle — pg_dump holds a consistent snapshot, so a dump taken during
+# heavy writes is correct but slow.
+OnCalendar=*-*-* 03:10:00
+
+# A machine that was off at 03:10 backs up when it next comes up, rather than
+# skipping the night entirely. On a LAN box that is switched off sometimes,
+# this is the difference between fourteen backups and four.
+Persistent=true
+
+RandomizedDelaySec=5m
+
+[Install]
+WantedBy=timers.target

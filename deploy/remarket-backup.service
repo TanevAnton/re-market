@@ -1,0 +1,50 @@
+# Nightly backup of the database and the listing photographs.
+#
+#   sudo cp deploy/remarket-backup.* /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now remarket-backup.timer
+#
+# Check it afterwards, because a timer that is not enabled fails exactly as
+# silently as the scheduler one does:
+#
+#   systemctl list-timers remarket-backup
+#   journalctl -u remarket-backup -n 30
+#
+# And then, once, on a day when nothing is wrong:
+#
+#   ./deploy/restore.sh
+#
+# That is the only step that turns these files into backups. Everything above
+# it just produces archives nobody has opened.
+
+[Unit]
+Description=RE-MARKET database and image backup
+After=network.target postgresql.service
+# Never run while a deploy is mid-migration: a dump taken between two migrations
+# restores into a schema that never existed.
+Conflicts=remarket-deploy.service
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/var/www/remarket
+ExecStart=/var/www/remarket/deploy/backup.sh
+
+# Off-box copy. Without it the backups die with the disk they protect against.
+# Ivan has a NAS; an rsync target or a mounted path both work.
+# Environment=BACKUP_OFFSITE=/mnt/nas/remarket
+
+# Environment=BACKUP_KEEP_DAYS=14
+
+# A dump of a growing database must not be killed halfway and leave a
+# half-written file behind. backup.sh verifies before rotating, so a timeout
+# here costs a night, not a backup set.
+TimeoutStartSec=1800
+
+# It reads .env and writes to /var/backups. Nothing else.
+PrivateTmp=true
+ProtectHome=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

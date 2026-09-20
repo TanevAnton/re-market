@@ -336,10 +336,78 @@ journalctl -u remarket-scheduler.service -n 50
 | Config changes ignored | config is cached — `php artisan config:cache` after every `.env` edit |
 | Offers never expire | the scheduler timer is not enabled (step 7) |
 
+## 9. Backups, and a restore you have actually run
+
+```bash
+sudo cp deploy/remarket-backup.* /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now remarket-backup.timer
+
+systemctl list-timers remarket-backup     # it is scheduled
+sudo systemctl start remarket-backup      # run one now, do not wait for 03:10
+journalctl -u remarket-backup -n 30       # it worked
+```
+
+Then, **on a day when nothing is wrong**:
+
+```bash
+./deploy/restore.sh
+```
+
+That restores the newest dump into a scratch database beside the real one,
+prints what came back table by table, checks the photo archive reads, and drops
+the scratch database again. It cannot touch the live site. **Until that has been
+run once, there are no backups here — only files with reassuring names.**
+
+Compare the numbers it prints against the live database:
+
+```bash
+psql -d remarket -c 'SELECT count(*) FROM listings'
+```
+
+### Two things are backed up, and forgetting the second is the classic mistake
+
+Listing photographs are **not in the database**. They are files under
+`storage/app/public`, and the rows only carry their paths. A database-only
+backup restores a site where every listing exists, every price is right, and
+every photograph is a broken image — on a marketplace where the photograph *is*
+the listing, that is barely better than nothing. `backup.sh` archives both.
+
+### What is deliberately not backed up
+
+`.env`. It holds the database password, the SMTP password and the Telegram bot
+token, and a copy of it sitting beside a database dump turns one stolen archive
+into a full compromise. **Keep it in a password manager** — the restore
+procedure assumes you still have it.
+
+### Get them off the machine
+
+Backups on the same disk as the database protect you from a mistake but not from
+hardware. Uncomment `BACKUP_OFFSITE` in `remarket-backup.service` and point it
+at the NAS:
+
+```
+Environment=BACKUP_OFFSITE=/mnt/nas/remarket
+```
+
+### When it is for real
+
+```bash
+sudo systemctl stop remarket-queue nginx          # no writes under the restore
+./deploy/restore.sh --into remarket --i-mean-it   # it will ask you to type the name
+tar -C /var/www/remarket/storage/app -xf /var/backups/remarket/storage_<stamp>.tar.zst
+sudo chown -R www-data:www-data /var/www/remarket/storage/app/public
+php artisan optimize:clear
+sudo systemctl start remarket-queue nginx
+php artisan remarket:doctor
+```
+
+Retention is 14 days (`BACKUP_KEEP_DAYS`), and nothing is rotated away until the
+new dump has been verified.
+
 ## Not covered here
 
 No HTTPS — this is a LAN deployment reached by IP, and a certificate needs a
 real domain. No queue worker: nothing queues jobs yet, but the moment e-mail
 notifications land you will need `php artisan queue:work` under systemd, or
-they will be sent synchronously inside the web request. No backups — before
-this holds anything you would miss, add a `pg_dump` cron.
+they will be sent synchronously inside the web request.
