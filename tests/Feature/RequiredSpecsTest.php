@@ -62,7 +62,7 @@ class RequiredSpecsTest extends TestCase
      * If somebody drops the flag, these tests stop covering anything — and
      * would keep passing while doing it.
      */
-    public function test_the_three_specs_are_still_marked_required(): void
+    public function test_the_required_specs_are_still_marked_required(): void
     {
         $this->assertSame(['dead_pixels'], array_keys(RequiredSpecs::forCategory('monitor')));
 
@@ -70,6 +70,16 @@ class RequiredSpecsTest extends TestCase
             ['cpu_model', 'gpu_model'],
             array_keys(RequiredSpecs::forCategory('prebuilt')),
         );
+
+        // The three Apple categories, added 20 Sep. A device locked to
+        // somebody else's Apple ID is the one defect on this site that cannot
+        // be repaired, negotiated or worked around, and it is invisible until
+        // the buyer gets home.
+        foreach (['iphone', 'ipad', 'macbook'] as $category) {
+            $this->assertSame(['icloud_signed_out'],
+                array_keys(RequiredSpecs::forCategory($category)),
+                "[{$category}] must still require the Apple ID question");
+        }
 
         // A category with none must produce no rules at all, or every listing
         // on the site would suddenly need a field nobody defined.
@@ -90,11 +100,23 @@ class RequiredSpecsTest extends TestCase
                     continue;
                 }
 
+                /*
+                 * The known shapes of an honest way out. Two of them are
+                 * ignorance — „не знам", „не е проверено" — and the third is
+                 * knowledge of a bad answer: „не мога да изляза" on an Apple
+                 * listing is not a seller dodging the question, it is the
+                 * question answered in the way that matters most.
+                 *
+                 * That distinction is why this list is phrases rather than a
+                 * rule: adding a required select without one of these is the
+                 * mistake, and the test names it at the point it is made.
+                 */
                 $escape = array_filter(
                     $spec['options'],
                     fn ($o) => is_string($o) && (
                         str_contains(mb_strtolower($o), 'не знам')
                         || str_contains(mb_strtolower($o), 'не е провер')
+                        || str_contains(mb_strtolower($o), 'не мога')
                     ),
                 );
 

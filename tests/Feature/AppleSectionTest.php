@@ -106,11 +106,15 @@ class AppleSectionTest extends TestCase
      * The risks that make this category different, each with a checklist line
      * pointing at its spec.
      *
-     * `required` on a listing-scoped spec is decorative — the wizard validates
-     * the scalar fields and leaves the spec blob alone — so the mechanism that
-     * actually makes a seller answer is the checklist turning a blank into
-     * „без отговор". A schema risk with no checklist line behind it is a
-     * question nobody ever gets asked.
+     * `required` on a listing-scoped spec USED TO BE decorative — the wizard
+     * validated the scalar fields and left the spec blob alone. `RequiredSpecs`
+     * enforces it now, and `icloud_signed_out` is required on all three
+     * categories as of 20 Sep.
+     *
+     * The checklist still matters for everything that is NOT required, which is
+     * most of this schema: it turns a blank into „без отговор" rather than
+     * silence. A schema risk with no checklist line behind it and no `required`
+     * flag is a question nobody ever gets asked.
      */
     public function test_every_apple_specific_risk_has_a_checklist_line_behind_it(): void
     {
@@ -285,18 +289,19 @@ class AppleSectionTest extends TestCase
      * The wizard asks the seller the questions this category turns on — but
      * note WHERE it asks them.
      *
-     * The spec fields live inside „Подробности по желание", which is collapsed
-     * until the seller opens it, so on a freshly-rendered step 3 the iCloud and
-     * battery inputs are not in the DOM at all. What IS on screen unprompted is
-     * the checklist, and that is the honest description of the mechanism: the
-     * wizard does not require an answer about iCloud, it tells the seller that
-     * buyers will ask. Both halves are asserted here rather than only the one
-     * that reads better, because a test that opened the panel first would imply
-     * the wizard insists on an answer, and it does not.
+     * TWO FIELDS, TWO DIFFERENT MECHANISMS, and the split is the point.
      *
-     * Whether an iPhone's iCloud status should be optional at all is a product
-     * question, not a test one — a phone locked to someone else's Apple ID is
-     * the single most expensive mistake a buyer on this site can make.
+     * The iCloud question is required as of 20 Sep, so it is rendered above
+     * „Подробности по желание" and is on screen the moment step 3 loads. The
+     * battery is optional, so it lives inside that panel and is not in the DOM
+     * until the seller opens it.
+     *
+     * This test used to assert that BOTH were inside the collapsed panel, and
+     * its own docblock ended by saying that whether iCloud should be optional
+     * at all was a product question — „a phone locked to someone else's Apple
+     * ID is the single most expensive mistake a buyer on this site can make".
+     * That question has been answered; this is what the answer looks like from
+     * the wizard's side.
      */
     public function test_the_wizard_asks_about_icloud_and_the_battery(): void
     {
@@ -309,14 +314,19 @@ class AppleSectionTest extends TestCase
             ->call('next')
             ->assertSet('step', 3);
 
-        // Unprompted, on arrival: the warning.
-        $wizard->assertSee('Apple ID')
+        // Unprompted, on arrival: the required question and the warning that
+        // explains why it is being asked.
+        $wizard->assertSee('iCloud / Find My')
+               ->assertSee('Apple ID')
                ->assertSee('Здраве на батерията');
 
-        // And the fields themselves, once the optional panel is opened.
+        // The optional fields only after the panel is opened. Asserted through
+        // the input's own id rather than its label, because the label text for
+        // this one also appears in the checklist above it — and a test that
+        // passes on the checklist while the field is missing is a test that
+        // proves nothing.
         $wizard->call('toggleOptional')
-               ->assertSee('Излязъл от iCloud')
-               ->assertSee('Здраве на батерията');
+               ->assertSee('spec-battery_health');
     }
 
     /**

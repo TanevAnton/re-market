@@ -31,6 +31,14 @@
             {{-- Over the image rather than under it: the two things a buyer
                  filters on hardest, without spending a row of the card. --}}
             <div class="absolute left-2 top-2 flex flex-wrap gap-1">
+                {{-- Before the mining badge: a card that cannot be unlocked is
+                     worth less than a card that was mined on, and a buyer
+                     scanning a grid of iPhones should not have to open one to
+                     find out. --}}
+                @if (\App\Support\AppleLock::isLocked($listing))
+                    <span class="badge-warn backdrop-blur">заключен за Apple ID</span>
+                @endif
+
                 @if ($listing->mining_use === \App\Enums\MiningUse::Yes)
                     <span class="badge-warn backdrop-blur">копала {{ $listing->mining_months }} мес.</span>
                 @endif

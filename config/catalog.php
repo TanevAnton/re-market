@@ -680,11 +680,33 @@ return [
                     'help'  => ['bg' => 'Настройки → Батерия → Здраве на батерията',
                                 'en' => 'Settings → Battery → Battery Health'],
                     'facet' => 'range', 'priority' => 3],
-                'icloud_signed_out' => ['type' => 'bool', 'scope' => 'listing',
-                    'label' => ['bg' => 'Излязъл от iCloud', 'en' => 'Signed out of iCloud'],
-                    'help'  => ['bg' => 'Без това телефонът остава заключен за новия собственик',
-                                'en' => 'Without this the phone stays locked to the old owner'],
-                    'facet' => 'bool', 'priority' => 4],
+                /*
+                 * REQUIRED, and a select rather than the checkbox it used to
+                 * be. A required checkbox has exactly one answer that
+                 * satisfies it, so it stops being a question and becomes a
+                 * box everybody ticks — including the sellers it was meant to
+                 * catch. Three states, all of them sayable out loud, is the
+                 * only shape in which „задължително" means anything here.
+                 *
+                 * „Не мога да изляза" is a legitimate answer, not a trap. A
+                 * locked device sold openly as locked is a real transaction
+                 * in this market; a locked device sold quietly as working is
+                 * the single worst thing that can happen to a buyer on this
+                 * site. Forbidding the honest answer moves the lie into the
+                 * description, where nothing can filter or badge it.
+                 */
+                'icloud_signed_out' => ['type' => 'select', 'scope' => 'listing',
+                    'required' => true,
+                    'label' => ['bg' => 'iCloud / Find My', 'en' => 'iCloud / Find My'],
+                    'help'  => ['bg' => 'Телефон, заключен за чужд Apple ID, не се отключва от сервиз, от оператор или от Apple. Кажи как стоят нещата — купувачите така или иначе ще проверят на място.',
+                                'en' => 'A phone locked to someone else\'s Apple ID cannot be unlocked by a repair shop, a carrier or Apple.'],
+                    'options' => ['Да, излязъл съм от iCloud',
+                                  'Още не — ще изляза пред купувача',
+                                  'Не мога да изляза'],
+                    'states'  => ['clear'   => 'Да, излязъл съм от iCloud',
+                                  'pending' => 'Още не — ще изляза пред купувача',
+                                  'locked'  => 'Не мога да изляза'],
+                    'facet' => 'terms', 'priority' => 4],
                 'network_locked' => ['type' => 'bool', 'scope' => 'listing',
                     'label' => ['bg' => 'Заключен за оператор', 'en' => 'Carrier locked'],
                     'facet' => 'bool', 'priority' => 5],
@@ -734,11 +756,20 @@ return [
                     'facet' => 'terms', 'priority' => 10],
 
                 // --- this particular tablet ----------------------------------
-                'icloud_signed_out' => ['type' => 'bool', 'scope' => 'listing',
-                    'label' => ['bg' => 'Излязъл от iCloud', 'en' => 'Signed out of iCloud'],
-                    'help'  => ['bg' => 'Без това таблетът остава заключен за новия собственик',
-                                'en' => 'Without this the tablet stays locked to the old owner'],
-                    'facet' => 'bool', 'priority' => 5],
+                // Required, and a select. See the iphone block for why a
+                // required checkbox is not a question.
+                'icloud_signed_out' => ['type' => 'select', 'scope' => 'listing',
+                    'required' => true,
+                    'label' => ['bg' => 'iCloud / Find My', 'en' => 'iCloud / Find My'],
+                    'help'  => ['bg' => 'Таблет, заключен за чужд Apple ID, не се отключва от сервиз или от Apple. Кажи как стоят нещата — купувачите ще проверят на място.',
+                                'en' => 'A tablet locked to someone else\'s Apple ID cannot be unlocked by a repair shop or by Apple.'],
+                    'options' => ['Да, излязъл съм от iCloud',
+                                  'Още не — ще изляза пред купувача',
+                                  'Не мога да изляза'],
+                    'states'  => ['clear'   => 'Да, излязъл съм от iCloud',
+                                  'pending' => 'Още не — ще изляза пред купувача',
+                                  'locked'  => 'Не мога да изляза'],
+                    'facet' => 'terms', 'priority' => 5],
                 'battery_health' => ['type' => 'int', 'scope' => 'listing', 'unit' => '%', 'sparse' => true,
                     'label' => ['bg' => 'Здраве на батерията', 'en' => 'Battery health'],
                     // iPadOS does not show this the way iOS does, so it is
@@ -819,9 +850,21 @@ return [
                 'battery_health' => ['type' => 'int', 'scope' => 'listing', 'unit' => '%', 'sparse' => true,
                     'label' => ['bg' => 'Здраве на батерията', 'en' => 'Battery health'],
                     'facet' => 'range', 'priority' => 7],
-                'icloud_signed_out' => ['type' => 'bool', 'scope' => 'listing',
-                    'label' => ['bg' => 'Изключен Find My', 'en' => 'Find My switched off'],
-                    'facet' => 'bool', 'priority' => 8],
+                // Required, and a select. See the iphone block for why a
+                // required checkbox is not a question. Activation Lock on a
+                // Mac behaves exactly like the iPhone's.
+                'icloud_signed_out' => ['type' => 'select', 'scope' => 'listing',
+                    'required' => true,
+                    'label' => ['bg' => 'Find My', 'en' => 'Find My'],
+                    'help'  => ['bg' => 'Mac с включен Find My се заключва при изтриване и не се отключва от сервиз или от Apple.',
+                                'en' => 'A Mac with Find My on locks itself on erase and cannot be unlocked by a repair shop or by Apple.'],
+                    'options' => ['Да, Find My е изключен',
+                                  'Още не — ще го изключа пред купувача',
+                                  'Не мога да го изключа'],
+                    'states'  => ['clear'   => 'Да, Find My е изключен',
+                                  'pending' => 'Още не — ще го изключа пред купувача',
+                                  'locked'  => 'Не мога да го изключа'],
+                    'facet' => 'terms', 'priority' => 8],
                 'mdm_free' => ['type' => 'bool', 'scope' => 'listing',
                     'label' => ['bg' => 'Без фирмена регистрация (MDM)', 'en' => 'Not MDM enrolled'],
                     // Ex-corporate machines from liquidations re-enrol

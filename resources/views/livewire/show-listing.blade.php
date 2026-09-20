@@ -379,6 +379,11 @@
             </p>
         </div>
 
+        {{-- First of the three, because it is the only one that can make the
+             item worthless. A locked device is invisible until the buyer gets
+             home, so this cannot sit below anything. --}}
+        @include('partials.apple-lock', ['listing' => $listing])
+
         {{-- Above the checklist on purpose: „the rest of this machine is also
              for sale" changes what somebody is shopping for, and a buyer who
              reads it after deciding on one card has already decided. --}}

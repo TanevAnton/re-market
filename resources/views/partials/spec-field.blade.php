@@ -19,12 +19,28 @@
         </label>
     @elseif ($spec['type'] === 'select')
         <select id="spec-{{ $key }}" wire:model="specs.{{ $key }}" class="mt-1">
-            {{-- A required select has no blank option: the schema already
-                 provides the honest way out („Не е проверено"), so an empty
-                 choice would only be a way to skip the question. --}}
-            @unless ($required ?? false)
+            {{-- BOTH branches need an option with an empty value, and the
+                 reason is the browser rather than the validator.
+
+                 A <select> whose bound value matches no option displays the
+                 FIRST one. Without this, a required select the seller has not
+                 touched shows „Да, излязъл съм от iCloud" selected while the
+                 property is still null — the screen claims an answer nobody
+                 gave, and then rejects the listing over the field that appears
+                 to be filled in. On the Apple question the implied answer is
+                 also the reassuring one, which is the worst possible default
+                 to put in somebody's mouth.
+
+                 `disabled` on the required one is the difference: it is
+                 there to be displayed, not to be chosen, so it cannot become a
+                 way to skip a question the schema already gives an honest way
+                 out of. Validation is unchanged — an empty value fails
+                 `required` either way. --}}
+            @if ($required ?? false)
+                <option value="" disabled>— избери —</option>
+            @else
                 <option value="">—</option>
-            @endunless
+            @endif
             @foreach ($spec['options'] ?? [] as $opt)
                 <option value="{{ $opt }}">{{ $opt }}</option>
             @endforeach
