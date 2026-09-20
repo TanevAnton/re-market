@@ -39,6 +39,35 @@
         <env name="DB_CONNECTION" value="pgsql"/>
         <env name="DB_DATABASE" value="remarket_test"/>
 
+        <!--
+            Turnstile OFF for the suite, pinned here rather than inherited.
+
+            THIS IS NOT A CONVENIENCE, IT IS A BUG FIX. Until 20 Sep these two
+            were not set at all, so whether the suite passed depended on what
+            happened to be in the developer's .env. The keys were blank, so
+            Turnstile disabled itself, so verify() returned true, so every test
+            that submits a form passed — and the whole suite quietly rested on
+            the bot defence being switched off.
+
+            The moment the keys were filled in — which is a thing that MUST
+            happen before launch — sixteen tests failed at once, across auth,
+            password reset, offers and reports. Not one of them was about
+            Turnstile, and the failure message („Проверката за робот не мина")
+            pointed at the forms rather than at the configuration.
+
+            A test environment that changes behaviour because of a production
+            setting is not a test environment. Pinned blank, on purpose: no
+            test should have to carry a token to exercise the thing it is
+            actually about.
+
+            Turnstile's OWN behaviour is covered by TurnstileTest, which turns
+            the keys on per-test and fakes the HTTP call. That is where it
+            belongs — not as an invisible precondition of every other test on
+            the site.
+        -->
+        <env name="TURNSTILE_SITE_KEY" value=""/>
+        <env name="TURNSTILE_SECRET_KEY" value=""/>
+
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
