@@ -1,4 +1,4 @@
-# Deploying RE-MARKET to an Ubuntu server on your LAN
+# Deploying RIGO to an Ubuntu server on your LAN
 
 Assumes an Ubuntu box you can SSH into and that the code is on GitHub at
 `TanevAnton/re-market`.
@@ -23,7 +23,7 @@ Move-Item env-example.txt .env.example -Force -ErrorAction SilentlyContinue
 git ls-files | Select-String -Pattern '^\.env$|^vendor/|^node_modules/'
 
 git add -A
-git commit -m "RE-MARKET: catalogue, listings, offers, deals"
+git commit -m "RIGO: catalogue, listings, offers, deals"
 git remote add origin https://github.com/TanevAnton/re-market.git
 git branch -M main
 git push -u origin main

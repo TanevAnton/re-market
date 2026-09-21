@@ -13,7 +13,7 @@ use Livewire\Component;
  * The page for one piece of hardware.
  *
  * This is the whole organic-search strategy in one file. Nobody searches for
- * "RE-MARKET"; they search for "rtx 4070 цена бг" and "колко струва 5700x3d
+ * "RIGO"; they search for "rtx 4070 цена бг" and "колко струва 5700x3d
  * втора употреба". A listing page cannot answer either - it is one person's
  * asking price and it disappears when the card sells, taking its rankings with
  * it. This page is permanent, accumulates links, and answers the question the

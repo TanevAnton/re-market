@@ -18,7 +18,7 @@ use Tests\TestCase;
  * Titles, share previews and what each page asks to be indexed as.
  *
  * Every listing pasted into Viber or a Telegram group was rendering as a bare
- * link with no photo and the title "RE-MARKET" - on a marketplace whose growth
+ * link with no photo and the title "RIGO" - on a marketplace whose growth
  * is word of mouth, that is the cheapest thing on the site to have got wrong.
  */
 class PageMetaTest extends TestCase

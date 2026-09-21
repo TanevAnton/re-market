@@ -51,7 +51,9 @@ return [
         'telegram_link_ttl'     => (int) env('TELEGRAM_LINK_TTL_MINUTES', 15),
         'bulkgate_app_id'   => env('BULKGATE_APP_ID'),
         'bulkgate_token'    => env('BULKGATE_APP_TOKEN'),
-        'sender_id'         => env('BULKGATE_SENDER_ID', 'REMARKET'),
+        // Max 11 alphanumeric characters, and the operator has to believe you own
+        // the brand. RIGO is four, which leaves room and is easy to read in an SMS.
+        'sender_id'         => env('BULKGATE_SENDER_ID', 'RIGO'),
     ],
     'verify_max_attempts' => (int) env('VERIFY_MAX_ATTEMPTS', 5),
 

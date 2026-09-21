@@ -17,7 +17,7 @@
 return [
 
     /*
-     * RE-MARKET is owned by RE-Tech (re-tech.bg), and the registered entity
+     * RIGO is owned by RE-Tech (re-tech.bg), and the registered entity
      * behind that brand is КОМПНЕТ СОЛЮШЪНС ООД. "RE-Tech" is a trade name and
      * must not appear here - DSA Art. 11 and ЗЕТ чл. 4 both want the company
      * that can actually be served with a notice.

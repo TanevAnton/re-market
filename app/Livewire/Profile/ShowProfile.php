@@ -94,9 +94,18 @@ class ShowProfile extends Component
              * is the figure a cautious buyer is actually looking for and the
              * only one a spammer cannot inflate.
              */
+            /*
+             * The site name comes from config, not from a string here. This
+             * line said „RE-MARKET" until the day the site stopped being
+             * called that, and a hardcoded brand in a meta description is the
+             * kind of thing that stays wrong for months: nothing errors, no
+             * test fails, and it is only ever seen by Google and by whoever
+             * shares a profile link.
+             */
             'description' => sprintf(
-                'Обяви и оценки на %s в RE-MARKET — %d завършени сделки.',
+                'Обяви и оценки на %s в %s — %d завършени сделки.',
                 $this->user->username,
+                config('app.name'),
                 $this->user->deals_completed,
             ),
             'canonical'   => route('profile', $this->user->username),

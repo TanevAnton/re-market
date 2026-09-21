@@ -42,7 +42,7 @@ class Doctor extends Command
         $this->live = (bool) config('remarket.seo.indexable', false);
 
         $this->line('');
-        $this->line('  <options=bold>RE-MARKET deployment check</>');
+        $this->line('  <options=bold>'.config('app.name').' deployment check</>');
         $this->line('  <fg=gray>'.($this->live
             ? 'SEO_INDEXABLE is on — held to launch standards.'
             : 'SEO_INDEXABLE is off — treated as a test deployment.').'</>');

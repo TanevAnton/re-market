@@ -47,11 +47,17 @@ class MailTest extends Command
         }
 
         try {
+            // config('app.name'), not a literal: this mail is the thing you
+            // send to check the live configuration, so it should carry the
+            // live name rather than whatever the site was called when the
+            // command was written.
+            $name = config('app.name');
+
             Mail::raw(
-                "Това е тестово съобщение от RE-MARKET.\n\n"
+                "Това е тестово съобщение от {$name}.\n\n"
                 ."Ако го четеш, потвърждаването на имейл ще работи.\n"
                 .'Изпратено: '.now()->toDateTimeString(),
-                fn ($message) => $message->to($to)->subject('RE-MARKET — тест на пощата'),
+                fn ($message) => $message->to($to)->subject($name.' — тест на пощата'),
             );
         } catch (\Throwable $e) {
             $this->error('  Sending failed: '.$e->getMessage());

@@ -143,7 +143,7 @@ class TurnstileTest extends TestCase
      *
      * The one place in this codebase where failing open is right, and the only
      * one that had never been verified. If it ever regresses to failing closed,
-     * a Cloudflare outage becomes a RE-MARKET outage: no signup, no offer, no
+     * a Cloudflare outage becomes a RIGO outage: no signup, no offer, no
      * password reset, for as long as it lasts — and you find out during
      * somebody else's incident.
      *

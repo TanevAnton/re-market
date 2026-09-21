@@ -1,4 +1,10 @@
-# RE-MARKET
+# RIGO
+
+> The product is **RIGO** (rigo.bg). The codebase, the `remarket:*` artisan
+> commands, the `remarket` database and the `remarket-*` systemd units keep
+> their original internal name on purpose — renaming them would touch every
+> file and require a coordinated server migration to change nothing a user
+> can see. The brand lives in `APP_NAME` and nowhere else.
 
 A Bulgarian marketplace for used PC hardware and gaming gear — a vertical
 alternative to OLX.bg, built around three things OLX cannot do:

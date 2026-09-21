@@ -157,8 +157,8 @@ class Home extends Component
             'stats'         => $stats,
         ])->layoutData([
             /*
-             * No site name in the title: the layout appends it, and "RE-MARKET
-             * · RE-MARKET" is what happens otherwise. What goes here is the
+             * No site name in the title: the layout appends it, and "RIGO
+             * · RIGO" is what happens otherwise. What goes here is the
              * phrase someone would search for, since this is the page that
              * ranks for the brand plus the category.
              */
