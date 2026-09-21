@@ -25,6 +25,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ isset($title) ? $title.' · '.config('app.name') : config('app.name') }}</title>
 
+    {{-- The tab icon. There was none at all until 21 Sep, which meant every
+         bookmark, every pinned tab and every share preview showed a blank
+         sheet of paper next to a marketplace asking people to trust it.
+
+         SVG only, deliberately: every browser this site supports reads it, it
+         is 600 bytes instead of a 15KB multi-resolution .ico, and it is the
+         same drawing as the header mark rather than a raster copy that has to
+         be regenerated whenever the mark changes. Browsers too old for it fall
+         back to asking for /favicon.ico and getting a 404, which costs one
+         request and shows the same blank sheet they would have shown anyway. --}}
+    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{{ asset('favicon.svg') }}">
+
     {{-- Per-page SEO.
          --------------------------------------------------------------------
          Every one of these is optional and every one of them is absent by
@@ -161,9 +174,21 @@
          all - the menu carries those entries at small widths instead. --}}
     <div class="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3.5">
 
-        <a href="{{ route('home') }}" wire:navigate class="flex shrink-0 items-center gap-2">
-            <span class="grid h-8 w-8 place-items-center rounded-lg bg-accent font-mono text-[11px]
-                         font-bold text-[var(--accent-ink)]">RM</span>
+        {{-- Mark plus live text, not one baked image.
+
+             The word is still `config('app.name')`, so it stays the one place
+             the site is named and the whole brand keeps moving with APP_NAME.
+             Only the mark is a drawing.
+
+             The filled accent tile that used to be here held the letters „RM",
+             which stopped being the site's initials on 20 Sep and would have
+             sat in the header wrong for as long as nobody looked at it. A mark
+             that is not letters cannot go stale that way. --}}
+        <a href="{{ route('home') }}" wire:navigate
+           class="flex shrink-0 items-center gap-2 text-ink transition-colors hover:text-accent">
+
+            @include('partials.logo', ['class' => 'h-7 w-7 text-accent'])
+
             <span class="hidden text-[15px] font-extrabold tracking-tight sm:inline">{{ config('app.name') }}</span>
         </a>
 
