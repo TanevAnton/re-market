@@ -68,6 +68,26 @@
         <env name="TURNSTILE_SITE_KEY" value=""/>
         <env name="TURNSTILE_SECRET_KEY" value=""/>
 
+        <!--
+            Billing, pinned blank for the same reason as Turnstile above.
+
+            With no IBAN and no VAT ground, BillingIdentity says „not ready" and
+            the top-up flow is closed. That is the state every test that is not
+            about billing should see — and pinning it means the suite cannot
+            start depending on whatever happens to be in a developer's .env.
+            Precisely the trap Turnstile fell into: the keys were not pinned,
+            so sixteen unrelated tests quietly relied on the bot defence being
+            switched off.
+
+            PaymentTest turns these on per-test, which is where they belong.
+        -->
+        <env name="BILLING_IBAN" value=""/>
+        <env name="BILLING_BIC" value=""/>
+        <env name="BILLING_BANK" value=""/>
+        <env name="BILLING_VAT_REGISTERED" value="false"/>
+        <env name="BILLING_VAT_NUMBER" value=""/>
+        <env name="BILLING_VAT_EXEMPT_NOTE" value=""/>
+
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

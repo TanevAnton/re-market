@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Payment;
+use App\Support\BillingIdentity;
 use App\Support\Turnstile;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -53,6 +55,7 @@ class Doctor extends Command
         $this->checkMail();
         $this->checkQueue();
         $this->checkPosture();
+        $this->checkBilling();
         $this->checkSecrets();
 
         $this->line('');
@@ -267,6 +270,45 @@ class Doctor extends Command
         $this->live
             ? $this->good('SEO_INDEXABLE is on: pages are indexable and the sitemap is served.')
             : $this->good('SEO_INDEXABLE is off: every page is noindex and the sitemap 404s.');
+    }
+
+    /**
+     * Can this deployment take money, and does it know who is taking it?
+     *
+     * A WARNING RATHER THAN A FAILURE WHEN NOTHING IS PENDING, because a site
+     * that has not started charging is a perfectly good state to be in — the
+     * top-up button simply does not appear. It becomes a FAIL the moment
+     * somebody has actually sent a transfer: that is a seller with money gone
+     * and no way to be credited, and it is worse than not selling at all.
+     */
+    private function checkBilling(): void
+    {
+        $this->section('Billing');
+
+        $blanks  = BillingIdentity::missing();
+        $waiting = Schema::hasTable('payments') ? Payment::pending()->count() : 0;
+
+        if ($blanks === []) {
+            $this->good('Invoice details are complete — top-ups are open.');
+
+            config('remarket.billing.vat_registered')
+                ? $this->good('VAT is charged at '.config('remarket.billing.vat_rate').'% and shown on the invoice.')
+                : $this->good('No VAT charged; the invoice states the ground for it.');
+        } else {
+            $missing = implode(', ', array_keys($blanks));
+
+            if ($waiting > 0) {
+                $this->bad("{$waiting} payment(s) are waiting and no invoice can be issued. Missing: {$missing}");
+            } else {
+                $this->warn_("Top-ups are off — sellers cannot add credit. Missing: {$missing}");
+            }
+
+            $this->hint('Credit can still be granted by hand: CreditService::grant().');
+        }
+
+        if ($waiting > 0) {
+            $this->warn_("{$waiting} payment(s) waiting on a human at /plashtaniya.");
+        }
     }
 
     private function checkSecrets(): void

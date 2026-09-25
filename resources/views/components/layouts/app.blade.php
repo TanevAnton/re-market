@@ -221,6 +221,9 @@
                 $queued       = $isAdmin ? \App\Models\ModerationItem::queue()->count() : 0;
                 $uncatalogued = $isAdmin ? \App\Models\Listing::awaitingCatalogue()->count() : 0;
 
+                // Somebody has transferred money and is waiting on a human.
+                $pendingPayments = $isAdmin ? \App\Models\Payment::pending()->count() : 0;
+
                 /*
                  * What the closed menu owes the user.
                  *
@@ -232,7 +235,7 @@
                  * a dot that never goes away, and a dot that never goes away
                  * stops being read.
                  */
-                $menuBadge = $openDeals + $queued;
+                $menuBadge = $openDeals + $queued + $pendingPayments;
             @endphp
         @endauth
 
@@ -487,6 +490,18 @@
                             <span>Модерация</span>
                             @if ($queued)
                                 <span class="badge-accent font-mono">{{ $queued }}</span>
+                            @endif
+                        </a>
+
+                        {{-- Accent, like moderation: somebody has sent money
+                             and is waiting for credit that only a human can
+                             release. That is a queue that being slow is
+                             visible on, which is the cost of the manual
+                             provider and the reason it is counted here. --}}
+                        <a href="{{ route('payments') }}" wire:navigate class="menu-item">
+                            <span>Плащания</span>
+                            @if ($pendingPayments)
+                                <span class="badge-accent font-mono">{{ $pendingPayments }}</span>
                             @endif
                         </a>
 

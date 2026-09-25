@@ -47,6 +47,74 @@ return [
         'topup_options'       => [500, 1000, 2000, 5000],
     ],
 
+    /*
+     * Who issues the invoices, and on what VAT basis.
+     *
+     * EVERY FIELD HERE ENDS UP PRINTED ON A LEGAL DOCUMENT, which is why none
+     * of them has a plausible-looking default. An invoice with an invented
+     * company name or a guessed VAT treatment is worse than no invoice: it is
+     * a wrong document with a real sequential number on it, and the fix for
+     * that is a credit note rather than an edit.
+     *
+     * `PaymentService::confirm()` refuses to issue while any required field is
+     * blank, and `php artisan doctor` says so before a live deployment. That
+     * refusal is the feature — see BillingIdentity.
+     *
+     * VAT_REGISTERED decides which of two things the document says. Registered:
+     * the rate is charged and shown. Not registered: a GROUND for charging
+     * none has to be stated, and which ground applies to a Bulgarian company
+     * selling digital services to Bulgarian consumers is a question for an
+     * accountant, not for this file. VAT_EXEMPT_NOTE is where their answer
+     * goes, verbatim.
+     */
+    'billing' => [
+        /*
+         * WHO ISSUES IT IS NOT HERE. The company behind this site is defined
+         * once, in config/legal.php, from the Trade Register, for the five
+         * public legal pages — and App\Support\BillingIdentity reads it from
+         * there. A second copy in this file would be two places for one
+         * company's name to be wrong, and the wrong one would be the one
+         * nobody reads until an invoice is disputed.
+         *
+         * Not even as `config('legal.entity.name')` here: a config file that
+         * reads another config file works only because of the order Laravel
+         * happens to load them in, which is a dependency nobody can see.
+         *
+         * The bank account is the one genuinely new identity fact, and it is
+         * not public record, so it stays in .env.
+         */
+        'iban'           => env('BILLING_IBAN'),
+        'bic'            => env('BILLING_BIC'),
+        'bank'           => env('BILLING_BANK'),
+
+        /*
+         * FALSE, AND THE REASON IS ALREADY WRITTEN DOWN IN config/legal.php.
+         *
+         * BG208386399 exists, but it is a ЗДДС чл. 97а registration — the
+         * special regime for buying services from abroad. It is NOT ordinary
+         * VAT registration, and the company does not charge VAT on domestic
+         * supplies under it. Putting it on an invoice as „ДДС номер" and
+         * charging 20% would be a false statement about a real company's tax
+         * status, in a document that is kept for ten years.
+         *
+         * So this stays false until ordinary registration actually happens —
+         * the turnover threshold, or voluntarily — and BILLING_VAT_EXEMPT_NOTE
+         * carries the ground for charging none. That sentence is the
+         * ACCOUNTANT'S, copied exactly; there is no default for it here
+         * because nobody in this file knows it.
+         */
+        'vat_registered' => (bool) env('BILLING_VAT_REGISTERED', false),
+        'vat_number'     => env('BILLING_VAT_NUMBER'),
+        'vat_rate'       => (float) env('BILLING_VAT_RATE', 20),
+        'vat_exempt_note'=> env('BILLING_VAT_EXEMPT_NOTE'),
+
+        // What a seller may put in at once. Small enough that a first-time
+        // buyer is not asked to trust the site with much.
+        'topup_options'  => [1000, 2000, 5000, 10000],
+        'topup_min'      => (int) env('BILLING_TOPUP_MIN', 500),
+        'topup_max'      => (int) env('BILLING_TOPUP_MAX', 50000),
+    ],
+
     // Cloudflare Turnstile. Cookieless, so it needs no consent-banner entry
     // under ЗЕС, and free at any volume. With either key missing the challenge
     // disables itself entirely - which is what keeps local and LAN testing

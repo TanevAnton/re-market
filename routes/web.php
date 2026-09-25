@@ -7,7 +7,9 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\VerifyEmailNotice;
 use App\Livewire\Auth\VerifyPhone;
 use App\Livewire\AppleSection;
+use App\Http\Controllers\ShowInvoice;
 use App\Livewire\Billing\MyCredit;
+use App\Livewire\Billing\PaymentQueue;
 use App\Livewire\BrowseListings;
 use App\Livewire\BuildGuide;
 use App\Livewire\Bundles\ManageBundle;
@@ -280,6 +282,23 @@ Route::middleware('auth')->group(function () {
      * record of it would be the site holding money behind a door.
      */
     Route::get('/moyat-kredit', MyCredit::class)->name('credit');
+
+    /*
+     * The invoice. Owner or admin, 404 to everyone else — checked in the
+     * controller as well as implied by the UUID, because a document with
+     * somebody's company details on it should not be guessable OR reachable.
+     */
+    Route::get('/faktura/{invoice}', ShowInvoice::class)->name('invoice');
+
+    /*
+     * Turning bank statements into credit.
+     *
+     * Admin-gated like moderation, and for a heavier reason: confirming here
+     * issues a numbered document and moves money, and neither can be undone.
+     */
+    Route::get('/plashtaniya', PaymentQueue::class)
+        ->middleware('admin')
+        ->name('payments');
 
     Route::get('/komplekt/nov', ManageBundle::class)
         ->middleware('verified')

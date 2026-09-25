@@ -194,3 +194,31 @@ LEGAL_CONTACT_PHONE=
 
 # Bump when the terms change - users are entitled to know they moved.
 LEGAL_UPDATED_AT=2026-09-07
+
+# --- Billing -----------------------------------------------------------------
+# The company issuing the invoices comes from config/legal.php (Trade Register
+# data, correct on every deployment). The only thing a new server does not know
+# is where to be paid, and that is not public record.
+#
+# With BILLING_IBAN empty the top-up button does not appear at all and credit
+# can only be granted by hand - which is a perfectly good state to launch in.
+BILLING_IBAN=
+BILLING_BIC=
+BILLING_BANK=
+
+# LEAVE THIS FALSE until ordinary VAT registration actually happens.
+# BG208386399 is a ЗДДС чл. 97а registration (services bought from abroad), NOT
+# ordinary registration - the company does not charge VAT on domestic supplies
+# under it. Turning this on would put "ДДС номер" and 20% on a document that is
+# kept for ten years.
+BILLING_VAT_REGISTERED=false
+BILLING_VAT_NUMBER=
+BILLING_VAT_RATE=20
+
+# The ground for charging no VAT, in the ACCOUNTANT'S words, copied exactly.
+# An invoice that charges none has to say why; there is no default for this
+# because nobody but them knows which ground applies.
+BILLING_VAT_EXEMPT_NOTE=
+
+BILLING_TOPUP_MIN=500
+BILLING_TOPUP_MAX=50000
