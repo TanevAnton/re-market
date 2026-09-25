@@ -81,6 +81,24 @@
 
             PaymentTest turns these on per-test, which is where they belong.
         -->
+        <!--
+            New-account moderation, pinned OFF — and pinned is the point.
+
+            This was never pinned, so the whole suite quietly inherited
+            whatever a developer had in their .env. That is the third time this
+            has bitten (Turnstile, then billing): a test that depends on an
+            unpinned env value passes or fails according to a file that is not
+            in the repository, and the failure looks like the feature is broken.
+
+            ZERO rather than two, because zero is what the suite has been
+            running with and pinning it to two would flip a precondition under
+            hundreds of tests at once. The baseline is „the hold is off"; every
+            test that exercises the hold turns it on for itself with
+            config(['remarket.antispam.moderated_listings_for_new_accounts' => 2])
+            — WantedTest and BulkImportTest both do.
+        -->
+        <env name="NEW_ACCOUNT_MODERATED_LISTINGS" value="0"/>
+
         <env name="BILLING_IBAN" value=""/>
         <env name="BILLING_BIC" value=""/>
         <env name="BILLING_BANK" value=""/>

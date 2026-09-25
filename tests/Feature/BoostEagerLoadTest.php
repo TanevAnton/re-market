@@ -196,6 +196,10 @@ class BoostEagerLoadTest extends TestCase
             'show-listing.blade.php',
             'show-part.blade.php',
             'show-profile.blade.php',
+            // Added when „Търся" shipped — and this test is why the N+1 in
+            // ShowWanted::render() was found before it reached the server
+            // rather than a month later.
+            'show-wanted.blade.php',
         ]);
 
         $this->assertSame(

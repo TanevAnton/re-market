@@ -302,6 +302,17 @@ return [
         'require_timestamp_photo_for_private' => env('REQUIRE_TIMESTAMP_PHOTO', false),
     ],
 
+    /*
+     * „Търся" — wanted ads.
+     *
+     * Shorter than a listing's sixty days on purpose: somebody who needed a
+     * card in March has bought one by May, and an answered request left open
+     * wastes the time of every seller who reads it.
+     */
+    'wanted' => [
+        'expire_after_days' => (int) env('WANTED_EXPIRE_AFTER_DAYS', 30),
+    ],
+
     'antispam' => [
         'moderated_listings_for_new_accounts' => (int) env('NEW_ACCOUNT_MODERATED_LISTINGS', 2),
         'limits' => [

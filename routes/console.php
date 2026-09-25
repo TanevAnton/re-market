@@ -63,6 +63,18 @@ Schedule::command('remarket:notify-saved-searches')
     ->withoutOverlapping();
 
 /*
+ * Wanted ads that ran out their window.
+ *
+ * Daily is plenty: `WantedAd::visible()` checks the date itself, so the site
+ * never shows a stale request even if this is late or never runs at all. What
+ * it keeps honest is the status column, so „how many requests nobody ever
+ * answered" stays a query rather than an arithmetic exercise.
+ */
+Schedule::command('remarket:expire-wanted')
+    ->dailyAt('04:25')
+    ->withoutOverlapping();
+
+/*
  * Abandoned wizards, and the photos behind them.
  *
  * The wizard puts every uploaded photo on disk before any listing row exists,

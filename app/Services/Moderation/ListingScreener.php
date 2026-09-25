@@ -6,6 +6,7 @@ use App\Enums\ListingStatus;
 use App\Enums\ModerationTrigger;
 use App\Models\Listing;
 use Illuminate\Support\Facades\DB;
+use App\Services\Wanted\WantedService;
 
 /**
  * The automated checks that run when a listing is published.
@@ -43,6 +44,24 @@ class ListingScreener
         // decorative - the damage is done by the time anyone opens it.
         if ($flagged && $listing->status === ListingStatus::Active) {
             $listing->forceFill(['status' => ListingStatus::PendingReview])->save();
+        }
+
+        /*
+         * The listing survived screening and is live — so the buyers who asked
+         * for exactly this are told.
+         *
+         * HERE because this method is the single chokepoint every path to a
+         * public listing passes through: creating one, relisting one, and the
+         * bulk importer all call it. The fourth path, a listing let out of the
+         * moderation queue, does not — ModerationService::approve() calls this
+         * for itself, and WantedMatchTest covers both so the day somebody adds
+         * a fifth way to publish, one of them fails.
+         *
+         * AFTER the flag check, never before: a listing that just went to
+         * PendingReview must not be announced to anybody.
+         */
+        if ($listing->status === ListingStatus::Active) {
+            app(WantedService::class)->announceListing($listing);
         }
 
         return $flagged;

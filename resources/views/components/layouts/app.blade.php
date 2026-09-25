@@ -221,6 +221,15 @@
                 $queued       = $isAdmin ? \App\Models\ModerationItem::queue()->count() : 0;
                 $uncatalogued = $isAdmin ? \App\Models\Listing::awaitingCatalogue()->count() : 0;
 
+                /*
+                 * Answers to this user's wanted ads that they have not cleared.
+                 * Counted rather than derived from a flag for the same reason
+                 * the ticket badges are: nothing has to remember to reset it.
+                 */
+                $wantedAnswers = \App\Models\WantedResponse::pending()
+                    ->whereHas('wantedAd', fn ($q) => $q->where('user_id', auth()->id())->open())
+                    ->count();
+
                 // Somebody has transferred money and is waiting on a human.
                 $pendingPayments = $isAdmin ? \App\Models\Payment::pending()->count() : 0;
 
@@ -261,7 +270,7 @@
                  * a dot that never goes away, and a dot that never goes away
                  * stops being read.
                  */
-                $menuBadge = $openDeals + $queued + $pendingPayments + $ticketReplies + $openTickets;
+                $menuBadge = $openDeals + $queued + $pendingPayments + $ticketReplies + $openTickets + $wantedAnswers;
             @endphp
         @endauth
 
@@ -295,6 +304,10 @@
                      x-on:click.outside="open = false"
                      class="card absolute left-0 z-40 mt-2 w-52 max-w-[calc(100vw-2rem)] p-1.5">
                     <a href="{{ route('browse') }}" wire:navigate class="menu-item">Обяви</a>
+                    {{-- Directly under Обяви: it is the same page seen from the
+                         other side, and a seller browsing stock is the person
+                         most likely to want it. --}}
+                    <a href="{{ route('wanted') }}" wire:navigate class="menu-item">Търсения</a>
                     <a href="{{ route('build') }}" wire:navigate class="menu-item">Сглоби компютър</a>
                     <a href="{{ route('apple') }}" wire:navigate class="menu-item">Apple</a>
                     <a href="{{ route('valuation') }}" wire:navigate class="menu-item">Колко струва?</a>
@@ -434,6 +447,7 @@
                          these. The divider hides with them, or it is a line
                          under nothing. --}}
                     <a href="{{ route('browse') }}" wire:navigate class="menu-item lg:hidden">Обяви</a>
+                    <a href="{{ route('wanted') }}" wire:navigate class="menu-item lg:hidden">Търсения</a>
                     <a href="{{ route('build') }}" wire:navigate class="menu-item lg:hidden">Сглоби компютър</a>
                     <a href="{{ route('valuation') }}" wire:navigate class="menu-item lg:hidden">Колко струва?</a>
 
@@ -473,6 +487,16 @@
                          bundle is made of and where somebody realises they
                          have four parts from the same machine. --}}
                     <a href="{{ route('bundles.mine') }}" wire:navigate class="menu-item">Моите комплекти</a>
+
+                    {{-- The buyer's own side of the marketplace, next to the
+                         seller's. Badged when somebody has answered — that is
+                         the one thing here the user is waiting on. --}}
+                    <a href="{{ route('wanted.create') }}" wire:navigate class="menu-item">
+                        <span>Моите търсения</span>
+                        @if ($wantedAnswers)
+                            <span class="badge-accent font-mono">{{ $wantedAnswers }}</span>
+                        @endif
+                    </a>
 
                     {{-- The buyer's side of "come back later". Everything else
                          here belongs to selling; without these a buyer has no
@@ -598,6 +622,7 @@
              "published" if someone can actually find them. --}}
         <nav class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
             <a href="{{ route('browse') }}" wire:navigate class="text-ink-muted hover:text-ink">Всички обяви</a>
+            <a href="{{ route('wanted') }}" wire:navigate class="text-ink-muted hover:text-ink">Търсения</a>
             <a href="{{ route('valuation') }}" wire:navigate class="text-ink-muted hover:text-ink">Колко струва техниката ми</a>
             <a href="{{ route('apple') }}" wire:navigate class="text-ink-muted hover:text-ink">Apple втора употреба</a>
         </nav>

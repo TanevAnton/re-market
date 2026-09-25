@@ -17,6 +17,9 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
+use App\Enums\WantedStatus;
+use App\Models\WantedAd;
+use App\Services\Wanted\WantedService;
 
 /**
  * Every moderation decision goes through here.
@@ -106,6 +109,18 @@ class ModerationService
                 $subject->forceFill(['status' => BundleStatus::Active])->save();
             }
 
+            // Wanted ads: the third subject type through this door, and the
+            // warning above applies to it word for word. The expiry clock
+            // restarts here for the same reason a listing's does — a request
+            // that waited three days in the queue should not be three days
+            // closer to running out because we were slow.
+            if ($subject instanceof WantedAd && $subject->status === WantedStatus::PendingReview) {
+                $subject->forceFill([
+                    'status'     => WantedStatus::Active,
+                    'expires_at' => now()->addDays((int) config('remarket.wanted.expire_after_days', 30)),
+                ])->save();
+            }
+
             $item->forceFill([
                 'status'     => 'approved',
                 'decided_by' => $moderator->id,
@@ -129,6 +144,23 @@ class ModerationService
 
         if (($bundle = $item->subject) instanceof Bundle) {
             $bundle->user->notify(new BundleDecision($bundle, approved: true));
+        }
+
+        /*
+         * An approved wanted ad reaches the sellers it matches, here rather
+         * than at creation — a held ad was never announced, and if this call is
+         * missing it never will be. It is guarded by `matched_at` inside
+         * announce(), so approving twice cannot double-send.
+         *
+         * The fourth path to a public listing is also here, for the same
+         * reason: ListingScreener handles the other three and says so.
+         */
+        if (($wanted = $item->subject) instanceof WantedAd) {
+            app(WantedService::class)->announce($wanted->refresh());
+        }
+
+        if (($listing = $item->subject) instanceof Listing && $listing->status === ListingStatus::Active) {
+            app(WantedService::class)->announceListing($listing);
         }
 
         // Art. 16(5). Outside the transaction for the same reason as every
@@ -180,6 +212,10 @@ class ModerationService
              */
             if ($subject instanceof Bundle) {
                 $subject->forceFill(['status' => BundleStatus::Removed])->save();
+            }
+
+            if ($subject instanceof WantedAd) {
+                $subject->forceFill(['status' => WantedStatus::Removed])->save();
             }
 
             /*
@@ -253,6 +289,7 @@ class ModerationService
         [$title, $measure] = match (true) {
             $subject instanceof Listing => [$subject->title, 'обявата „%s“ е премахната от платформата'],
             $subject instanceof Bundle  => [$subject->title, 'комплектът „%s“ е премахнат от платформата'],
+            $subject instanceof WantedAd => [$subject->title, 'търсенето „%s“ е премахнато от платформата'],
             $subject instanceof User    => [$subject->username, 'профилът „%s“ е ограничен'],
             default                     => ['—', 'съдържанието „%s“ е премахнато'],
         };
@@ -342,6 +379,7 @@ class ModerationService
         // An admin approving their own listing is the check reviewing itself.
         $isOwn = ($subject instanceof Listing && $subject->user_id === $moderator->id)
               || ($subject instanceof Bundle && $subject->user_id === $moderator->id)
+              || ($subject instanceof WantedAd && $subject->user_id === $moderator->id)
               || ($subject instanceof User && $subject->id === $moderator->id);
 
         if ($isOwn) {

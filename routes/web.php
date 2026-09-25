@@ -36,6 +36,9 @@ use App\Livewire\Profile\EditProfile;
 use App\Livewire\Profile\ShowProfile;
 use App\Livewire\ShowListing;
 use App\Http\Controllers\Sitemap;
+use App\Livewire\Wanted\BrowseWanted;
+use App\Livewire\Wanted\ManageWanted;
+use App\Livewire\Wanted\ShowWanted;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -176,6 +179,18 @@ Route::view('/signali', 'legal.notice')->name('legal.notice');
  * route, which is legally clocked and owes a statement of reasons. The support
  * page names it, above the form.
  */
+/*
+ * „Търсения" — demand, public like the listings are.
+ *
+ * Browsing and reading a single request need no account: the reader this page
+ * is for is a dealer with stock and no reason to sign up yet, and Google
+ * indexing „търся RTX 4070" is supply-side traffic the site badly needs.
+ * Posting one needs a verified account, exactly like a listing — it is
+ * user-written text that reaches sellers directly.
+ */
+Route::get('/tarseniya', BrowseWanted::class)->name('wanted');
+Route::get('/tarsene/{ad}', ShowWanted::class)->name('wanted.show');
+
 Route::get('/podkrepa', SupportCentre::class)->name('support');
 Route::get('/podkrepa/{ticket}', ShowTicket::class)->name('support.ticket');
 
@@ -304,6 +319,10 @@ Route::middleware('auth')->group(function () {
      * email can still have been granted credit, and locking them out of the
      * record of it would be the site holding money behind a door.
      */
+    Route::get('/tarsya', ManageWanted::class)
+        ->middleware('verified')
+        ->name('wanted.create');
+
     Route::get('/moyat-kredit', MyCredit::class)->name('credit');
 
     /*
