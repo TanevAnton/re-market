@@ -16,6 +16,28 @@ return [
     // telling them how to appeal, so this stops being optional at launch.
     'support_email' => env('SUPPORT_EMAIL'),
 
+    /*
+     * Paid visibility. Prices are in EURO cents, like every other price on
+     * this site.
+     *
+     * `max_pinned_per_page` is the one that protects the product rather than
+     * the revenue. The moment a third of the grid is paid placement, the
+     * reason anybody chose this over OLX is gone — and the pressure to raise
+     * it will come from the only part of the site that earns money, so it
+     * lives here where changing it is a visible decision.
+     */
+    'boosts' => [
+        'prices' => [
+            'bump'      => (int) env('BOOST_PRICE_BUMP', 100),
+            'highlight' => (int) env('BOOST_PRICE_HIGHLIGHT', 300),
+            'pin'       => (int) env('BOOST_PRICE_PIN', 900),
+        ],
+        'highlight_days'      => (int) env('BOOST_HIGHLIGHT_DAYS', 7),
+        'pin_days'            => (int) env('BOOST_PIN_DAYS', 7),
+        'max_pinned_per_page' => (int) env('BOOST_MAX_PINNED_PER_PAGE', 2),
+        'topup_options'       => [500, 1000, 2000, 5000],
+    ],
+
     // Cloudflare Turnstile. Cookieless, so it needs no consent-banner entry
     // under ЗЕС, and free at any volume. With either key missing the challenge
     // disables itself entirely - which is what keeps local and LAN testing

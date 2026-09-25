@@ -1,6 +1,20 @@
 {{-- Shared by browse, profile, home and the part pages. One card definition,
      one place to change. --}}
-<article class="card-interactive group relative flex flex-col overflow-hidden">
+@php
+    // Read once per card. Boosted:: reads the LOADED relation, so a grid that
+    // eager-loads pays one query for the page rather than two per card.
+    $boostHighlighted = \App\Support\Boosted::isHighlighted($listing);
+    $boostLabelled    = \App\Support\Boosted::isLabelled($listing);
+@endphp
+
+{{-- The highlight is a RING, not a fill. A filled card would out-shout the
+     photograph, which is the thing a buyer is actually scanning, and a grid
+     where the paid cards are the loudest is the grid this site exists not to
+     be. A ring says „look here" without taking anything away from the item. --}}
+<article @class([
+    'card-interactive group relative flex flex-col overflow-hidden',
+    'ring-2 ring-accent/70' => $boostHighlighted,
+])>
 
     {{-- Outside the <a>, because a button nested in a link is invalid HTML and
          behaves differently in every browser. $withFavorite defaults to true so
@@ -31,6 +45,17 @@
             {{-- Over the image rather than under it: the two things a buyer
                  filters on hardest, without spending a row of the card. --}}
             <div class="absolute left-2 top-2 flex flex-wrap gap-1">
+                {{-- Required, not decorative. The Omnibus Directive makes a
+                     consumer's ability to tell that money changed hands a
+                     legal obligation, so this badge is as load-bearing as the
+                     price. It reads „Промотирана" for every running boost —
+                     including the highlight, which does not move the listing
+                     — because arguing that distinction to a regulator is not
+                     worth the two pixels it saves. --}}
+                @if ($boostLabelled)
+                    <span class="badge-accent backdrop-blur">промотирана</span>
+                @endif
+
                 {{-- Before the mining badge: a card that cannot be unlocked is
                      worth less than a card that was mined on, and a buyer
                      scanning a grid of iPhones should not have to open one to

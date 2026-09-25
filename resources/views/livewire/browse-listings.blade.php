@@ -273,7 +273,33 @@
         @endif
 
         <div wire:loading.class="opacity-40" class="transition-opacity">
-            @if ($listings->isEmpty())
+
+            {{-- The paid slots.
+
+                 ABOVE the results and visibly separated, not blended into
+                 them. A paid listing mixed into the organic grid is the
+                 pattern that makes people stop believing the order means
+                 anything — and the Omnibus Directive is about exactly that
+                 belief. Capped at two by config; see BrowseListings::pinned().
+
+                 OUTSIDE the empty-state branch on purpose. The organic query
+                 excludes whatever is pinned, so a category whose only match is
+                 a paid listing leaves `$listings` empty — and with this block
+                 nested in the @else the visitor was shown „няма обяви" while a
+                 listing that matched sat one query away, unrendered. --}}
+            @if ($pinned->isNotEmpty())
+                <div class="mb-6">
+                    <p class="hint mb-2">Платени позиции</p>
+
+                    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                        @foreach ($pinned as $listing)
+                            @include('partials.listing-card', ['listing' => $listing])
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            @if ($listings->isEmpty() && $pinned->isEmpty())
                 {{-- The most valuable empty state on the site.
 
                      Someone who filtered down to nothing knows exactly what
@@ -304,13 +330,53 @@
                     </div>
                 </div>
             @else
-                <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                    @foreach ($listings as $listing)
-                        @include('partials.listing-card', ['listing' => $listing])
-                    @endforeach
-                </div>
+                @if ($listings->isNotEmpty())
+                    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                        @foreach ($listings as $listing)
+                            @include('partials.listing-card', ['listing' => $listing])
+                        @endforeach
+                    </div>
 
-                <div class="mt-6">{{ $listings->links() }}</div>
+                    <div class="mt-6">{{ $listings->links() }}</div>
+                @endif
+
+                {{-- The ranking disclosure.
+
+                     The Omnibus Directive requires telling a consumer the main
+                     parameters that decide the order they are looking at, AND
+                     that payment can influence it. Both halves are here, in
+                     the words the sort control uses, at the foot of the
+                     results where it answers „why is this the order" rather
+                     than interrupting the search.
+
+                     The block sentence and the badge sentence are separate and
+                     each is written ONLY when that thing is actually on the
+                     screen. A notice explaining a badge nobody can see is
+                     noise — and, the reason it is worth the two lines of PHP,
+                     it keeps the page from containing the words „Платени
+                     позиции" when no paid block was drawn. Turn the cap off in
+                     config and the page stops claiming to have one. --}}
+                @php
+                    $labelledOnScreen = $pinned->isNotEmpty()
+                        || $listings->contains(fn ($l) => \App\Support\Boosted::isLabelled($l));
+                @endphp
+
+                <p class="hint mt-6 max-w-2xl border-t border-line pt-4">
+                    Подредбата следва избраното от теб: <strong>{{ $this->sortLabel() }}</strong>.
+                    @if ($this->sort === 'new')
+                        При „Най-нови" мястото се определя от датата на издигане, а
+                        продавачът може да я обнови — безплатно веднъж на денонощие
+                        или срещу заплащане.
+                    @else
+                        При тази подредба плащане не влияе на мястото.
+                    @endif
+                    @if ($pinned->isNotEmpty())
+                        Блокът най-горе, озаглавен „Платени позиции", е платен от продавача.
+                    @endif
+                    @if ($labelledOnScreen)
+                        Обявите с етикет „промотирана" са платени от продавача.
+                    @endif
+                </p>
             @endif
         </div>
     </section>

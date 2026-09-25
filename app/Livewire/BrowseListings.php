@@ -415,14 +415,83 @@ class BrowseListings extends Component
         );
     }
 
-    #[Layout('components.layouts.app')]
-    public function render()
+    /**
+     * The paid slots above the results.
+     *
+     * THE CAP IS THE PRODUCT DECISION, not a performance one. Two per page,
+     * from config. The moment a third of the grid is paid placement, the
+     * reason anybody chose this over OLX is gone — and the pressure to raise
+     * that number will come from the only part of the site that earns money,
+     * so it sits in config where turning it up is a visible act.
+     *
+     * FIRST PAGE ONLY. A pinned slot is worth what it is because it is the
+     * first thing seen; repeating it on page four is selling the same thing
+     * twice and burying four more organic listings each time.
+     *
+     * The pins RESPECT THE FILTERS. Somebody searching „RTX 4070 до 500 €"
+     * gets pinned graphics cards under 500 €, not whatever was paid for most
+     * recently — a paid slot showing an irrelevant listing is an advert, and
+     * an advert in the results is the thing this cap exists to prevent.
+     *
+     * Excluded from the organic list below, so nothing appears twice.
+     *
+     * @return \Illuminate\Support\Collection<int, \App\Models\Listing>
+     */
+    private function pinned(): \Illuminate\Support\Collection
+    {
+        if ($this->getPage() > 1) {
+            return collect();
+        }
+
+        $max = (int) config('remarket.boosts.max_pinned_per_page', 2);
+
+        if ($max < 1) {
+            return collect();
+        }
+
+        return $this->baseQuery()
+            ->whereHas('boosts', fn ($b) => $b->running()->pinned())
+            ->with(['part', 'city', 'user', 'images', ...\App\Support\Boosted::eagerLoad()])
+            ->inRandomOrder()
+            ->limit($max)
+            ->get();
+    }
+
+    /**
+     * The chosen sort, in the words the dropdown uses.
+     *
+     * Named from the same four strings the select shows, because the ranking
+     * disclosure at the foot of the results quotes it back — and a notice
+     * that names an order the visitor cannot see in the control is worse than
+     * no notice.
+     */
+    public function sortLabel(): string
+    {
+        return match ($this->sort) {
+            'price_asc'  => 'Цена ↑',
+            'price_desc' => 'Цена ↓',
+            'views'      => 'Най-гледани',
+            default      => 'Най-нови',
+        };
+    }
+
+    /**
+     * Everything the visitor asked for, as a query — category, city,
+     * condition, price, free text and every spec facet.
+     *
+     * EXTRACTED so the paid slots above the results run through exactly the
+     * same filters as the results themselves. A pinned listing that ignores
+     * „RTX 4070 до 500 €" is not a search result, it is an advert wearing one,
+     * and it is the thing that makes people stop trusting a grid. Sharing the
+     * builder means the two can never drift: a facet added here applies to
+     * both, or to neither.
+     */
+    private function baseQuery(): \Illuminate\Database\Eloquent\Builder
     {
         $filter = $this->filter();
 
         $query = Listing::query()
             ->visible()
-            ->with(['part', 'city', 'user', 'images'])
             ->when($this->category, fn ($q) => $q->where('listings.category', $this->category))
             ->when($this->city, fn ($q) => $q->whereHas('city', fn ($c) => $c->where('slug', $this->city)))
             ->when($this->condition, fn ($q) => $q->whereIn('condition', $this->condition))
@@ -443,6 +512,38 @@ class BrowseListings extends Component
             $query = $filter->apply($query, $key, $value);
         }
 
+        return $query;
+    }
+
+    #[Layout('components.layouts.app')]
+    public function render()
+    {
+        /*
+         * Also built in baseQuery(), and deliberately not memoised: SpecFilter
+         * is `new SpecFilter($this->category)` and nothing else, so a second
+         * one costs less than the machinery to avoid it — and a memo on a
+         * Livewire component is a per-request cache that goes stale the moment
+         * the category changes mid-request, which this codebase has been
+         * bitten by before.
+         *
+         * This line is the whole reason twenty-odd tests went red once: the
+         * refactor moved the definition into baseQuery() while the view data
+         * below still used it, and `php -l` cannot see an undefined variable.
+         */
+        $filter = $this->filter();
+
+        $pinned = $this->pinned();
+
+        $query = $this->baseQuery()
+            // Boosted::eagerLoad() and not a bare 'boosts': the grid only
+            // ever asks about RUNNING ones, and loading the rest would drag
+            // every bump a listing has ever had into memory.
+            ->with(['part', 'city', 'user', 'images', ...\App\Support\Boosted::eagerLoad()])
+            // Nothing appears twice on one screen. Without this a pinned
+            // listing shows in its slot AND in the organic grid, which reads
+            // as a bug to a visitor and as double value to the seller.
+            ->when($pinned->isNotEmpty(), fn ($q) => $q->whereNotIn('listings.id', $pinned->pluck('id')));
+
         $query = match ($this->sort) {
             'price_asc'  => $query->orderBy('price_cents'),
             'price_desc' => $query->orderByDesc('price_cents'),
@@ -453,6 +554,7 @@ class BrowseListings extends Component
         $listings = $query->paginate(24);
 
         return view('livewire.browse-listings', [
+            'pinned'     => $pinned,
             'listings'   => $listings,
             'categories' => SpecFilter::categories(),
             // The forty biggest towns, PLUS whichever one is being filtered on.

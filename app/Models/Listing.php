@@ -190,6 +190,16 @@ class Listing extends Model
      * taking them with it.
      */
     public function bundle(): BelongsTo   { return $this->belongsTo(Bundle::class); }
+
+    /**
+     * Paid visibility on this listing.
+     *
+     * Read through App\Support\Boosted, never directly in a view: `$listing
+     * ->boosts` is the loaded collection and `$listing->boosts()` is a fresh
+     * query every single time, which on a 24-card grid is the difference
+     * between one query and fifty.
+     */
+    public function boosts(): HasMany { return $this->hasMany(Boost::class); }
     public function city(): BelongsTo     { return $this->belongsTo(City::class); }
     public function images(): HasMany     { return $this->hasMany(ListingImage::class)->orderBy('position'); }
     public function offers(): HasMany     { return $this->hasMany(Offer::class); }
