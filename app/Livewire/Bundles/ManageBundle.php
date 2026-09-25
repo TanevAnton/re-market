@@ -11,6 +11,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use RuntimeException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
  * Building a bundle out of listings you already have.
@@ -169,6 +170,12 @@ class ManageBundle extends Component
             $bundle = ($existing = $this->bundle())
                 ? $service->update($existing, $data, $this->selected, $user)
                 : $service->create($user, $data, $this->selected);
+        } catch (HttpException $e) {
+            // Symfony's HttpException extends \RuntimeException, so
+            // BundleService's `abort(404)` for „not your bundle" would
+            // otherwise land in the catch below and render as an inline error
+            // with no message at all. A 404 stays a 404.
+            throw $e;
         } catch (RuntimeException $e) {
             // The service's refusals are written for the seller to read. They
             // belong on the field that caused them, not in a log.
@@ -188,6 +195,8 @@ class ManageBundle extends Component
         if ($bundle->status === BundleStatus::Draft) {
             try {
                 $bundle = $service->publish($bundle, $user);
+            } catch (HttpException $e) {
+                throw $e;
             } catch (RuntimeException $e) {
                 $this->addError('selected', $e->getMessage());
 

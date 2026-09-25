@@ -7,6 +7,7 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\VerifyEmailNotice;
 use App\Livewire\Auth\VerifyPhone;
 use App\Livewire\AppleSection;
+use App\Livewire\Billing\MyCredit;
 use App\Livewire\BrowseListings;
 use App\Livewire\BuildGuide;
 use App\Livewire\Bundles\ManageBundle;
@@ -269,6 +270,16 @@ Route::middleware('auth')->group(function () {
      * the check that survives a refactor of this file.
      */
     Route::get('/moite-komplekti', MyBundles::class)->name('bundles.mine');
+
+    /*
+     * The seller's balance and its history.
+     *
+     * Logged in is enough — it is the user's own money and reading it changes
+     * nothing. No `verified` middleware: someone who has not confirmed their
+     * email can still have been granted credit, and locking them out of the
+     * record of it would be the site holding money behind a door.
+     */
+    Route::get('/moyat-kredit', MyCredit::class)->name('credit');
 
     Route::get('/komplekt/nov', ManageBundle::class)
         ->middleware('verified')

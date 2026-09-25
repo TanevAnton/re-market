@@ -211,6 +211,23 @@ class Listing extends Model
         return $this->images->first();
     }
 
+    /**
+     * When the FREE bump is available again. Null means now.
+     *
+     * ON THE MODEL, NOT IN A SERVICE, because two services need the same
+     * answer and they must never disagree about it. ListingService asks in
+     * order to refuse a free bump that is too soon; BoostService asks in order
+     * to refuse SELLING a bump that the seller can have for nothing — and if
+     * those two ever drift apart, the gap between them is a screen charging a
+     * euro for a button that is sitting right next to it, free.
+     */
+    public function freeBumpAvailableAt(): ?\Illuminate\Support\Carbon
+    {
+        $next = $this->bumped_at?->addHours((int) config('remarket.listings.bump_cooldown_hours', 24));
+
+        return $next?->isFuture() ? $next : null;
+    }
+
     // --- queries ---------------------------------------------------------
 
     public function scopeVisible(Builder $q): Builder

@@ -50,6 +50,24 @@ class BoostService
                 );
             }
 
+            /*
+             * NEVER SELL WHAT IS FREE RIGHT NOW.
+             *
+             * Every listing gets one free bump a day, and a paid bump does the
+             * same thing to the same column. Taking a euro for it while the
+             * free button is available — a double click, a stale screen, a
+             * direct POST — is the site charging for nothing, and it is the
+             * kind of thing a seller finds once and tells everybody about.
+             *
+             * In the service rather than only in the view, because the view is
+             * a screenshot of a moment and this is somebody's money.
+             */
+            if ($tier === BoostTier::Bump && $listing->freeBumpAvailableAt() === null) {
+                throw new RuntimeException(
+                    'Можеш да вдигнеш обявата безплатно точно сега — не плащай за това.'
+                );
+            }
+
             $price = $tier->priceCents();
 
             $boost = new Boost();
@@ -156,6 +174,8 @@ class BoostService
         foreach (BoostTier::ladder() as $tier) {
             $out[$tier->value] = match (true) {
                 $listing->status !== ListingStatus::Active => 'Обявата не е активна.',
+                $tier === BoostTier::Bump && $listing->freeBumpAvailableAt() === null
+                    => 'Можеш да я вдигнеш безплатно точно сега.',
                 $tier !== BoostTier::Bump && $this->running($listing, $tier) => 'Вече е активно.',
                 default => null,
             };

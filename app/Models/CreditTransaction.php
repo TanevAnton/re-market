@@ -63,6 +63,24 @@ class CreditTransaction extends Model
         });
     }
 
+    /**
+     * What this row was, in the seller's words.
+     *
+     * „Подарен" rather than „grant": the early sellers get free credit and the
+     * screen should say so plainly, because a mystery positive row is worse
+     * than no row at all.
+     */
+    public function kindLabel(): string
+    {
+        return match ($this->kind) {
+            self::TOPUP  => 'Зареждане',
+            self::SPEND  => 'Плащане',
+            self::REFUND => 'Върнато',
+            self::GRANT  => 'Подарен кредит',
+            default      => $this->kind,
+        };
+    }
+
     public function formattedAmount(): string
     {
         $sign = $this->amount_cents < 0 ? '−' : '+';

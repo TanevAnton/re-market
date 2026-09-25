@@ -19,6 +19,11 @@
     </div>
 
     @error('listing') <p class="error mt-3">{{ $message }}</p> @enderror
+    {{-- Its own key, not 'listing': a refused boost and a refused delete can
+         both be on screen, and one must not overwrite the other.
+         The success side is flashed to session('status'), which the layout
+         already renders for every page. --}}
+    @error('boost') <p class="error mt-3">{{ $message }}</p> @enderror
 
     @if ($listings->isEmpty())
         <div class="card-pad mt-6 text-center">
@@ -46,7 +51,12 @@
     <div class="mt-6 space-y-3">
         @foreach ($listings as $listing)
             @php
-                $bumpAt   = $service->bumpAvailableAt($listing);
+                $bumpAt = $service->bumpAvailableAt($listing);
+
+                // The loaded relation, already filtered to running by
+                // Boosted::eagerLoad() in the component — counted, not queried.
+                $runningBoosts = $listing->boosts->count();
+
                 $editable = in_array($listing->status, [
                     \App\Enums\ListingStatus::Draft,
                     \App\Enums\ListingStatus::PendingReview,
@@ -129,6 +139,19 @@
                                     title="{{ $bumpAt ? 'Отново '.$bumpAt->diffForHumans() : 'Вдига обявата в началото' }}">
                                 Вдигни
                             </button>
+
+                            {{-- AFTER the free bump, never before it. The free
+                                 control is the one a seller should reach
+                                 first, and a paid button sitting to its left
+                                 would be the site quietly steering them past
+                                 something they already have. --}}
+                            <button type="button" wire:click="openBoost({{ $listing->id }})"
+                                    class="btn-ghost btn-sm">
+                                Промотирай
+                                @if ($runningBoosts)
+                                    <span class="badge-good ml-1">{{ $runningBoosts }}</span>
+                                @endif
+                            </button>
                         @endif
 
                         @if (in_array($listing->status, [
@@ -173,6 +196,14 @@
                             Изтрий
                         </button>
                     </div>
+
+                    @if ($boosting === $listing->id)
+                        @include('partials.boost-ladder', [
+                            'listing' => $listing,
+                            'boosts'  => $boosts,
+                            'balance' => $balance,
+                        ])
+                    @endif
 
                     {{-- Said plainly, because a seller who marks a live deal as
                          sold here would be skipping the confirmation the buyer

@@ -50,13 +50,20 @@ class BoostedBrowseTest extends TestCase
         app(CreditService::class)->grant($this->seller, 100_00, 'test');
     }
 
+    /**
+     * `bumped_at` pinned to now: the factory scatters it over 45 days, and
+     * BoostService refuses to sell a bump while the free daily one is
+     * available — so without this the bump test here is a dice roll. Same
+     * reason as BoostTest::listing().
+     */
     private function listing(array $attributes = []): Listing
     {
         return Listing::factory()->create([
-            'user_id'  => $this->seller->id,
-            'city_id'  => City::first()->id,
-            'category' => 'gpu',
-            'status'   => ListingStatus::Active,
+            'user_id'   => $this->seller->id,
+            'city_id'   => City::first()->id,
+            'category'  => 'gpu',
+            'status'    => ListingStatus::Active,
+            'bumped_at' => now(),
             ...$attributes,
         ]);
     }

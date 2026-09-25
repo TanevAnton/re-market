@@ -313,10 +313,7 @@ class ListingService
             throw new RuntimeException('Само активна обява може да се вдига.');
         }
 
-        $hours = (int) config('remarket.listings.bump_cooldown_hours', 24);
-        $next  = $listing->bumped_at?->addHours($hours);
-
-        if ($next && $next->isFuture()) {
+        if ($next = $listing->freeBumpAvailableAt()) {
             throw new RuntimeException('Можеш да вдигнеш обявата отново '.$next->diffForHumans().'.');
         }
 
@@ -325,12 +322,16 @@ class ListingService
         return $listing;
     }
 
-    /** When can this seller bump again? Null means now. */
+    /**
+     * When can this seller bump again for free? Null means now.
+     *
+     * Delegates to the model, which is where the rule lives now — BoostService
+     * needs the same answer to refuse selling a bump that is already free, and
+     * two copies of one cooldown is how they end up disagreeing.
+     */
     public function bumpAvailableAt(Listing $listing): ?\Illuminate\Support\Carbon
     {
-        $next = $listing->bumped_at?->addHours((int) config('remarket.listings.bump_cooldown_hours', 24));
-
-        return $next?->isFuture() ? $next : null;
+        return $listing->freeBumpAvailableAt();
     }
 
     /**

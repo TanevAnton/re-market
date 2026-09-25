@@ -212,6 +212,11 @@
                 // One query, not one per thread - this renders on every page.
                 $unread = \App\Models\Thread::unreadTotalFor(auth()->id());
 
+                // One indexed SUM, and only for logged-in users. There is no
+                // balance column anywhere by design — see CreditTransaction.
+                $creditBalance = app(\App\Services\Billing\CreditService::class)
+                    ->balance(auth()->user());
+
                 $isAdmin      = auth()->user()->is_admin;
                 $queued       = $isAdmin ? \App\Models\ModerationItem::queue()->count() : 0;
                 $uncatalogued = $isAdmin ? \App\Models\Listing::awaitingCatalogue()->count() : 0;
@@ -456,6 +461,22 @@
                         Моят профил
                     </a>
                     <a href="{{ route('profile.edit') }}" wire:navigate class="menu-item">Настройки</a>
+
+                    {{-- The balance, in the menu rather than in the bar.
+
+                         A number that only moves when the seller moves it does
+                         not belong next to the counts of things other people
+                         are waiting on — and a euro figure permanently in the
+                         header would make the site look like it is asking to
+                         be paid on every page. It is a neutral badge for the
+                         same reason: money sitting in an account is not work
+                         that is late. --}}
+                    <a href="{{ route('credit') }}" wire:navigate class="menu-item">
+                        <span>Моят кредит</span>
+                        <span class="badge-neutral font-mono tabular">
+                            {{ number_format($creditBalance / 100, 2, ',', ' ') }} €
+                        </span>
+                    </a>
 
                     @if ($isAdmin)
                         <hr class="my-1.5">

@@ -47,13 +47,24 @@ class BoostTest extends TestCase
         $this->credit = app(CreditService::class);
     }
 
+    /**
+     * `bumped_at` is pinned to now on purpose, and it is not cosmetic.
+     *
+     * The factory scatters it across the last 45 days, so whether the FREE
+     * daily bump happens to be available is random — and BoostService refuses
+     * to SELL a bump while the free one is there. Left to the factory, every
+     * bump test in this file would pass or fail on a dice roll. `now()` means
+     * „the free bump was just used", which is the state a paid bump exists
+     * for.
+     */
     private function listing(array $attributes = [], ?User $owner = null): Listing
     {
         return Listing::factory()->create([
-            'user_id'  => ($owner ?? $this->seller)->id,
-            'city_id'  => City::first()->id,
-            'category' => 'gpu',
-            'status'   => ListingStatus::Active,
+            'user_id'   => ($owner ?? $this->seller)->id,
+            'city_id'   => City::first()->id,
+            'category'  => 'gpu',
+            'status'    => ListingStatus::Active,
+            'bumped_at' => now(),
             ...$attributes,
         ]);
     }
@@ -139,7 +150,9 @@ class BoostTest extends TestCase
 
     public function test_a_bump_moves_the_listing_and_costs_its_price(): void
     {
-        $listing = $this->listing(['bumped_at' => now()->subDays(5)]);
+        // An hour ago: inside the free cooldown, so a paid bump is a thing
+        // the seller can actually be sold.
+        $listing = $this->listing(['bumped_at' => now()->subHour()]);
         $this->credit->topUp($this->seller, 1000, 'card');
 
         $boost = $this->boosts->buy($listing, $this->seller, BoostTier::Bump);
@@ -316,6 +329,48 @@ class BoostTest extends TestCase
         foreach (BoostTier::ladder() as $tier) {
             $this->assertNotNull($sold[$tier->value], "[{$tier->value}] should refuse on a sold listing");
         }
+    }
+
+    /**
+     * THE SITE DOES NOT SELL WHAT IT GIVES AWAY.
+     *
+     * Every listing gets one free bump a day and a paid bump does the same
+     * thing to the same column. While the free one is available there is
+     * nothing to sell, and taking a euro for it — a double click, a stale
+     * screen, a direct POST — would be the single cheapest way to lose a
+     * seller's trust on a site whose whole pitch is not being OLX.
+     */
+    public function test_a_bump_is_not_for_sale_while_the_free_one_is_available(): void
+    {
+        $listing = $this->listing(['bumped_at' => now()->subDays(5)]);
+        $this->credit->topUp($this->seller, 1000, 'card');
+
+        try {
+            $this->boosts->buy($listing, $this->seller, BoostTier::Bump);
+            $this->fail('charged for a bump that was free');
+        } catch (RuntimeException $e) {
+            $this->assertStringContainsString('безплатно', $e->getMessage());
+        }
+
+        $this->assertSame(1000, $this->credit->balance($this->seller));
+        $this->assertSame(0, Boost::count());
+
+        // And the screen is told the same thing, in the same words.
+        $this->assertStringContainsString(
+            'безплатно',
+            $this->boosts->availability($listing)[BoostTier::Bump->value] ?? '',
+        );
+    }
+
+    /** A listing with no bump history has never used its free one. */
+    public function test_a_never_bumped_listing_is_also_free_to_bump(): void
+    {
+        $listing = $this->listing(['bumped_at' => null]);
+        $this->credit->topUp($this->seller, 1000, 'card');
+
+        $this->expectException(RuntimeException::class);
+
+        $this->boosts->buy($listing, $this->seller, BoostTier::Bump);
     }
 
     /**
