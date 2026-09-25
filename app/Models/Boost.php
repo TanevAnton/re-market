@@ -74,6 +74,12 @@ class Boost extends Model
         return $q->where('tier', BoostTier::Pin);
     }
 
+    /** The homepage slot. A different page and a different sale — see BoostTier. */
+    public function scopeFront(Builder $q): Builder
+    {
+        return $q->where('tier', BoostTier::Front);
+    }
+
     /**
      * What is left, for showing the seller. Null once it is over.
      *

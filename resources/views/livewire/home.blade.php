@@ -222,10 +222,47 @@
             </div>
         </section>
 
+        {{-- ── Paid positions ────────────────────────────────────────────────
+             The homepage's one paid slot, and the most valuable placement on
+             the site: one audience, shared by every category.
+
+             LABELLED, SEPARATED, AND DISCLOSED — the same three rules as the
+             browse block. „Платени позиции" over it rather than „Препоръчани",
+             a border between it and everything else, and a sentence saying
+             plainly that the order is random among sellers who paid. The
+             Omnibus Directive requires the consumer be told that payment
+             decided what they are looking at; on the front page of the site
+             that requirement and simple honesty happen to say the same thing.
+
+             Shares its slot with „Най-разглеждани" below: paid when anybody
+             bought, most-viewed when nobody did. See Home::mostViewed(). --}}
+        @if ($promoted->isNotEmpty())
+            <section class="border-t border-line py-12">
+                <div class="flex items-baseline justify-between gap-4">
+                    <h2 class="text-xl font-bold tracking-tight">Платени позиции</h2>
+                    <a href="{{ route('browse') }}" wire:navigate class="link text-sm">
+                        Виж всички обяви →
+                    </a>
+                </div>
+
+                <p class="hint mt-1 max-w-2xl">
+                    Тези обяви са платени от продавачите си. Редът между тях е
+                    случаен, а всички останали обяви на сайта се подреждат без
+                    заплащане.
+                </p>
+
+                <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    @foreach ($promoted as $listing)
+                        @include('partials.listing-card', ['listing' => $listing])
+                    @endforeach
+                </div>
+            </section>
+        @endif
+
         {{-- ── Most viewed ───────────────────────────────────────────────────
              "Most viewed", not "featured" - there is nothing curated here and
-             saying otherwise on the front page would be a small lie. This is
-             the slot promoted listings will take. --}}
+             saying otherwise on the front page would be a small lie. Rendered
+             only when the paid block above is empty; they share one slot. --}}
         @if ($mostViewed->isNotEmpty())
             <section class="border-t border-line py-12">
                 <div class="flex items-baseline justify-between gap-4">

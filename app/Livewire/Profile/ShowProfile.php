@@ -73,7 +73,7 @@ class ShowProfile extends Component
         return view('livewire.profile.show-profile', [
             'listings' => $this->user->listings()
                 ->visible()
-                ->with(['part', 'city', 'images'])
+                ->with(['part', 'city', 'images', ...\App\Support\Boosted::eagerLoad()])
                 ->latest('bumped_at')
                 ->paginate(12),
 

@@ -31,10 +31,19 @@ return [
             'bump'      => (int) env('BOOST_PRICE_BUMP', 100),
             'highlight' => (int) env('BOOST_PRICE_HIGHLIGHT', 300),
             'pin'       => (int) env('BOOST_PRICE_PIN', 900),
+            // The homepage. Roughly 3x the category pin, like every other rung
+            // — one audience shared by every category is genuinely scarcer
+            // than a slot in one of nineteen of them.
+            'front'     => (int) env('BOOST_PRICE_FRONT', 2700),
         ],
         'highlight_days'      => (int) env('BOOST_HIGHLIGHT_DAYS', 7),
         'pin_days'            => (int) env('BOOST_PIN_DAYS', 7),
+        'front_days'          => (int) env('BOOST_FRONT_DAYS', 7),
         'max_pinned_per_page' => (int) env('BOOST_MAX_PINNED_PER_PAGE', 2),
+        // Eight is what the homepage rail holds. Raising it makes every slot
+        // worth less to everyone who already bought one, so it is a number
+        // somebody has to come here and change.
+        'max_front_page'      => (int) env('BOOST_MAX_FRONT_PAGE', 8),
         'topup_options'       => [500, 1000, 2000, 5000],
     ],
 

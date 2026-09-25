@@ -54,6 +54,12 @@ class Boosted
         return self::of($listing, BoostTier::Pin) !== null;
     }
 
+    /** On the homepage block. A separate purchase from the category pin. */
+    public static function isOnFront(Listing $listing): bool
+    {
+        return self::of($listing, BoostTier::Front) !== null;
+    }
+
     /**
      * Does this listing have to carry the „Промотирана" label?
      *
@@ -66,9 +72,20 @@ class Boosted
      * A bump is excluded because it is never running — see BoostTier. Its
      * effect ended when it was bought, and a badge on a week-old bump would
      * mislead in the direction the rule exists to prevent.
+     *
+     * ANY RUNNING BOOST, asked as a question about the collection rather than
+     * as a list of tiers. The earlier version read
+     * `isHighlighted() || isPinned()`, which meant adding the homepage tier
+     * would have shipped a paid placement with NO disclosure badge on it until
+     * somebody noticed — a list of tiers is a list that gets out of date, and
+     * the one thing this method must never do is under-report.
      */
     public static function isLabelled(Listing $listing): bool
     {
-        return self::isHighlighted($listing) || self::isPinned($listing);
+        if (! $listing->relationLoaded('boosts')) {
+            $listing->load(self::eagerLoad());
+        }
+
+        return $listing->boosts->contains(fn (Boost $b) => $b->isRunning());
     }
 }

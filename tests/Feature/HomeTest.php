@@ -2,10 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Enums\BoostTier;
 use App\Enums\ListingStatus;
 use App\Livewire\Home;
 use App\Models\Listing;
 use App\Models\User;
+use App\Services\Billing\BoostService;
+use App\Services\Billing\CreditService;
 use Database\Seeders\CitySeeder;
 use Database\Seeders\PartSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -129,6 +132,118 @@ class HomeTest extends TestCase
 
         $this->assertSame($popular->id, $viewed->first()->id);
         $this->assertTrue($viewed->contains('id', $quiet->id));
+    }
+
+    // --- the homepage's paid slot -----------------------------------------
+
+    private function promote(Listing $listing): void
+    {
+        $seller = $listing->user;
+
+        app(CreditService::class)->grant($seller, 100_00, 'test');
+        app(BoostService::class)->buy($listing, $seller, BoostTier::Front);
+    }
+
+    public function test_a_paid_listing_reaches_the_front_page_block(): void
+    {
+        $paid = $this->listing(['title' => 'Платената карта на началната']);
+        $this->promote($paid);
+
+        $promoted = Livewire::test(Home::class)->instance()->promoted();
+
+        $this->assertCount(1, $promoted);
+        $this->assertSame($paid->id, $promoted->first()->id);
+
+        $this->get(route('home'))
+            ->assertSee('Платени позиции')
+            ->assertSee('Платената карта на началната');
+    }
+
+    /**
+     * A CATEGORY PIN IS NOT A HOMEPAGE SLOT.
+     *
+     * They are two purchases at two prices, and the day they stop being
+     * separate is the day every 9 € pin buyer silently gets the 27 € placement
+     * — which devalues the thing for everyone who paid for it properly.
+     */
+    public function test_a_category_pin_does_not_reach_the_front_page(): void
+    {
+        $listing = $this->listing();
+        $seller  = $listing->user;
+
+        app(CreditService::class)->grant($seller, 100_00, 'test');
+        app(BoostService::class)->buy($listing, $seller, BoostTier::Pin);
+
+        $this->assertCount(0, Livewire::test(Home::class)->instance()->promoted());
+    }
+
+    /** And the reverse: the homepage slot does not pin a category. */
+    public function test_a_front_page_slot_does_not_pin_the_category(): void
+    {
+        $paid = $this->listing(['category' => 'gpu']);
+        $this->promote($paid);
+
+        Livewire::test(\App\Livewire\BrowseListings::class)
+            ->assertViewHas('pinned', fn ($p) => $p->isEmpty());
+    }
+
+    public function test_the_front_page_block_is_capped(): void
+    {
+        config(['remarket.boosts.max_front_page' => 2]);
+
+        for ($i = 0; $i < 4; $i++) {
+            $this->promote($this->listing(['title' => "Платена {$i}"]));
+        }
+
+        $this->assertCount(2, Livewire::test(Home::class)->instance()->promoted());
+    }
+
+    public function test_setting_the_front_page_cap_to_zero_turns_the_block_off(): void
+    {
+        config(['remarket.boosts.max_front_page' => 0]);
+
+        $this->promote($this->listing());
+
+        $this->assertCount(0, Livewire::test(Home::class)->instance()->promoted());
+        $this->get(route('home'))->assertDontSee('Платени позиции');
+    }
+
+    /** Nothing clears a flag — `visible()` simply stops matching it. */
+    public function test_a_sold_listing_leaves_the_front_page_block(): void
+    {
+        $paid = $this->listing();
+        $this->promote($paid);
+
+        $paid->forceFill(['status' => ListingStatus::Sold])->save();
+
+        $this->assertCount(0, Livewire::test(Home::class)->instance()->promoted());
+    }
+
+    public function test_a_paid_front_page_listing_carries_the_label(): void
+    {
+        $this->promote($this->listing());
+
+        $this->get(route('home'))->assertSee('промотирана');
+    }
+
+    /**
+     * The two rails share one slot: paid when somebody bought, most-viewed
+     * when nobody did. A „Платени позиции" heading over an empty grid would be
+     * a dead section on the most visible page of the site.
+     */
+    public function test_most_viewed_fills_the_slot_only_while_nothing_is_paid(): void
+    {
+        $this->listing(['view_count' => 900]);
+
+        $this->get(route('home'))
+            ->assertSee('Най-разглеждани')
+            ->assertDontSee('Платени позиции');
+
+        $this->promote($this->listing(['view_count' => 5]));
+
+        $this->get(route('home'))
+            ->assertSee('Платени позиции')
+            ->assertDontSee('Най-разглеждани');
     }
 
     public function test_the_stats_count_what_they_say_they_count(): void

@@ -73,24 +73,61 @@ class Home extends Component
     public function newest()
     {
         return Listing::visible()
-            ->with(['images', 'city', 'part'])
+            ->with(['images', 'city', 'part', ...\App\Support\Boosted::eagerLoad()])
             ->latest('published_at')
             ->limit(self::RAIL)
             ->get();
     }
 
     /**
-     * Most viewed, not "featured".
+     * The homepage's paid slots — the listings that bought BoostTier::Front.
      *
-     * There is no promoted-listing column yet, and dressing "whatever has the
-     * most views" up as an editorial pick would be a small lie on the most
-     * visible part of the site. When promoted listings ship (the first
-     * monetisation step), they take this slot and the heading changes with it.
+     * RANDOMISED, AND CAPPED. Randomised because there is no honest ordering
+     * available: everyone in here paid the same price for the same slot, so any
+     * fixed order would sell the top of the block to whoever bought earliest
+     * without saying so. `inRandomOrder()` means the sellers who paid share the
+     * attention rather than queue for it.
+     *
+     * Capped because the homepage has ONE audience that every category shares.
+     * Eight slots is what the rail holds; raise the number and each one is
+     * worth less to everybody who bought it, which is a decision that should
+     * cost somebody an edit to config rather than happen by drift.
+     *
+     * `visible()` rather than a flag: a listing that sells or is taken down
+     * leaves this block the moment its status changes, with nothing to clear.
+     */
+    public function promoted()
+    {
+        $max = min(self::RAIL, (int) config('remarket.boosts.max_front_page', 8));
+
+        if ($max < 1) {
+            return Listing::query()->whereRaw('1 = 0')->get();
+        }
+
+        return Listing::visible()
+            ->with(['images', 'city', 'part', ...\App\Support\Boosted::eagerLoad()])
+            ->whereHas('boosts', fn ($b) => $b->running()->front())
+            ->inRandomOrder()
+            ->limit($max)
+            ->get();
+    }
+
+    /**
+     * Most viewed — the FALLBACK for the paid slot, not a rail of its own.
+     *
+     * The homepage shows the paid block when anybody has bought one and this
+     * when nobody has. That is on purpose: a „Платени позиции" heading over an
+     * empty grid is a dead section on the most visible page of the site, and
+     * the day this shipped nobody had bought anything at all. Each heading is
+     * true for what is underneath it, which is the only rule that matters here
+     * — "most viewed" is a fact about the listings, not an editorial pick, and
+     * calling it "featured" would be the small lie this comment used to warn
+     * about.
      */
     public function mostViewed()
     {
         return Listing::visible()
-            ->with(['images', 'city', 'part'])
+            ->with(['images', 'city', 'part', ...\App\Support\Boosted::eagerLoad()])
             ->where('view_count', '>', 0)
             ->orderByDesc('view_count')
             ->limit(self::RAIL)
@@ -152,7 +189,10 @@ class Home extends Component
         return view('livewire.home', [
             'categories'    => $this->categories(),
             'newest'        => $this->newest(),
-            'mostViewed'    => $this->mostViewed(),
+            'promoted'      => $promoted = $this->promoted(),
+            // Only asked for when the paid block has nothing in it — the two
+            // share one slot and the query for the loser is not worth running.
+            'mostViewed'    => $promoted->isEmpty() ? $this->mostViewed() : collect(),
             'popularParts'  => $this->popularParts(),
             'stats'         => $stats,
         ])->layoutData([

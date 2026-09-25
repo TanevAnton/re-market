@@ -34,7 +34,7 @@ class MyFavorites extends Component
         $favorites = Favorite::query()
             ->where('user_id', auth()->id())
             ->whereHas('listing')
-            ->with(['listing' => fn ($q) => $q->with(['images', 'city', 'part'])])
+            ->with(['listing' => fn ($q) => $q->with(['images', 'city', 'part', ...\App\Support\Boosted::eagerLoad()])])
             ->latest()
             ->paginate(24);
 

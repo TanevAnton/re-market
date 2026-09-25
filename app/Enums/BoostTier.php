@@ -25,6 +25,7 @@ enum BoostTier: string
     case Bump      = 'bump';
     case Highlight = 'highlight';
     case Pin       = 'pin';
+    case Front     = 'front';
 
     public function label(): string
     {
@@ -32,6 +33,7 @@ enum BoostTier: string
             self::Bump      => 'Издигане',
             self::Highlight => 'Откроена обява',
             self::Pin       => 'Топ обява',
+            self::Front     => 'Начална страница',
         };
     }
 
@@ -41,6 +43,7 @@ enum BoostTier: string
             self::Bump      => 'Обявата ти скача на първо място в „най-нови".',
             self::Highlight => 'Обявата се откроява в списъка, на мястото си.',
             self::Pin       => 'Обявата стои над резултатите в своята категория.',
+            self::Front     => 'Обявата стои на началната страница, пред всички категории.',
         };
     }
 
@@ -58,6 +61,7 @@ enum BoostTier: string
             self::Bump      => 0,
             self::Highlight => (int) config('remarket.boosts.highlight_days', 7),
             self::Pin       => (int) config('remarket.boosts.pin_days', 7),
+            self::Front     => (int) config('remarket.boosts.front_days', 7),
         };
     }
 
@@ -75,10 +79,19 @@ enum BoostTier: string
             self::Bump      => 100,
             self::Highlight => 300,
             self::Pin       => 900,
+            self::Front     => 2700,
         });
     }
 
-    /** Does this tier occupy a reserved slot, rather than just decorating one? */
+    /**
+     * Does this tier occupy a reserved slot IN A CATEGORY?
+     *
+     * Pin only, and Front deliberately does NOT count. They are two different
+     * slots on two different pages and they are sold separately — folding
+     * Front in here would hand every homepage buyer a category pin they did
+     * not pay for, and quietly halve what the pin is worth to everyone who
+     * did. `Boost::scopeFront()` is the other one.
+     */
     public function isPinned(): bool
     {
         return $this === self::Pin;
@@ -88,9 +101,10 @@ enum BoostTier: string
      * Does buying this change where the listing appears?
      *
      * The Omnibus Directive requires disclosing when ranking is influenced by
-     * payment. Bump and Pin both move a listing; Highlight does not touch the
-     * order at all. Keeping that distinction in one method means the labelling
-     * rules can read it instead of restating it.
+     * payment. Bump, Pin and Front all put a listing somewhere it would not
+     * otherwise be; Highlight does not touch the order at all. Keeping that
+     * distinction in one method means the labelling rules can read it instead
+     * of restating it.
      */
     public function affectsRanking(): bool
     {
@@ -100,6 +114,6 @@ enum BoostTier: string
     /** @return list<self> Cheapest first, which is the order they are sold in. */
     public static function ladder(): array
     {
-        return [self::Bump, self::Highlight, self::Pin];
+        return [self::Bump, self::Highlight, self::Pin, self::Front];
     }
 }

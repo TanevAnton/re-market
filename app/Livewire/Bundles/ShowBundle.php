@@ -43,7 +43,12 @@ class ShowBundle extends Component
     #[Layout('components.layouts.app')]
     public function render()
     {
-        $this->bundle->load(['listings.images', 'listings.city', 'listings.part', 'user']);
+        $this->bundle->load([
+            'listings.images', 'listings.city', 'listings.part', 'user',
+            // Every card asks whether it is boosted; without this that is a
+            // query per listing in the bundle. See App\Support\Boosted.
+            'listings.boosts' => fn ($q) => $q->running(),
+        ]);
 
         $title = $this->bundle->title.' — комплект';
 
