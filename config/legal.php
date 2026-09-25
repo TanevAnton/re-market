@@ -70,19 +70,27 @@ return [
      */
     'contact' => [
         /*
-         * office@ for people, legal@ for authorities and data-protection
-         * requests - which is also the better split than one shared mailbox:
-         * "legal@" printed as the user-facing address reads as somewhere you
-         * send a lawsuit rather than a question, and it would cost real reports.
+         * support@ for people, legal@ for authorities and data-protection
+         * requests - a better split than one shared mailbox: "legal@" printed
+         * as the user-facing address reads as somewhere you send a lawsuit
+         * rather than a question, and it would cost real reports.
          *
-         * All of these move to the real domain once it exists. A marketplace
-         * whose published contact sits on another company's domain looks like a
-         * front to anyone who checks - and the people who check are exactly the
-         * cautious buyers worth keeping.
+         * NOW ON rigo.bg, which is the point. A marketplace whose published
+         * contact sits on another company's domain looks like a front to anyone
+         * who checks - and the people who check are exactly the cautious buyers
+         * worth keeping. These were office@/legal@re-tech.bg until the domain
+         * existed.
+         *
+         * BOTH MAILBOXES HAVE TO EXIST BEFORE THIS SHIPS. A published contact
+         * point that bounces is worse than one on the wrong domain: DSA Art. 12
+         * requires the user-facing one to actually work, and mail to a
+         * non-existent address on a domain that has MX records is silently
+         * lost rather than returned. `php artisan doctor` cannot check this -
+         * it is a DNS-and-mailbox job, not a config one.
          */
-        'users'       => env('LEGAL_CONTACT_USERS', 'office@re-tech.bg'),       // Art. 12
-        'authorities' => env('LEGAL_CONTACT_AUTHORITIES', 'legal@re-tech.bg'),  // Art. 11
-        'privacy'     => env('LEGAL_CONTACT_PRIVACY', 'legal@re-tech.bg'),      // GDPR requests
+        'users'       => env('LEGAL_CONTACT_USERS', 'support@rigo.bg'),         // Art. 12
+        'authorities' => env('LEGAL_CONTACT_AUTHORITIES', 'legal@rigo.bg'),     // Art. 11
+        'privacy'     => env('LEGAL_CONTACT_PRIVACY', 'legal@rigo.bg'),         // GDPR requests
         'phone'       => env('LEGAL_CONTACT_PHONE'),
         // Art. 11(3): the languages an authority may use with us.
         'languages'   => ['български', 'English'],

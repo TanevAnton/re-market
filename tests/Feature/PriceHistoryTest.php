@@ -97,6 +97,44 @@ class PriceHistoryTest extends TestCase
     }
 
     /**
+     * THE DATE COMES FROM THE APP, NOT FROM POSTGRES.
+     *
+     * The capture used `CURRENT_DATE`, which Postgres evaluates in the DATABASE
+     * session's timezone — normally UTC — while everything else on this site
+     * runs in Europe/Sofia. For the two to three hours after local midnight the
+     * two calendars disagree, and a run in that window stamps the point with
+     * YESTERDAY's date: it overwrites the previous day's band through the
+     * ON CONFLICT and today gets no point at all. Nothing shouts. The chart
+     * just has a gap with a wrong value beside it.
+     *
+     * Found because `isToday()` above failed during a late-night run, which is
+     * precisely the window the bug lives in — so this test forces the
+     * disagreement rather than waiting for the clock to produce it.
+     */
+    public function test_the_captured_date_ignores_the_databases_own_timezone(): void
+    {
+        $this->listings(5, 70000);
+
+        // Fourteen hours ahead of UTC: wherever the app's day currently is,
+        // the database's CURRENT_DATE is now very likely a different one.
+        \DB::statement("SET TIME ZONE 'Pacific/Kiritimati'");
+
+        try {
+            Artisan::call('remarket:refresh-part-stats');
+
+            $point = PartPricePoint::where('part_id', $this->part->id)->firstOrFail();
+
+            $this->assertSame(
+                now()->toDateString(),
+                $point->captured_on->toDateString(),
+                'the price point was stamped with the database server\'s date rather than the app\'s',
+            );
+        } finally {
+            \DB::statement('SET TIME ZONE DEFAULT');
+        }
+    }
+
+    /**
      * The one that matters. A timer fires twice, a deploy fails halfway, or
      * somebody runs it by hand while debugging — and a second row for the same
      * day would put a step in every chart this table feeds.

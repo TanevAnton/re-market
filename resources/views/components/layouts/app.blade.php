@@ -225,6 +225,32 @@
                 $pendingPayments = $isAdmin ? \App\Models\Payment::pending()->count() : 0;
 
                 /*
+                 * Support, both directions.
+                 *
+                 * `$ticketReplies` is answers waiting for THIS user to read;
+                 * `$openTickets` is questions waiting for an admin. Derived by
+                 * comparing message ids, the same way the ticket's own badges
+                 * are, so there is no counter that something has to remember to
+                 * decrement — and ids rather than timestamps, because these
+                 * columns store seconds and a same-second reply made the
+                 * comparison silently false. See the migration.
+                 */
+                $ticketReplies = \App\Models\Ticket::where('user_id', auth()->id())
+                    ->working()
+                    ->whereNotNull('last_message_id')
+                    ->where(fn ($q) => $q->whereNull('user_seen_message_id')
+                        ->orWhereColumn('user_seen_message_id', '<', 'last_message_id'))
+                    ->count();
+
+                $openTickets = $isAdmin
+                    ? \App\Models\Ticket::working()
+                        ->whereNotNull('last_message_id')
+                        ->where(fn ($q) => $q->whereNull('staff_seen_message_id')
+                            ->orWhereColumn('staff_seen_message_id', '<', 'last_message_id'))
+                        ->count()
+                    : 0;
+
+                /*
                  * What the closed menu owes the user.
                  *
                  * The sum of the ACCENT badges hidden inside it, and nothing
@@ -235,7 +261,7 @@
                  * a dot that never goes away, and a dot that never goes away
                  * stops being read.
                  */
-                $menuBadge = $openDeals + $queued + $pendingPayments;
+                $menuBadge = $openDeals + $queued + $pendingPayments + $ticketReplies + $openTickets;
             @endphp
         @endauth
 
@@ -465,6 +491,17 @@
                     </a>
                     <a href="{{ route('profile.edit') }}" wire:navigate class="menu-item">Настройки</a>
 
+                    {{-- Accent badge only when an answer is waiting to be
+                         read. A support reply is something the user asked for
+                         and is the one notification they will actually go
+                         looking for. --}}
+                    <a href="{{ route('support') }}" wire:navigate class="menu-item">
+                        <span>Поддръжка</span>
+                        @if ($ticketReplies)
+                            <span class="badge-accent font-mono">{{ $ticketReplies }}</span>
+                        @endif
+                    </a>
+
                     {{-- The balance, in the menu rather than in the bar.
 
                          A number that only moves when the seller moves it does
@@ -502,6 +539,13 @@
                             <span>Плащания</span>
                             @if ($pendingPayments)
                                 <span class="badge-accent font-mono">{{ $pendingPayments }}</span>
+                            @endif
+                        </a>
+
+                        <a href="{{ route('tickets') }}" wire:navigate class="menu-item">
+                            <span>Запитвания</span>
+                            @if ($openTickets)
+                                <span class="badge-accent font-mono">{{ $openTickets }}</span>
                             @endif
                         </a>
 
@@ -559,6 +603,9 @@
         </nav>
 
         <nav class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            {{-- First in the legal row, and reachable without an account: the
+                 person who needs it most is the one who cannot get in. --}}
+            <a href="{{ route('support') }}" wire:navigate class="text-ink-muted hover:text-ink">Поддръжка</a>
             <a href="{{ route('legal.terms') }}" wire:navigate class="text-ink-muted hover:text-ink">Общи условия</a>
             <a href="{{ route('legal.privacy') }}" wire:navigate class="text-ink-muted hover:text-ink">Поверителност</a>
             <a href="{{ route('legal.cookies') }}" wire:navigate class="text-ink-muted hover:text-ink">Бисквитки</a>
@@ -566,8 +613,16 @@
             <a href="{{ route('legal.contacts') }}" wire:navigate class="text-ink-muted hover:text-ink">Контакти</a>
         </nav>
 
+        {{-- The address in plain text on every page, not only behind a link.
+             DSA Art. 12 wants the user-facing contact point published, and some
+             people will always rather use their own mail client than a form on
+             a site they do not know yet. --}}
         <p class="mt-4 text-xs text-ink-faint">
             {{ config('legal.entity.name') }}@if (config('legal.entity.eik')), ЕИК {{ config('legal.entity.eik') }}@endif
+            @if (config('legal.contact.users'))
+                · <a href="mailto:{{ config('legal.contact.users') }}"
+                     class="text-ink-muted hover:text-ink">{{ config('legal.contact.users') }}</a>
+            @endif
         </p>
     </div>
 </footer>

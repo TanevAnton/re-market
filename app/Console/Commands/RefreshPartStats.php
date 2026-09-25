@@ -132,10 +132,27 @@ class RefreshPartStats extends Command
          * twice. The second run of a day corrects that day; it does not add a
          * second point to it.
          */
+        /*
+         * THE DATE IS BOUND FROM PHP, NOT TAKEN FROM CURRENT_DATE.
+         *
+         * `CURRENT_DATE` is evaluated in the DATABASE session's timezone, which
+         * is whatever Postgres was installed with — normally UTC. Everything
+         * else on this site runs in Europe/Sofia. For the two to three hours
+         * after midnight local time those two calendars disagree, and a run in
+         * that window stamps the point with YESTERDAY's date: it overwrites the
+         * previous day's band through the ON CONFLICT below, and today gets no
+         * point at all.
+         *
+         * Nothing shouts when that happens. The chart simply has a gap and a
+         * wrong value next to it, and „сравнение с последните 30 дни" quietly
+         * compares against a figure from the wrong day. This was found by a
+         * test asserting isToday() failing during a late-night run — which is
+         * exactly the window the bug lives in.
+         */
         $captured = DB::affectingStatement("
             INSERT INTO part_price_points
                 (part_id, captured_on, p25_cents, median_cents, p75_cents, sample_size, created_at)
-            SELECT id, CURRENT_DATE,
+            SELECT id, ?::date,
                    price_p25_cents, price_median_cents, price_p75_cents,
                    active_listings_count, now()
               FROM parts
@@ -145,7 +162,7 @@ class RefreshPartStats extends Command
                 median_cents = EXCLUDED.median_cents,
                 p75_cents    = EXCLUDED.p75_cents,
                 sample_size  = EXCLUDED.sample_size
-        ");
+        ", [now()->toDateString()]);
 
         $priced = DB::table('parts')->whereNotNull('price_median_cents')->count();
         $live   = DB::table('parts')->where('active_listings_count', '>', 0)->count();

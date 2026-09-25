@@ -10,6 +10,9 @@ use App\Livewire\AppleSection;
 use App\Http\Controllers\ShowInvoice;
 use App\Livewire\Billing\MyCredit;
 use App\Livewire\Billing\PaymentQueue;
+use App\Livewire\Support\ShowTicket;
+use App\Livewire\Support\SupportCentre;
+use App\Livewire\Support\TicketQueue;
 use App\Livewire\BrowseListings;
 use App\Livewire\BuildGuide;
 use App\Livewire\Bundles\ManageBundle;
@@ -156,6 +159,26 @@ Route::view('/biskvitki', 'legal.cookies')->name('legal.cookies');
 Route::view('/kontakti', 'legal.contacts')->name('legal.contacts');
 Route::view('/signali', 'legal.notice')->name('legal.notice');
 
+/*
+ * Support. PUBLIC, and that is the design rather than an oversight.
+ *
+ * The commonest support request on any site is „I cannot log in", and a help
+ * form behind a login is useless to precisely the person sending it. Guests
+ * clear a Turnstile challenge and leave an address.
+ *
+ * The ticket page is public for the same reason: a guest has no account to
+ * gate it on, so the emailed link is SIGNED and the signature is the
+ * credential. ShowTicket::mount() 404s anyone who is neither the owner, nor an
+ * admin, nor holding a valid signature — so an unauthenticated route here is
+ * not an unauthorised one.
+ *
+ * Not to be confused with `/signali` above: that is the DSA Art. 16 notice
+ * route, which is legally clocked and owes a statement of reasons. The support
+ * page names it, above the form.
+ */
+Route::get('/podkrepa', SupportCentre::class)->name('support');
+Route::get('/podkrepa/{ticket}', ShowTicket::class)->name('support.ticket');
+
 // --- guests ---------------------------------------------------------------
 Route::middleware('guest')->group(function () {
     Route::get('/registraciya', Register::class)->name('register');
@@ -299,6 +322,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/plashtaniya', PaymentQueue::class)
         ->middleware('admin')
         ->name('payments');
+
+    /*
+     * The support queue. Admin-gated, and it reads other people's email
+     * addresses and problems — which is reason enough on its own.
+     */
+    Route::get('/zapitvaniya', TicketQueue::class)
+        ->middleware('admin')
+        ->name('tickets');
 
     Route::get('/komplekt/nov', ManageBundle::class)
         ->middleware('verified')

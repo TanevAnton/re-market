@@ -44,6 +44,17 @@
         <dt>Имейл</dt>
         <dd><x-legal-value :value="config('legal.contact.users')" env="LEGAL_CONTACT_USERS" /></dd>
 
+        {{-- The form goes next to the address rather than instead of it. A
+             ticket gets a number and a thread, which is better for both sides —
+             but Art. 12 is satisfied by a mailbox a person reads, and somebody
+             who would rather use their own mail client should not be made to
+             fill in a form. --}}
+        <dt>Формуляр</dt>
+        <dd>
+            <a href="{{ route('support') }}">Поддръжка</a> — запитването получава
+            номер и отговорът остава в един разговор. Не е нужен профил.
+        </dd>
+
         @if (config('legal.contact.phone'))
             <dt>Телефон</dt>
             <dd>{{ config('legal.contact.phone') }}</dd>
