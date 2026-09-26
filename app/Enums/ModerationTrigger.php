@@ -10,6 +10,8 @@ enum ModerationTrigger: string
     case Reported             = 'reported';
     case MissingTimestampPhoto = 'missing_timestamp_photo';
     case ContactInfo          = 'contact_info';
+    case StolenClaim          = 'stolen_claim';           // confirmed report against this serial
+    case DuplicateSerial      = 'duplicate_serial';       // same serial on another live listing
     case Manual               = 'manual';
 
     public function label(): string
@@ -21,6 +23,8 @@ enum ModerationTrigger: string
             self::Reported              => 'Докладвана',
             self::MissingTimestampPhoto => 'Липсва снимка с дата',
             self::ContactInfo           => 'Контакти в обявата',
+            self::StolenClaim           => 'Сигнал за кражба',
+            self::DuplicateSerial       => 'Повторен сериен номер',
             self::Manual                => 'Ръчна проверка',
         };
     }
@@ -29,7 +33,14 @@ enum ModerationTrigger: string
     public function priority(): int
     {
         return match ($this) {
+            /*
+             * FIRST, ahead of a reused photograph. Somebody has filed a police
+             * report and a listing on this site matches it — if anything here
+             * deserves to be looked at before lunch, it is that.
+             */
+            self::StolenClaim           => 0,
             self::PhashCollision        => 1,
+            self::DuplicateSerial       => 1,
             self::Reported              => 2,
             self::PriceOutlier          => 3,
             self::MissingTimestampPhoto => 4,

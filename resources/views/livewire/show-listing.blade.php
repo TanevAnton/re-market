@@ -93,6 +93,16 @@
                 <span class="badge-neutral">С касова бележка</span>
             @endif
 
+            {{-- „The seller recorded a serial" — a real but WEAK signal, and the
+                 badge is neutral rather than green for exactly that reason. It
+                 says the number exists here, not that anything was verified;
+                 the check page spells out the difference. --}}
+            @if (\App\Support\ItemIdentifier::enabled() && $listing->identifiers->isNotEmpty())
+                <a href="{{ route('safety.check') }}" wire:navigate class="badge-neutral">
+                    Сериен номер е записан
+                </a>
+            @endif
+
             @if ($listing->quantity > 1)
                 <span class="badge-neutral font-mono">{{ $listing->quantity }} бр.</span>
             @endif

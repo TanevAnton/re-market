@@ -8,6 +8,7 @@ use App\Support\Turnstile;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use App\Support\ItemIdentifier;
 
 /**
  * Is this deployment actually ready to face the public?
@@ -56,6 +57,7 @@ class Doctor extends Command
         $this->checkQueue();
         $this->checkPosture();
         $this->checkBilling();
+        $this->checkIdentifiers();
         $this->checkSecrets();
 
         $this->line('');
@@ -308,6 +310,52 @@ class Doctor extends Command
 
         if ($waiting > 0) {
             $this->warn_("{$waiting} payment(s) waiting on a human at /plashtaniya.");
+        }
+    }
+
+    /**
+     * The serial register, and the one irreversible mistake in it.
+     *
+     * IDENTIFIER_PEPPER keys every hash in `item_identifiers` and
+     * `stolen_reports`. Changing it does not invalidate the register — it
+     * SILENTLY EMPTIES it while leaving every row in place. Nothing throws,
+     * nothing logs, and no serial anybody types afterwards will ever match
+     * again. There is no way to detect that from the data, so the only place it
+     * can be caught is here, before somebody edits .env in a hurry.
+     */
+    private function checkIdentifiers(): void
+    {
+        $this->section('Serial register');
+
+        if (! ItemIdentifier::enabled()) {
+            $this->warn_('IDENTIFIER_PEPPER is empty — the serial/IMEI register is off.');
+            $this->hint('Fine to launch without. php -r "echo bin2hex(random_bytes(32));"');
+
+            return;
+        }
+
+        $pepper = (string) config('remarket.identifiers.pepper');
+
+        // Short enough to brute-force is the same as absent, and looks the same
+        // from the outside — which is the dangerous part.
+        strlen($pepper) >= 32
+            ? $this->good('IDENTIFIER_PEPPER is set.')
+            : $this->bad('IDENTIFIER_PEPPER is shorter than 32 characters. Regenerate it BEFORE any serial is stored.');
+
+        $stored  = Schema::hasTable('item_identifiers') ? DB::table('item_identifiers')->count() : 0;
+        $claims  = Schema::hasTable('stolen_reports') ? DB::table('stolen_reports')->count() : 0;
+
+        if ($stored > 0 || $claims > 0) {
+            $this->warn_("{$stored} identifier(s) and {$claims} claim(s) are keyed to the CURRENT pepper.");
+            $this->hint('Changing IDENTIFIER_PEPPER now makes all of them permanently unmatchable. Back it up with the database.');
+        }
+
+        if (Schema::hasTable('stolen_reports')) {
+            $pending = DB::table('stolen_reports')->where('status', 'pending')->count();
+
+            if ($pending > 0) {
+                $this->warn_("{$pending} theft claim(s) waiting on a human at /kradeni-veshti.");
+            }
         }
     }
 

@@ -77,6 +77,18 @@ class CreateListing extends Component
     public bool $has_receipt = false;
     public string $validation_url = '';
 
+    /*
+     * The serial or IMEI, optional, in the folded-away half of step 3.
+     *
+     * OPTIONAL AND IT HAS TO STAY OPTIONAL. Supply is the bottleneck on this
+     * site and every required field on this screen is a seller who closes the
+     * tab. What it buys when it IS filled in is a badge a buyer can check and a
+     * listing that gets caught if somebody reports the object stolen — which is
+     * a reason to offer it, not a reason to insist.
+     */
+    public string $identifierKind = \App\Support\ItemIdentifier::SERIAL;
+    public string $identifier     = '';
+
     /** @var array<int, \Livewire\Features\SupportFileUploads\TemporaryUploadedFile> */
     public array $photos = [];
     /** Already processed and on disk: ['path','thumb','phash','width','height','bytes'] */
@@ -496,6 +508,7 @@ class CreateListing extends Component
                 'mining_months'  => ['nullable', 'integer', 'min:1', 'max:120'],
                 'warranty_until' => ['nullable', 'date', 'after:today'],
                 'validation_url' => ['nullable', 'url', 'max:255'],
+                'identifier'     => ['nullable', 'string', 'max:64'],
                 'stored'         => ['array', 'min:1'],
 
                 // The specs the schema says are required. Category-dependent,
@@ -708,8 +721,32 @@ class CreateListing extends Component
          * fails to publish should not have left a queue entry behind. Neither
          * check decides anything - both put it in front of a person.
          */
+        /*
+         * The serial, recorded before the other screens run.
+         *
+         * BEFORE ListingScreener, because attaching it is itself a screen: a
+         * serial matching a confirmed theft report, or one already on another
+         * live listing, pulls the listing to PendingReview. Running it after
+         * would mean announcing a listing to the „Търся" board that is about to
+         * come down.
+         *
+         * Swallowed rather than fatal: a bad serial must never lose a listing
+         * somebody spent ten minutes on. The seller is told, and can add it
+         * from the edit screen.
+         */
+        $identifierFlags = [];
+
+        if (trim($this->identifier) !== '' && \App\Support\ItemIdentifier::enabled()) {
+            try {
+                $identifierFlags = app(\App\Services\Safety\StolenRegistry::class)
+                    ->attach($listing, $this->identifierKind, $this->identifier);
+            } catch (RuntimeException $e) {
+                session()->flash('identifier-warning', $e->getMessage());
+            }
+        }
+
         $flagged  = app(ListingScreener::class)->screen($listing);
-        $reviewed = $reviewed || $flagged !== [];
+        $reviewed = $reviewed || $flagged !== [] || $identifierFlags !== [];
 
         /*
          * delete(), NOT discard().

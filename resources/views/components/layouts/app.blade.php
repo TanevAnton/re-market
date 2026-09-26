@@ -233,6 +233,9 @@
                 // Somebody has transferred money and is waiting on a human.
                 $pendingPayments = $isAdmin ? \App\Models\Payment::pending()->count() : 0;
 
+                // Theft claims nobody has decided yet.
+                $stolenClaims = $isAdmin ? \App\Models\StolenReport::pending()->count() : 0;
+
                 /*
                  * Support, both directions.
                  *
@@ -270,7 +273,7 @@
                  * a dot that never goes away, and a dot that never goes away
                  * stops being read.
                  */
-                $menuBadge = $openDeals + $queued + $pendingPayments + $ticketReplies + $openTickets + $wantedAnswers;
+                $menuBadge = $openDeals + $queued + $pendingPayments + $ticketReplies + $openTickets + $wantedAnswers + $stolenClaims;
             @endphp
         @endauth
 
@@ -573,6 +576,16 @@
                             @endif
                         </a>
 
+                        {{-- Somebody has filed a police report and is waiting to
+                             hear whether we acted on it. Accent, and first in
+                             the moderation queue by priority. --}}
+                        <a href="{{ route('stolen') }}" wire:navigate class="menu-item">
+                            <span>Сигнали за кражба</span>
+                            @if ($stolenClaims)
+                                <span class="badge-accent font-mono">{{ $stolenClaims }}</span>
+                            @endif
+                        </a>
+
                         {{-- Neutral, not accent: this is work that is available
                              rather than work that is late. Nobody is waiting on
                              it, and it stays out of the roll-up for that reason. --}}
@@ -631,6 +644,7 @@
             {{-- First in the legal row, and reachable without an account: the
                  person who needs it most is the one who cannot get in. --}}
             <a href="{{ route('support') }}" wire:navigate class="text-ink-muted hover:text-ink">Поддръжка</a>
+            <a href="{{ route('safety.report') }}" wire:navigate class="text-ink-muted hover:text-ink">Отнета вещ</a>
             <a href="{{ route('legal.terms') }}" wire:navigate class="text-ink-muted hover:text-ink">Общи условия</a>
             <a href="{{ route('legal.privacy') }}" wire:navigate class="text-ink-muted hover:text-ink">Поверителност</a>
             <a href="{{ route('legal.cookies') }}" wire:navigate class="text-ink-muted hover:text-ink">Бисквитки</a>

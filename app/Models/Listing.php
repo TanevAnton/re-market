@@ -200,6 +200,12 @@ class Listing extends Model
      * between one query and fifty.
      */
     public function boosts(): HasMany { return $this->hasMany(Boost::class); }
+
+    /*
+     * The serial or IMEI, stored hashed. There is no accessor that returns it
+     * because it is not here — see App\Support\ItemIdentifier.
+     */
+    public function identifiers(): HasMany { return $this->hasMany(ItemIdentifier::class); }
     public function city(): BelongsTo     { return $this->belongsTo(City::class); }
     public function images(): HasMany     { return $this->hasMany(ListingImage::class)->orderBy('position'); }
     public function offers(): HasMany     { return $this->hasMany(Offer::class); }

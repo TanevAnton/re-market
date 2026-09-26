@@ -313,6 +313,31 @@ return [
         'expire_after_days' => (int) env('WANTED_EXPIRE_AFTER_DAYS', 30),
     ],
 
+    /*
+     * Serial numbers and IMEIs.
+     *
+     * THE PEPPER IS NOT OPTIONAL AND IT CAN NEVER CHANGE. Every serial is
+     * stored as HMAC-SHA256 keyed with it, so:
+     *
+     *   - empty means the feature is off, and the screens hide it rather than
+     *     writing rows that could never be matched;
+     *   - rotating it does not invalidate the register, it SILENTLY EMPTIES it
+     *     while leaving every row in place. Nothing fails; matches just stop.
+     *
+     * Generate once, put it in .env, back it up with the database rather than
+     * separately from it, and never touch it again:
+     *
+     *   php -r "echo bin2hex(random_bytes(32));"
+     */
+    'identifiers' => [
+        'pepper' => env('IDENTIFIER_PEPPER'),
+        // The buyer lookup is a gift to somebody checking whether their own
+        // haul is 'hot', so it is signed-in and rate-limited. Generous enough
+        // for a person with a box of parts, mean enough to be useless for a
+        // sweep.
+        'lookups_per_hour' => (int) env('IDENTIFIER_LOOKUPS_PER_HOUR', 30),
+    ],
+
     'antispam' => [
         'moderated_listings_for_new_accounts' => (int) env('NEW_ACCOUNT_MODERATED_LISTINGS', 2),
         'limits' => [

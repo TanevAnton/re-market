@@ -51,6 +51,19 @@ class EditListing extends Component
     public bool $accepts_inspect_test = true;
     public ?int $city_id = null;
     public ?string $warranty_until = null;
+    /*
+     * The serial or IMEI. Optional here too — and this is also the second
+     * chance for a seller whose value was refused at publish time.
+     *
+     * Never prefilled with the stored value, because there is no stored value:
+     * the column holds a peppered hash. `$identifierMask` is the „…4821" shown
+     * so a seller can tell that something IS recorded without the site holding
+     * the number.
+     */
+    public string $identifierKind = \App\Support\ItemIdentifier::SERIAL;
+    public string $identifier     = '';
+    public ?string $identifierMask = null;
+
     public bool $has_receipt = false;
     public string $mining_use = 'no';
     public ?int $mining_months = null;
@@ -65,6 +78,12 @@ class EditListing extends Component
         abort_unless($listing->user_id === auth()->id(), 404);
 
         $this->listingId = $listing->id;
+
+        // The mask, not the value — there is no value to load. See the property.
+        if ($row = \App\Models\ItemIdentifier::where('listing_id', $listing->id)->first()) {
+            $this->identifierKind = $row->kind;
+            $this->identifierMask = $row->masked();
+        }
 
         $this->fill([
             'title'                => $listing->title,
@@ -244,6 +263,7 @@ class EditListing extends Component
             'mining_use'           => ['required', Rule::enum(MiningUse::class)],
             'mining_months'        => ['nullable', 'integer', 'min:1', 'max:120'],
             'validation_url'       => ['nullable', 'url', 'max:255'],
+            'identifier'           => ['nullable', 'string', 'max:64'],
             'delivery_options'     => ['array'],
 
             /*
@@ -287,6 +307,24 @@ class EditListing extends Component
             $this->addError('listing', $e->getMessage());
 
             return null;
+        }
+
+        /*
+         * AFTER the update, and outside its try: attaching a serial can pull the
+         * listing to PendingReview, and that must happen to the saved version
+         * rather than to one that might not have saved. A refused serial is an
+         * inline error rather than a lost edit — the seller's other changes are
+         * already in.
+         */
+        if (trim($this->identifier) !== '' && \App\Support\ItemIdentifier::enabled()) {
+            try {
+                app(\App\Services\Safety\StolenRegistry::class)
+                    ->attach($this->listing(), $this->identifierKind, $this->identifier);
+            } catch (RuntimeException $e) {
+                $this->addError('identifier', $e->getMessage());
+
+                return null;
+            }
         }
 
         session()->flash('status', 'Промените са запазени.');

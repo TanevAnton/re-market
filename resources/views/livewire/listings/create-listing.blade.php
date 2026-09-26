@@ -305,6 +305,8 @@
                 <input type="checkbox" wire:model="has_receipt"> Имам касова бележка / фактура
             </label>
 
+            @include('partials.identifier-field')
+
                     </div>
                 @endif
             </div>

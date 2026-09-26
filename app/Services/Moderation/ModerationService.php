@@ -301,6 +301,13 @@ class ModerationService
             ModerationTrigger::PhashCollision,
             ModerationTrigger::PriceOutlier,
             ModerationTrigger::ContactInfo,
+            // Art. 17(3)(c) asks whether automated means were used in
+            // DETECTION. A serial matching a filed report, and the same serial
+            // appearing on two listings, are both found by a query — so a
+            // seller told their ad came down over one is entitled to know that,
+            // and to know the decision itself was still a person's.
+            ModerationTrigger::StolenClaim,
+            ModerationTrigger::DuplicateSerial,
         ], true)
             ? 'Обявата беше отбелязана за проверка автоматично ('.$item->trigger->label()
                 .'), но решението е взето от човек.'

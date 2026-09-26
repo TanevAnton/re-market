@@ -39,6 +39,9 @@ use App\Http\Controllers\Sitemap;
 use App\Livewire\Wanted\BrowseWanted;
 use App\Livewire\Wanted\ManageWanted;
 use App\Livewire\Wanted\ShowWanted;
+use App\Livewire\Safety\CheckSerial;
+use App\Livewire\Safety\ReportStolen;
+use App\Livewire\Safety\StolenQueue;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -191,6 +194,16 @@ Route::view('/signali', 'legal.notice')->name('legal.notice');
 Route::get('/tarseniya', BrowseWanted::class)->name('wanted');
 Route::get('/tarsene/{ad}', ShowWanted::class)->name('wanted.show');
 
+/*
+ * The serial / IMEI register.
+ *
+ * Reporting is OPEN, like the DSA notice form: the person whose card was taken
+ * has probably never heard of this site. Checking needs an account and is
+ * rate-limited — an open „is this serial reported" endpoint is also how a thief
+ * checks whether their haul is hot before listing it.
+ */
+Route::get('/kradeno', ReportStolen::class)->name('safety.report');
+
 Route::get('/podkrepa', SupportCentre::class)->name('support');
 Route::get('/podkrepa/{ticket}', ShowTicket::class)->name('support.ticket');
 
@@ -319,6 +332,8 @@ Route::middleware('auth')->group(function () {
      * email can still have been granted credit, and locking them out of the
      * record of it would be the site holding money behind a door.
      */
+    Route::get('/proverka-na-nomer', CheckSerial::class)->name('safety.check');
+
     Route::get('/tarsya', ManageWanted::class)
         ->middleware('verified')
         ->name('wanted.create');
@@ -349,6 +364,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/zapitvaniya', TicketQueue::class)
         ->middleware('admin')
         ->name('tickets');
+
+    /*
+     * Theft claims. Its own screen rather than the moderation queue — the
+     * queue is about content published here, and a claim about an object made
+     * by somebody with no account is not that. See StolenQueue.
+     */
+    Route::get('/kradeni-veshti', StolenQueue::class)
+        ->middleware('admin')
+        ->name('stolen');
 
     Route::get('/komplekt/nov', ManageBundle::class)
         ->middleware('verified')

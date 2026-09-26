@@ -222,3 +222,19 @@ BILLING_VAT_EXEMPT_NOTE=
 
 BILLING_TOPUP_MIN=500
 BILLING_TOPUP_MAX=50000
+
+# --- Serial / IMEI register --------------------------------------------------
+# Serials are stored as HMAC-SHA256 keyed with this pepper, so that a dump of
+# the database is inert: an IMEI is trivially brute-forced against a plain hash
+# (eight of its digits come from a published list and the last is a checksum).
+#
+# GENERATE ONCE AND NEVER CHANGE IT. Rotating it does not invalidate the
+# register - it silently empties it while leaving every row in place. Nothing
+# fails; serials simply stop matching. Back it up WITH the database.
+#
+#   php -r "echo bin2hex(random_bytes(32));"
+#
+# Empty = the feature is off and the fields do not appear, which is a fine
+# state to launch in.
+IDENTIFIER_PEPPER=
+IDENTIFIER_LOOKUPS_PER_HOUR=30

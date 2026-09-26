@@ -54,7 +54,10 @@ class ShowListing extends Component
 
         abort_unless($canView, 404);
 
-        $this->listing = $listing->load(['part', 'city', 'user', 'images']);
+        // `identifiers` for the „сериен номер е записан" badge — loaded rather
+        // than queried in the view, which would be one query per page view for
+        // a single boolean.
+        $this->listing = $listing->load(['part', 'city', 'user', 'images', 'identifiers']);
 
         // Own views do not count, and there is no reason to touch updated_at.
         if ($viewer?->id !== $listing->user_id) {
