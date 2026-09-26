@@ -237,6 +237,19 @@
                 $stolenClaims = $isAdmin ? \App\Models\StolenReport::pending()->count() : 0;
 
                 /*
+                 * Traders who asked us to look their company up.
+                 *
+                 * Accent and inside the roll-up, unlike the catalogue queue:
+                 * somebody clicked a button and is waiting for an answer, which
+                 * is the test. That nothing is blocked for them meanwhile — they
+                 * sell exactly as before — makes this queue low-stakes, not
+                 * invisible.
+                 */
+                $traderRequests = $isAdmin
+                    ? \App\Models\User::where('trader_status', \App\Models\User::TRADER_PENDING)->count()
+                    : 0;
+
+                /*
                  * Support, both directions.
                  *
                  * `$ticketReplies` is answers waiting for THIS user to read;
@@ -273,7 +286,7 @@
                  * a dot that never goes away, and a dot that never goes away
                  * stops being read.
                  */
-                $menuBadge = $openDeals + $queued + $pendingPayments + $ticketReplies + $openTickets + $wantedAnswers + $stolenClaims;
+                $menuBadge = $openDeals + $queued + $pendingPayments + $ticketReplies + $openTickets + $wantedAnswers + $stolenClaims + $traderRequests;
             @endphp
         @endauth
 
@@ -583,6 +596,17 @@
                             <span>Сигнали за кражба</span>
                             @if ($stolenClaims)
                                 <span class="badge-accent font-mono">{{ $stolenClaims }}</span>
+                            @endif
+                        </a>
+
+                        {{-- Verifying a declared company against the register.
+                             Below the heavier queues: a badge nobody gets is a
+                             disappointment, an unremoved stolen listing is a
+                             crime scene. --}}
+                        <a href="{{ route('traders') }}" wire:navigate class="menu-item">
+                            <span>Проверка на фирми</span>
+                            @if ($traderRequests)
+                                <span class="badge-accent font-mono">{{ $traderRequests }}</span>
                             @endif
                         </a>
 

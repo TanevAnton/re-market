@@ -67,6 +67,69 @@
         <button type="submit" class="btn-primary">Запази</button>
     </form>
 
+    {{-- Verification: a SEPARATE card, and outside the form above on purpose.
+
+         What the form above saves is the declaration — „продавам като търговец"
+         plus the company details. That is the legal obligation, it applies from
+         the moment it is saved, and nobody checks it. This card is the optional
+         second thing: asking us to look the company up. Folding it into the same
+         form would blur exactly the line the whole feature exists to keep.
+
+         Gated on auth()->user()->isTrader() — the SAVED state — not on the
+         $seller_type radio. There is nothing to check until the details are in
+         the database. --}}
+    @if (auth()->user()->isTrader())
+        @php($me = auth()->user())
+
+        <div class="card-pad space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <h2 class="text-sm font-semibold uppercase tracking-wider text-ink-muted">
+                    Проверка на фирмата
+                </h2>
+                <span @class([
+                    'badge-good'    => $me->trader_status === \App\Models\User::TRADER_VERIFIED,
+                    'badge-warn'    => $me->trader_status === \App\Models\User::TRADER_PENDING,
+                    'badge-bad'     => $me->trader_status === \App\Models\User::TRADER_REJECTED,
+                    'badge-neutral' => $me->trader_status === \App\Models\User::TRADER_NONE,
+                ])>{{ $me->traderStatusLabel() }}</span>
+            </div>
+
+            <p class="hint">
+                Проверяваме фирмата в Търговския регистър и обявите ти получават етикет
+                „проверена фирма" с името на дружеството. Незадължително е — правата на
+                купувачите важат, откакто продаваш като търговец, независимо от проверката.
+            </p>
+
+            @if ($me->trader_status === \App\Models\User::TRADER_VERIFIED)
+                <p class="text-sm">
+                    Проверена на {{ $me->trader_verified_at?->format('d.m.Y') }}.
+                    Ако данните на фирмата се променят, пиши ни от Поддръжка — етикетът
+                    трябва да съвпада с регистъра.
+                </p>
+            @elseif ($me->trader_status === \App\Models\User::TRADER_PENDING)
+                <p class="text-sm">Заявката чака човек. Обикновено до два работни дни.</p>
+            @else
+                @if ($me->trader_note)
+                    {{-- The moderator's sentence, shown verbatim. „Не мина" on its
+                         own teaches the applicant nothing and produces a support
+                         ticket; „ЕИК-то е на друго дружество" they can fix. --}}
+                    <p class="rounded-md border border-line bg-warn-soft p-3 text-sm text-warn">
+                        {{ $me->trader_note }}
+                    </p>
+                @endif
+
+                @error('verification') <p class="error">{{ $message }}</p> @enderror
+
+                <button type="button" wire:click="requestVerification" class="btn-secondary btn-sm"
+                        wire:loading.attr="disabled">
+                    {{ $me->trader_status === \App\Models\User::TRADER_REJECTED
+                        ? 'Заяви проверка отново'
+                        : 'Заяви проверка' }}
+                </button>
+            @endif
+        </div>
+    @endif
+
     <form wire:submit="saveNotifications" class="card-pad space-y-4">
         <h2 class="text-sm font-semibold uppercase tracking-wider text-ink-muted">Известия</h2>
 

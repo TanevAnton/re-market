@@ -387,6 +387,22 @@
             <p class="mt-4 rounded-md bg-surface-alt p-3 text-xs leading-relaxed text-ink-muted">
                 {{ $listing->user->seller_type->consumerNotice() }}
             </p>
+
+            {{-- BELOW the notice, never instead of it, and never merged with it.
+
+                 The notice above is the buyer's rights and it does not depend on
+                 this: it applies because the seller declared themselves a
+                 trader. This block is a separate, weaker claim — somebody
+                 compared the ЕИК and the name against the register — and the
+                 last sentence is there because „проверена фирма" left alone gets
+                 read as „safe deal", which nobody checked. Same discipline as
+                 the serial-number screen. --}}
+            @if ($listing->user->isVerifiedTrader())
+                <div class="mt-2 rounded-md border border-line bg-good-soft p-3">
+                    <p class="text-xs font-medium text-good">Проверена фирма · {{ $listing->user->verifiedCompany() }}</p>
+                    <p class="mt-1 text-xs leading-relaxed text-good">Сравнихме ЕИК и наименованието с Търговския регистър. Това не е гаранция за обявата или за сделката.</p>
+                </div>
+            @endif
         </div>
 
         {{-- First of the three, because it is the only one that can make the

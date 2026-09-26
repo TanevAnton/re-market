@@ -42,6 +42,7 @@ use App\Livewire\Wanted\ShowWanted;
 use App\Livewire\Safety\CheckSerial;
 use App\Livewire\Safety\ReportStolen;
 use App\Livewire\Safety\StolenQueue;
+use App\Livewire\Traders\TraderQueue;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -373,6 +374,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/kradeni-veshti', StolenQueue::class)
         ->middleware('admin')
         ->name('stolen');
+
+    /*
+     * Company verification. Admin-gated, and it reads other people's ЕИК,
+     * registered seat and email — which is the whole reason it cannot be a tab
+     * on a public screen.
+     *
+     * Deliberately NOT part of the moderation queue. That queue is DSA
+     * machinery for content somebody published: a statement of reasons, an
+     * appeal, a notified author. Refusing a verification publishes nothing and
+     * removes nothing — the seller stays a trader with every obligation that
+     * carries — so borrowing the content queue's apparatus for it would
+     * generate statements of reasons about no content at all.
+     */
+    Route::get('/proverka-na-firmi', TraderQueue::class)
+        ->middleware('admin')
+        ->name('traders');
 
     Route::get('/komplekt/nov', ManageBundle::class)
         ->middleware('verified')

@@ -12,6 +12,16 @@
                     <span class="{{ $user->isTrader() ? 'badge-accent' : 'badge-neutral' }}">
                         {{ $user->seller_type->label() }}
                     </span>
+                    {{-- A SECOND badge, not a different colour on the first one.
+
+                         „Търговец" is what this person declared; this is what
+                         somebody checked. Merging them into one green „verified
+                         trader" chip would tell a buyer a claim was confirmed
+                         when every trader on the site wears the declaration and
+                         almost none have been looked up. --}}
+                    @if ($user->isVerifiedTrader())
+                        <span class="badge-good">фирмата е проверена</span>
+                    @endif
                     @if ($user->phone_verified_at)
                         <span class="badge-good">телефон потвърден</span>
                     @endif
@@ -27,6 +37,13 @@
                         {{ $user->trader_details['company'] ?? '' }}
                         @if (! empty($user->trader_details['uic'])) · ЕИК {{ $user->trader_details['uic'] }} @endif
                     </p>
+                    @if ($user->isVerifiedTrader())
+                        {{-- What was checked, said in full and kept on one line:
+                             the register, the date, and the limit of the claim.
+                             A green chip on its own invites „verified" to mean
+                             „safe", which is not what anybody looked at. --}}
+                        <p class="hint">Проверено в Търговския регистър на {{ $user->trader_verified_at?->format('d.m.Y') }} · проверката е на фирмата, не на конкретна обява</p>
+                    @endif
                 @endif
             </div>
 

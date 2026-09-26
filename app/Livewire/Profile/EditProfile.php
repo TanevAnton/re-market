@@ -4,11 +4,13 @@ namespace App\Livewire\Profile;
 
 use App\Enums\SellerType;
 use App\Models\City;
+use App\Services\Traders\TraderVerification;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use RuntimeException;
 
 class EditProfile extends Component
 {
@@ -82,6 +84,40 @@ class EditProfile extends Component
         ]);
 
         session()->flash('status', 'Профилът е обновен.');
+    }
+
+    /**
+     * „Check my company."
+     *
+     * OPTIONAL, and it has to stay optional. The declaration above is the
+     * legal obligation and it is already satisfied by saving the form; this is
+     * a seller asking the site to vouch for something a buyer would otherwise
+     * have to look up. Making it a requirement would turn a voluntary badge
+     * into a barrier to selling.
+     *
+     * Everything that can refuse it — not a trader, blank ЕИК, already
+     * verified — comes back from TraderVerification as a sentence, and all of
+     * them belong on this screen rather than as a 500 in the middle of
+     * somebody editing their profile.
+     */
+    public function requestVerification(): void
+    {
+        try {
+            /*
+             * auth()->user(), NOT ->fresh(). apply() mutates the instance it is
+             * handed, and this is the same instance render() reads a moment
+             * later — so the block below redraws as „Чака проверка" without a
+             * second query. A fresh() copy would save correctly and leave the
+             * screen showing the old state until the next page load.
+             */
+            app(TraderVerification::class)->apply(auth()->user());
+        } catch (RuntimeException $e) {
+            $this->addError('verification', $e->getMessage());
+
+            return;
+        }
+
+        session()->flash('status', 'Заявката е изпратена. Ще проверим фирмата в Търговския регистър.');
     }
 
     public function updatePassword(): void

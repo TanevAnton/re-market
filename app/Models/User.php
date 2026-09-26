@@ -40,6 +40,23 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $attributes = [
         'notify_email'    => true,
         'notify_telegram' => true,
+
+        /*
+         * Two more of the same shape, both found by a test that rendered the
+         * settings screen for a just-created user.
+         *
+         * `locale` is a typed `string` property on EditProfile, so a null read
+         * from a freshly-created instance is not a wrong value — it is a
+         * TypeError halfway through rendering the page. And `trader_status`
+         * null means the verification block's status chip matches none of its
+         * four cases and draws unstyled.
+         *
+         * Both columns have database defaults, and that is exactly why this is
+         * needed: a default is applied by the INSERT, not read back into the
+         * model that issued it.
+         */
+        'locale'        => 'bg',
+        'trader_status' => self::TRADER_NONE,
     ];
 
     /**
@@ -65,8 +82,9 @@ class User extends Authenticatable implements MustVerifyEmail
             'banned_at'         => 'datetime',
             'last_seen_at'      => 'datetime',
             'password'          => 'hashed',
-            'trader_details'    => 'array',
-            'seller_type'       => SellerType::class,
+            'trader_details'     => 'array',
+            'seller_type'        => SellerType::class,
+            'trader_verified_at' => 'datetime',
             'rating_avg'        => 'decimal:2',
             'offers_suspended'  => 'boolean',
             'is_admin'          => 'boolean',
@@ -144,6 +162,50 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->seller_type === SellerType::Trader;
     }
 
+    // --- trader verification ---------------------------------------------
+
+    public const TRADER_NONE     = 'none';
+    public const TRADER_PENDING  = 'pending';
+    public const TRADER_VERIFIED = 'verified';
+    public const TRADER_REJECTED = 'rejected';
+
+    /**
+     * Has a human confirmed the declared company exists and matches?
+     *
+     * NOT THE SAME QUESTION AS isTrader(), and the difference is the whole
+     * point of this feature. `isTrader()` is what the seller SAID — it drives
+     * the Art. 6a consumer notice, it is required of everybody, and nobody
+     * checks it. This is what somebody CHECKED against the Commercial Register.
+     * A badge that conflates the two would tell a buyer a claim was verified
+     * when it was only made.
+     *
+     * Requires isTrader() as well: a verification left standing on an account
+     * that has since switched back to „частно лице" would be a badge for a
+     * company the seller no longer claims to be.
+     */
+    public function isVerifiedTrader(): bool
+    {
+        return $this->isTrader() && $this->trader_status === self::TRADER_VERIFIED;
+    }
+
+    /** The company name to print, or null when there is nothing verified. */
+    public function verifiedCompany(): ?string
+    {
+        return $this->isVerifiedTrader()
+            ? ($this->trader_details['company'] ?? null)
+            : null;
+    }
+
+    public function traderStatusLabel(): string
+    {
+        return match ($this->trader_status) {
+            self::TRADER_PENDING  => 'Чака проверка',
+            self::TRADER_VERIFIED => 'Проверена фирма',
+            self::TRADER_REJECTED => 'Проверката не мина',
+            default               => 'Непроверена',
+        };
+    }
+
     // --- relations -------------------------------------------------------
 
     public function city(): BelongsTo          { return $this->belongsTo(City::class); }
@@ -157,4 +219,16 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sales(): HasMany           { return $this->hasMany(Deal::class, 'seller_id'); }
     public function ratingsReceived(): HasMany { return $this->hasMany(Rating::class, 'ratee_id'); }
     public function ratingsGiven(): HasMany    { return $this->hasMany(Rating::class, 'rater_id'); }
+
+    /**
+     * Who checked this company.
+     *
+     * Read only by the admin queue, which shows it next to the decision. A
+     * verification is a claim the site makes to buyers, so the site has to be
+     * able to say which of its people made it.
+     */
+    public function traderVerifier(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'trader_verified_by');
+    }
 }
