@@ -44,6 +44,16 @@ class MyListings extends Component
      */
     public ?int $boosting = null;
 
+    /**
+     * Which listing's stats panel is open.
+     *
+     * Closed by default and one at a time, like the boost ladder — and for a
+     * second reason here: the panel costs two aggregate queries and a median
+     * over every comparable listing, which is fine on demand and wasteful
+     * fifteen times over on a page nobody asked it of.
+     */
+    public ?int $showingStats = null;
+
     public function tabs(): array
     {
         return [
@@ -79,6 +89,34 @@ class MyListings extends Component
     {
         $this->boosting        = $id;
         $this->confirmingDelete = null;
+    }
+
+    // --- how is it doing? -------------------------------------------------
+
+    /**
+     * The ownership check lives HERE, on the action, not in render().
+     *
+     * The panel carries the best price anybody offered — the seller's private
+     * negotiating position — so a crafted toggleStats() must not reach it. The
+     * first version leaned on a scoped firstOrFail() during render, which is
+     * wrong twice: it fails halfway through drawing a page instead of refusing
+     * the request, and it throws ModelNotFoundException rather than the 404
+     * every other owner-only path here produces.
+     */
+    public function toggleStats(int $id): void
+    {
+        if ($this->showingStats === $id) {
+            $this->showingStats = null;
+
+            return;
+        }
+
+        abort_unless(
+            Listing::where('user_id', auth()->id())->whereKey($id)->exists(),
+            404,
+        );
+
+        $this->showingStats = $id;
     }
 
     public function closeBoost(): void
@@ -182,6 +220,15 @@ class MyListings extends Component
         $this->resetPage();
     }
 
+    private function insightFor(int $id): ?array
+    {
+        $listing = Listing::where('user_id', auth()->id())->whereKey($id)->first();
+
+        return $listing
+            ? app(\App\Services\Listings\ListingInsight::class)->for($listing)
+            : null;
+    }
+
     #[Layout('components.layouts.app')]
     public function render()
     {
@@ -207,6 +254,20 @@ class MyListings extends Component
             'listings' => $query->latest('created_at')->paginate(15),
             'service'  => app(ListingService::class),
             'boosts'   => app(BoostService::class),
+            /*
+             * Computed for the one open panel only — never for the whole page.
+             *
+             * Still scoped to the owner even though toggleStats() already
+             * refused anything else: `$showingStats` is a public property that
+             * survives between requests, and a view that trusts one is a view
+             * that leaks the day somebody finds a path to it that skips the
+             * action. first() rather than firstOrFail() — the gate has already
+             * spoken, so a miss here means the listing was deleted mid-session
+             * and the panel should just close.
+             */
+            'insight'  => $this->showingStats
+                ? $this->insightFor($this->showingStats)
+                : null,
             'balance'  => app(CreditService::class)->balance(auth()->user()),
         ]);
     }

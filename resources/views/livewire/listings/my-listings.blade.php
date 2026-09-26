@@ -145,6 +145,11 @@
                                  first, and a paid button sitting to its left
                                  would be the site quietly steering them past
                                  something they already have. --}}
+                            <button type="button" wire:click="toggleStats({{ $listing->id }})"
+                                    class="btn-ghost btn-sm">
+                                Как се движи
+                            </button>
+
                             <button type="button" wire:click="openBoost({{ $listing->id }})"
                                     class="btn-ghost btn-sm">
                                 Промотирай
@@ -196,6 +201,17 @@
                             Изтрий
                         </button>
                     </div>
+
+                    {{-- The stats BEFORE the boost ladder, deliberately. A
+                         seller should read why the listing is not moving before
+                         they are shown something to buy — and quite often the
+                         answer is „the price", which no boost fixes. --}}
+                    @if ($showingStats === $listing->id && $insight)
+                        @include('partials.listing-insight', [
+                            'listing' => $listing,
+                            'insight' => $insight,
+                        ])
+                    @endif
 
                     @if ($boosting === $listing->id)
                         @include('partials.boost-ladder', [
