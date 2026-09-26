@@ -58,6 +58,7 @@ class Doctor extends Command
         $this->checkPosture();
         $this->checkBilling();
         $this->checkIdentifiers();
+        $this->checkDeliveryRetention();
         $this->checkSecrets();
 
         $this->line('');
@@ -356,6 +357,50 @@ class Doctor extends Command
             if ($pending > 0) {
                 $this->warn_("{$pending} theft claim(s) waiting on a human at /kradeni-veshti.");
             }
+        }
+    }
+
+    /**
+     * The retention rule nobody would notice failing.
+     *
+     * Every other scheduled job announces its own absence: part stats go to zero,
+     * saved-search alerts stop arriving, deals stay open forever. The delivery
+     * purge is the opposite — if it never runs, the site looks perfect and the
+     * table quietly fills up with the name, phone number and home address of
+     * everybody who ever received a parcel. A retention policy that depends on a
+     * cron nobody checks is a retention policy on paper, so it gets a line here.
+     */
+    private function checkDeliveryRetention(): void
+    {
+        $this->section('Delivery details');
+
+        if (! Schema::hasTable('deals')) {
+            return;
+        }
+
+        $days = (int) config('remarket.delivery.retention_days');
+
+        $days >= 1
+            ? $this->good("Delivery details are erased {$days} days after a deal closes.")
+            : $this->bad('DELIVERY_RETENTION_DAYS is not a positive number — nothing will ever be erased.');
+
+        $holding = DB::table('deals')
+            ->whereNotNull('delivery_set_at')
+            ->whereNull('delivery_purged_at')
+            ->count();
+
+        $overdue = DB::table('deals')
+            ->where('status', '!=', 'open')
+            ->whereNotNull('delivery_set_at')
+            ->whereNull('delivery_purged_at')
+            ->where('updated_at', '<', now()->subDays(max(1, $days)))
+            ->count();
+
+        $this->line("   {$holding} deal(s) currently hold a name, phone and address.");
+
+        if ($overdue > 0) {
+            $this->bad("{$overdue} closed deal(s) are past the retention window and still hold personal data.");
+            $this->hint('php artisan remarket:purge-delivery-details — and check the scheduler is running.');
         }
     }
 

@@ -174,7 +174,7 @@
         {{-- Delivery and trust ------------------------------------------- --}}
         <div class="card-pad space-y-3">
             <p class="label">Доставка</p>
-            @foreach (['econt' => 'Еконт', 'speedy' => 'Спиди', 'pickup' => 'Лично предаване'] as $key => $label)
+            @foreach (\App\Enums\Courier::options() as $key => $label)
                 <label class="flex items-center gap-2 text-sm">
                     <input type="checkbox" value="{{ $key }}" wire:model="delivery_options">
                     {{ $label }}

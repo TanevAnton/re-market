@@ -408,6 +408,44 @@ return [
      * you want to look at and emphatically not what you want a test suite
      * repeating for every assertion.
      */
+    /*
+     * The two couriers, and the two things RIGO needs to know about them.
+     *
+     * NO API CREDENTIALS HERE, AND THAT IS THE DESIGN. RIGO holds no contract
+     * with either courier: the seller creates the waybill in their own account,
+     * because whoever creates it is the sender of record and the sender of record
+     * is who the cash-on-delivery is paid to. The platform never touching the
+     * money is the whole regulatory position. See App\Support\WaybillDraft.
+     *
+     * `tracking_url` defaults to each courier's plain tracking page, which has
+     * been verified. Their DEEP-LINK parameter has not, and a button that lands
+     * on an error page teaches the buyer to stop trusting the screen — the same
+     * reason the trader queue links to the Commercial Register's home page rather
+     * than a guessed search URL. Put `{number}` in the env value where the
+     * waybill number goes and it starts deep-linking with no code change; until
+     * then the number is rendered beside the link for copying.
+     */
+    'couriers' => [
+        'econt' => [
+            'tracking_url' => env('COURIER_ECONT_TRACKING_URL', 'https://www.econt.com/services/track-shipment'),
+        ],
+        'speedy' => [
+            'tracking_url' => env('COURIER_SPEEDY_TRACKING_URL', 'https://www.speedy.bg/bg/track-shipment'),
+        ],
+    ],
+
+    /*
+     * How long a finished deal keeps the buyer's name, phone and address.
+     *
+     * Long enough to reprint a label or sort out a courier dispute; short enough
+     * that the table is not a list of where everybody who ever bought a graphics
+     * card lives. `remarket:purge-delivery-details` does the erasing and the
+     * transaction facts — courier, tracking number, inspect-and-test — survive it.
+     */
+    'delivery' => [
+        'retention_days' => (int) env('DELIVERY_RETENTION_DAYS', 30),
+    ],
+
     'demo' => [
         'per_category' => (int) env('DEMO_PER_CATEGORY', 10),
 

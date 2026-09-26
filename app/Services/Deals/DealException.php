@@ -33,4 +33,31 @@ class DealException extends RuntimeException
     {
         return new self('Кажи защо се отказваш - другата страна ще го види.');
     }
+
+    // --- the handover -----------------------------------------------------
+
+    public static function unknownCourier(): self
+    {
+        return new self('Избери начин на доставка.');
+    }
+
+    public static function courierNotOffered(string $label): self
+    {
+        return new self('Продавачът не предлага '.$label.' за тази обява.');
+    }
+
+    public static function deliveryIncomplete(): self
+    {
+        return new self('Избери до офис или до адрес.');
+    }
+
+    public static function trackingRequired(): self
+    {
+        return new self('Въведи номера на товарителницата.');
+    }
+
+    public static function nothingToTrack(): self
+    {
+        return new self('Тази сделка е с лично предаване - няма товарителница.');
+    }
 }

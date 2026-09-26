@@ -106,6 +106,22 @@
         <env name="BILLING_VAT_NUMBER" value=""/>
         <env name="BILLING_VAT_EXEMPT_NOTE" value=""/>
 
+        <!--
+            The handover. Pinned for the reason all of the above are pinned, and
+            this is the FIFTH time that lesson has been paid for: a value the
+            suite reads from a developer's .env is a suite whose result depends
+            on whose machine it ran on.
+
+            The tracking URLs are pinned WITHOUT `{number}`, which is their
+            shipped default, so the test that asserts the „copy the number into
+            the courier's page" hint is testing the state the site actually
+            launches in. CourierHandoverTest sets a deep-link URL explicitly for
+            the one test that is about deep-linking.
+        -->
+        <env name="DELIVERY_RETENTION_DAYS" value="30"/>
+        <env name="COURIER_ECONT_TRACKING_URL" value="https://www.econt.com/services/track-shipment"/>
+        <env name="COURIER_SPEEDY_TRACKING_URL" value="https://www.speedy.bg/bg/track-shipment"/>
+
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

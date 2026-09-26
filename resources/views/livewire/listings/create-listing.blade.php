@@ -468,7 +468,7 @@
             <div>
                 <span class="label">Доставка</span>
                 <div class="mt-2 space-y-1.5">
-                    @foreach (['econt' => 'Еконт', 'speedy' => 'Спиди', 'pickup' => 'Лично предаване'] as $key => $label)
+                    @foreach (\App\Enums\Courier::options() as $key => $label)
                         <label class="flex items-center gap-2 text-sm">
                             <input type="checkbox" value="{{ $key }}" wire:model="delivery_options"> {{ $label }}
                         </label>

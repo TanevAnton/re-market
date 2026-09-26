@@ -133,9 +133,24 @@ class OfferService
                 'offer_id'              => $offer->id,
                 'buyer_id'              => $offer->buyer_id,
                 'seller_id'             => $offer->seller_id,
-                'inspect_test_selected' => (bool) $listing->accepts_inspect_test,
                 'expires_at'            => now()->addHours(config('remarket.deals.reservation_hours', 72)),
             ]);
+
+            /*
+             * Assigned directly, not through the constructor: the column left
+             * $fillable when DeliveryService took ownership of it, for the same
+             * reason `tracking_number` did — a mass-assignable handover column is
+             * one refactor away from being something a party to the deal can set
+             * on themselves.
+             *
+             * WHAT IT MEANS HERE is the SELLER's standing offer, copied off the
+             * listing so the deal starts with „преглед и тест available" rather
+             * than „declined". The buyer then confirms or drops it when they fill
+             * in the delivery details, and from that point the column is their
+             * choice. Both readings are true in sequence; neither is a default
+             * nobody chose.
+             */
+            $deal->inspect_test_selected = (bool) $listing->accepts_inspect_test;
 
             // Recording the exact figure weakens the DAC7 advertising carve-out
             // (plan 8.4). The band is the safer shape; the flag decides which.
@@ -249,9 +264,24 @@ class OfferService
                 'offer_id'              => $counter->id,
                 'buyer_id'              => $counter->buyer_id,
                 'seller_id'             => $counter->seller_id,
-                'inspect_test_selected' => (bool) $listing->accepts_inspect_test,
                 'expires_at'            => now()->addHours(config('remarket.deals.reservation_hours', 72)),
             ]);
+
+            /*
+             * Assigned directly, not through the constructor: the column left
+             * $fillable when DeliveryService took ownership of it, for the same
+             * reason `tracking_number` did — a mass-assignable handover column is
+             * one refactor away from being something a party to the deal can set
+             * on themselves.
+             *
+             * WHAT IT MEANS HERE is the SELLER's standing offer, copied off the
+             * listing so the deal starts with „преглед и тест available" rather
+             * than „declined". The buyer then confirms or drops it when they fill
+             * in the delivery details, and from that point the column is their
+             * choice. Both readings are true in sequence; neither is a default
+             * nobody chose.
+             */
+            $deal->inspect_test_selected = (bool) $listing->accepts_inspect_test;
 
             if (config('remarket.deals.store_exact_price', true)) {
                 $deal->agreed_price_cents = $counter->amount_cents;

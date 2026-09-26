@@ -439,7 +439,7 @@
                     @foreach ($listing->delivery_options as $opt)
                         <li class="flex items-center gap-2">
                             <span class="h-1 w-1 rounded-full bg-ink-faint"></span>
-                            {{ ['econt' => 'Еконт', 'speedy' => 'Спиди', 'pickup' => 'Лично предаване'][$opt] ?? $opt }}
+                            {{ \App\Enums\Courier::labelFor($opt) }}
                         </li>
                     @endforeach
                 </ul>

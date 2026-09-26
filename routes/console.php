@@ -85,3 +85,21 @@ Schedule::command('remarket:expire-wanted')
 Schedule::command('remarket:prune-drafts')
     ->weeklyOn(1, '04:40')
     ->withoutOverlapping();
+
+/*
+ * Buyer delivery details on deals that are long finished.
+ *
+ * THIS IS THE ONLY SCHEDULED JOB WHOSE PURPOSE IS TO DESTROY DATA, and unlike
+ * every other one above, the cost of it never running is not a stale number — it
+ * is a table that quietly accumulates the name, phone number and home address of
+ * everybody who ever received a parcel through the site, with no reader and no
+ * expiry. A retention rule that depends on a cron nobody checks is a retention
+ * policy on paper only, so `remarket:doctor` reports on it too.
+ *
+ * Daily, and the command refuses to touch an open deal however old — wiping the
+ * address of a parcel somebody may still be about to send turns a stalled deal
+ * into an impossible one.
+ */
+Schedule::command('remarket:purge-delivery-details')
+    ->dailyAt('04:50')
+    ->withoutOverlapping();
