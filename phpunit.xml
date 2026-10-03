@@ -118,6 +118,17 @@
             launches in. CourierHandoverTest sets a deep-link URL explicitly for
             the one test that is about deep-linking.
         -->
+        <!--
+            Privacy, pinned for the sixth time that lesson has been paid for.
+            The grace window and the export lifetime both drive assertions, and a
+            value read from a developer's .env is a suite whose result depends on
+            whose machine it ran on. The disk is pinned to a PRIVATE one, which is
+            also what PersonalDataExport::disk() refuses to run without.
+        -->
+        <env name="DELETION_GRACE_DAYS" value="30"/>
+        <env name="DATA_EXPORT_HOURS" value="72"/>
+        <env name="DATA_EXPORT_DISK" value="local"/>
+
         <env name="DELIVERY_RETENTION_DAYS" value="30"/>
         <env name="COURIER_ECONT_TRACKING_URL" value="https://www.econt.com/services/track-shipment"/>
         <env name="COURIER_SPEEDY_TRACKING_URL" value="https://www.speedy.bg/bg/track-shipment"/>

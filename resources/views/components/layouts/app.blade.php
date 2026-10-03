@@ -551,6 +551,13 @@
                          be paid on every page. It is a neutral badge for the
                          same reason: money sitting in an account is not work
                          that is late. --}}
+                    {{-- Next to the account's own settings, because it is the
+                         same kind of thing: what the site holds about you and
+                         what you can do about it. --}}
+                    <a href="{{ route('privacy.data') }}" wire:navigate class="menu-item">
+                        <span>Моите данни</span>
+                    </a>
+
                     <a href="{{ route('credit') }}" wire:navigate class="menu-item">
                         <span>Моят кредит</span>
                         <span class="badge-neutral font-mono tabular">

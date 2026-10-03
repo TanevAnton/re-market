@@ -85,6 +85,8 @@ class User extends Authenticatable implements MustVerifyEmail
             'trader_details'     => 'array',
             'seller_type'        => SellerType::class,
             'trader_verified_at' => 'datetime',
+            'deletion_requested_at' => 'datetime',
+            'anonymised_at'         => 'datetime',
             'rating_avg'        => 'decimal:2',
             'offers_suspended'  => 'boolean',
             'is_admin'          => 'boolean',

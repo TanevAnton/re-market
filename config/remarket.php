@@ -409,6 +409,25 @@ return [
      * repeating for every assertion.
      */
     /*
+     * GDPR Art. 15 and Art. 17, as things the user does themselves.
+     *
+     * `deletion_grace_days` is the window between „изтрий профила ми" and the
+     * data actually going. It is not hesitation: an account taken over for two
+     * minutes must not be permanently destroyable in those two minutes, and
+     * „without undue delay" in Art. 12(3) allows up to a month.
+     *
+     * `export_disk` MUST be a private disk. An export is somebody's entire
+     * account in one zip; PersonalDataExport::disk() refuses to run if this
+     * names a publicly served one, because that mistake is unrecoverable the
+     * moment a URL is guessed.
+     */
+    'privacy' => [
+        'deletion_grace_days' => (int) env('DELETION_GRACE_DAYS', 30),
+        'export_hours'        => (int) env('DATA_EXPORT_HOURS', 72),
+        'export_disk'         => env('DATA_EXPORT_DISK', 'local'),
+    ],
+
+    /*
      * The two couriers, and the two things RIGO needs to know about them.
      *
      * NO API CREDENTIALS HERE, AND THAT IS THE DESIGN. RIGO holds no contract

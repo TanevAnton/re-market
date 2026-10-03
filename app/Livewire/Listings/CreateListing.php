@@ -381,6 +381,51 @@ class CreateListing extends Component
 
     // --- photos -----------------------------------------------------------
 
+    // --- money the user typed ---------------------------------------------
+
+    /**
+     * **THE BULGARIAN DECIMAL SEPARATOR IS A COMMA**, and this screen was
+     * losing prices to it in two different ways at once.
+     *
+     * The field was `<input type="number" step="0.01">`. A Bulgarian phone
+     * keypad offers a comma, Chrome and Safari treat a comma as invalid in a
+     * number input, and an invalid number input reports its value as the EMPTY
+     * STRING — so „450,00" became „" silently, with no error and nothing on
+     * screen to explain it. The field is `inputmode="decimal"` now, which gets
+     * the same keypad without the browser editing the value behind our backs.
+     *
+     * And the two places that read the price DISAGREED about the comma.
+     * `render()` normalised it before asking PriceGuidance; `publish()` did not.
+     * So on a browser that let the comma through, the price guidance under the
+     * field was right while validation called the same value non-numeric.
+     * Both go through `cents()` now — one reading of one field.
+     */
+    public function updatedPrice(): void
+    {
+        $this->price = $this->normaliseDecimal($this->price);
+    }
+
+    public function updatedMinOffer(): void
+    {
+        $this->min_offer = $this->normaliseDecimal($this->min_offer);
+    }
+
+    private function normaliseDecimal(string $value): string
+    {
+        // Livewire skips TrimStrings, so nothing arriving here has been trimmed.
+        // Spaces go too: a thousands separator is a space in Bulgarian, and
+        // „1 200,50" is a thing somebody will type.
+        return str_replace([',', ' ', "\u{00A0}"], ['.', '', ''], trim($value));
+    }
+
+    /** The one place a typed price becomes cents. Null for „they left it blank". */
+    private function cents(string $value): ?int
+    {
+        $value = $this->normaliseDecimal($value);
+
+        return $value === '' ? null : (int) round((float) $value * 100);
+    }
+
     public function updatedPhotos(): void
     {
         $this->processPendingPhotos();
@@ -400,11 +445,11 @@ class CreateListing extends Component
         }
 
         $this->validate([
-            'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp,heic', 'max:12288'],
+            'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp,heic', 'max:10240'],
         ], [
             'photos.*.image' => 'Файлът трябва да е снимка.',
             'photos.*.mimes' => 'Поддържаме JPG, PNG, WEBP и HEIC.',
-            'photos.*.max'   => 'Максимум 12 MB на снимка.',
+            'photos.*.max'   => 'Максимум 10 MB на снимка.',
         ]);
 
         $processor = new ImageProcessor();
@@ -658,11 +703,9 @@ class CreateListing extends Component
                 'description'          => $this->description,
                 'condition'            => $this->condition,
                 'quantity'             => $this->quantity,
-                'price_cents'          => (int) round((float) $this->price * 100),
+                'price_cents'          => $this->cents($this->price),
                 'offers_enabled'       => $this->offers_enabled,
-                'min_offer_cents'      => $this->min_offer !== ''
-                    ? (int) round((float) $this->min_offer * 100)
-                    : null,
+                'min_offer_cents'      => $this->cents($this->min_offer),
                 'warranty_until'       => $this->warranty_until ?: null,
                 'has_receipt'          => $this->has_receipt,
                 'mining_use'           => $this->mining_use,
@@ -789,7 +832,7 @@ class CreateListing extends Component
              */
             'guidance'   => PriceGuidance::for(
                 $this->selectedPart(),
-                $this->price !== '' ? (int) round((float) str_replace(',', '.', $this->price) * 100) : null,
+                $this->cents($this->price),
             ),
             'maySpecs'   => $this->optionalItemSpecs(),
         ]);

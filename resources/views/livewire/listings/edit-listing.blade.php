@@ -35,44 +35,58 @@
             Първата снимка е основната — тя се показва в резултатите от търсене.
         </p>
 
-        <div class="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+        {{-- Same fix as the wizard's photo step, and it was WORSE here: all
+             THREE controls sat behind `group-hover`, so on a phone a published
+             listing's photos could not be removed, reordered or marked at all.
+             A seller who posts from a phone also edits from that phone.
+
+             Persistent strip, 44px minimum tap targets, two across rather than
+             three so the photo is big enough to judge and the Bulgarian labels
+             fit. --}}
+        <div class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
             @foreach ($listing->images as $index => $image)
-                <div class="group relative" wire:key="img-{{ $image->id }}">
-                    <img src="{{ $image->thumbUrl() }}" alt=""
-                         @class([
-                             'aspect-square w-full rounded-lg border object-cover',
-                             'border-accent ring-2 ring-accent' => $index === 0,
-                             'border-line'                      => $index !== 0,
-                             'ring-2 ring-accent/50'            => $index !== 0 && $image->is_timestamp_photo,
-                         ])>
+                <div wire:key="img-{{ $image->id }}"
+                     @class([
+                         'overflow-hidden rounded-lg border',
+                         'border-accent ring-2 ring-accent' => $index === 0,
+                         'border-line'                      => $index !== 0,
+                         'ring-2 ring-accent/50'            => $index !== 0 && $image->is_timestamp_photo,
+                     ])>
+                    <div class="relative">
+                        <img src="{{ $image->thumbUrl() }}" alt=""
+                             class="aspect-square w-full object-cover">
 
-                    @if ($index === 0)
-                        <span class="absolute left-1 top-1 rounded bg-accent px-1.5 py-0.5 text-[10px]
-                                     font-semibold text-[var(--accent-ink)]">
-                            основна
-                        </span>
-                    @else
-                        <button type="button" wire:click="makePrimary({{ $image->id }})"
-                                class="absolute left-1 top-1 rounded bg-canvas/90 px-1.5 py-0.5 text-[10px]
-                                       font-medium text-ink-muted opacity-0 backdrop-blur transition
-                                       hover:text-accent group-hover:opacity-100"
-                                title="Направи основна снимка">
-                            основна
-                        </button>
-                    @endif
+                        @if ($index === 0)
+                            <span class="absolute left-1 top-1 rounded bg-accent px-1.5 py-0.5 text-[10px]
+                                         font-semibold text-[var(--accent-ink)]">
+                                основна
+                            </span>
+                        @endif
+                    </div>
 
-                    <div class="absolute inset-x-1 bottom-1 flex gap-1 opacity-0 transition group-hover:opacity-100">
+                    <div class="flex divide-x divide-line border-t border-line">
+                        @if ($index !== 0)
+                            <button type="button" wire:click="makePrimary({{ $image->id }})"
+                                    class="min-h-11 flex-1 truncate px-1 text-[11px] font-medium
+                                           text-ink-muted active:bg-surface-alt"
+                                    title="Направи основна снимка">
+                                основна
+                            </button>
+                        @endif
+
                         <button type="button" wire:click="markTimestamp({{ $image->id }})"
                                 @class([
-                                    'flex-1 rounded px-1 py-0.5 text-[10px] font-medium backdrop-blur',
-                                    'bg-accent text-[var(--accent-ink)]' => $image->is_timestamp_photo,
-                                    'bg-canvas/90'                       => ! $image->is_timestamp_photo,
+                                    'min-h-11 flex-1 truncate px-1 text-[11px] font-medium',
+                                    'bg-accent text-[var(--accent-ink)]'   => $image->is_timestamp_photo,
+                                    'text-ink-muted active:bg-surface-alt' => ! $image->is_timestamp_photo,
                                 ])
                                 title="Снимка с ръкописна бележка">
                             {{ $image->is_timestamp_photo ? '✓ бележка' : 'бележка' }}
                         </button>
+
                         <button type="button" wire:click="removePhoto({{ $image->id }})"
-                                class="rounded bg-canvas/90 px-1.5 py-0.5 text-[10px] font-medium text-bad backdrop-blur">
+                                class="min-h-11 w-11 shrink-0 text-sm text-bad active:bg-surface-alt"
+                                aria-label="Изтрий снимката">
                             ✕
                         </button>
                     </div>
@@ -134,12 +148,22 @@
                          this label was the only place on the site naming a
                          different currency over the same number. --}}
                     <label class="label" for="price">Цена (€)</label>
-                    <input id="price" type="number" step="0.01" min="1" wire:model.live="price" class="mt-1 w-full">
+                    {{-- inputmode="decimal" rather than type="number": a Bulgarian
+                         keypad offers a comma, and a number input whose value is
+                         invalid reports it as the EMPTY STRING, so „450,00" was lost
+                         before `cents()` ever saw it.
+
+                         And `.live.debounce.500ms`, not bare `.live`: the price
+                         guidance below updates as you type, which is worth a round
+                         trip per pause and not one per keystroke on mobile data. --}}
+                    <input id="price" type="text" inputmode="decimal" autocomplete="off"
+                           wire:model.live.debounce.500ms="price" class="mt-1 w-full">
                     @error('price') <p class="error">{{ $message }}</p> @enderror
                 </div>
                 <div>
                     <label class="label" for="min_offer">Минимална оферта</label>
-                    <input id="min_offer" type="number" step="0.01" min="1" wire:model="min_offer" class="mt-1 w-full">
+                    <input id="min_offer" type="text" inputmode="decimal" autocomplete="off"
+                           wire:model.blur="min_offer" class="mt-1 w-full">
                     <p class="hint">Не се показва на купувачите. По-ниските оферти отпадат сами.</p>
                     @error('min_offer') <p class="error">{{ $message }}</p> @enderror
                 </div>
@@ -206,7 +230,7 @@
                 @if ($mining_use === 'yes')
                     <div>
                         <label class="label" for="mining_months">Колко месеца</label>
-                        <input id="mining_months" type="number" min="1" max="120"
+                        <input id="mining_months" type="number" inputmode="numeric" min="1" max="120"
                                wire:model="mining_months" class="mt-1 w-full">
                         @error('mining_months') <p class="error">{{ $message }}</p> @enderror
                     </div>

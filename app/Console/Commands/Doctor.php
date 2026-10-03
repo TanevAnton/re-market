@@ -59,6 +59,7 @@ class Doctor extends Command
         $this->checkBilling();
         $this->checkIdentifiers();
         $this->checkDeliveryRetention();
+        $this->checkPrivacy();
         $this->checkSecrets();
 
         $this->line('');
@@ -401,6 +402,55 @@ class Doctor extends Command
         if ($overdue > 0) {
             $this->bad("{$overdue} closed deal(s) are past the retention window and still hold personal data.");
             $this->hint('php artisan remarket:purge-delivery-details — and check the scheduler is running.');
+        }
+    }
+
+    /**
+     * The other retention promise that fails by looking fine.
+     *
+     * An account somebody asked to delete two months ago, still holding their
+     * email and phone because a cron stopped, is indistinguishable from a
+     * healthy site until a regulator asks. Same class as the delivery purge.
+     */
+    private function checkPrivacy(): void
+    {
+        $this->section('Privacy');
+
+        if (! Schema::hasTable('data_exports')) {
+            return;
+        }
+
+        try {
+            $disk = app(\App\Services\Privacy\PersonalDataExport::class)->disk();
+            $this->good("Data exports are written to the [{$disk}] disk, which is not publicly served.");
+        } catch (\Throwable $e) {
+            $this->bad($e->getMessage());
+        }
+
+        $grace = (int) config('remarket.privacy.deletion_grace_days');
+
+        $grace >= 1
+            ? $this->good("Deleted accounts are anonymised after {$grace} days.")
+            : $this->bad('DELETION_GRACE_DAYS is not a positive number — nothing will ever be anonymised.');
+
+        $overdue = DB::table('users')
+            ->whereNotNull('deletion_requested_at')
+            ->whereNull('anonymised_at')
+            ->where('deletion_requested_at', '<', now()->subDays(max(1, $grace)))
+            ->count();
+
+        if ($overdue > 0) {
+            $this->bad("{$overdue} account(s) asked to be deleted and are past the grace window.");
+            $this->hint('php artisan remarket:purge-accounts — and check the scheduler is running.');
+        }
+
+        $stale = DB::table('data_exports')
+            ->where('expires_at', '<', now())
+            ->whereIn('status', ['ready', 'pending'])
+            ->count();
+
+        if ($stale > 0) {
+            $this->bad("{$stale} expired data export(s) are still on disk. Each one is a whole account in a zip.");
         }
     }
 

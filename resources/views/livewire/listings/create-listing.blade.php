@@ -235,7 +235,7 @@
                         <div class="mt-3">
                             <label class="label" for="mining_months">Колко месеца</label>
                             <input id="mining_months" type="number" min="1" max="120"
-                                   wire:model.blur="mining_months" class="mt-1">
+                                   inputmode="numeric" wire:model.blur="mining_months" class="mt-1">
                         </div>
                     @endif
                     <p class="hint">Честният отговор продава по-бързо, отколкото мълчанието.</p>
@@ -356,6 +356,20 @@
                 <input type="file" wire:model="photos" multiple accept="image/*"
                        class="mt-3 block w-full text-sm file:mr-3 file:rounded-md file:border-0
                               file:bg-surface-alt file:px-3 file:py-2 file:text-sm file:text-ink">
+                {{-- Said BEFORE they pick, because the failure it prevents is
+                     invisible. Livewire sends every selected file in one POST, and
+                     a POST over `post_max_size` dies at nginx with a bare 413:
+                     Laravel never runs, so there is nothing to catch and nothing to
+                     show. A sentence here is worth more than an error handler that
+                     cannot fire.
+
+                     Five, not six, deliberately: 64M of POST holds six 10M photos
+                     exactly, and „exactly" is not a margin. --}}
+                <p class="hint mt-2">
+                    До 10 MB на снимка, и избирай до 5 наведнъж — иначе качването
+                    може да се скъса без съобщение. Можеш да добавиш още след това.
+                </p>
+
                 <div wire:loading wire:target="photos" class="hint">Качваме и обработваме…</div>
                 @error('photos') <p class="error">{{ $message }}</p> @enderror
                 @error('photos.*') <p class="error">{{ $message }}</p> @enderror
@@ -367,45 +381,70 @@
                         Първата снимка е основната — тя се показва в резултатите от търсене.
                     </p>
 
-                    <div class="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                    {{-- THE PHOTO CONTROLS USED TO BE HOVER-ONLY, WHICH MEANT
+                         THEY DID NOT EXIST ON A PHONE.
+
+                         `opacity-0 group-hover:opacity-100` never fires on
+                         Android Chrome and on iOS Safari fires on the first tap
+                         and then needs a second one to activate. So a seller
+                         photographing a card on a phone — which is how the first
+                         twenty listings on this site will be posted — could not
+                         delete a blurry photo and could not choose which one
+                         buyers see first. The tap targets were also about 16px
+                         tall against a 44px minimum, so even visible they were
+                         hard to hit.
+
+                         Now: a persistent strip under each thumbnail, every
+                         button at least 44px (`min-h-11`). And `grid-cols-2`
+                         rather than `grid-cols-3` on a phone, for two reasons —
+                         three 33px buttons cannot hold a Bulgarian word, and at
+                         two across the photo is big enough to see whether it is
+                         actually in focus, which is the whole point of looking at
+                         it. --}}
+                    <div class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
                         @foreach ($stored as $i => $img)
                             <div wire:key="photo-{{ $img['path'] }}"
                                  @class([
-                                     'group relative overflow-hidden rounded-md border',
+                                     'overflow-hidden rounded-md border',
                                      'border-accent ring-1 ring-accent' => $i === 0,
                                      'border-line'                      => $i !== 0,
                                  ])>
-                                <img src="{{ Storage::disk('public')->url($img['thumb']) }}" alt=""
-                                     class="aspect-[4/3] w-full object-cover">
+                                <div class="relative">
+                                    <img src="{{ Storage::disk('public')->url($img['thumb']) }}" alt=""
+                                         class="aspect-[4/3] w-full object-cover">
 
-                                @if ($i === 0)
-                                    <span class="absolute left-1 top-1 rounded bg-accent px-1.5 py-0.5
-                                                 text-[10px] font-semibold text-[var(--accent-ink)]">
-                                        основна
-                                    </span>
-                                @else
-                                    <button type="button" wire:click="makePrimary({{ $i }})"
-                                            class="absolute left-1 top-1 rounded bg-canvas/90 px-1.5 py-0.5
-                                                   text-[10px] font-medium text-ink-muted opacity-0
-                                                   transition hover:text-accent group-hover:opacity-100">
-                                        направи основна
+                                    @if ($i === 0)
+                                        <span class="absolute left-1 top-1 rounded bg-accent px-1.5 py-0.5
+                                                     text-[10px] font-semibold text-[var(--accent-ink)]">
+                                            основна
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <div class="flex divide-x divide-line border-t border-line">
+                                    @if ($i !== 0)
+                                        <button type="button" wire:click="makePrimary({{ $i }})"
+                                                class="min-h-11 flex-1 truncate px-1 text-[11px] font-medium
+                                                       text-ink-muted active:bg-surface-alt">
+                                            основна
+                                        </button>
+                                    @endif
+
+                                    <button type="button" wire:click="markTimestamp({{ $i }})"
+                                            @class([
+                                                'min-h-11 flex-1 truncate px-1 text-[11px] font-medium',
+                                                'bg-accent text-[var(--accent-ink)]' => $timestampIndex === $i,
+                                                'text-ink-muted active:bg-surface-alt' => $timestampIndex !== $i,
+                                            ])>
+                                        {{ $timestampIndex === $i ? '✓ бележка' : 'бележка' }}
                                     </button>
-                                @endif
 
-                                <button type="button" wire:click="removePhoto({{ $i }})"
-                                        class="absolute right-1 top-1 rounded bg-canvas/90 px-1.5 py-0.5
-                                               text-xs text-bad opacity-0 transition group-hover:opacity-100">
-                                    ✕
-                                </button>
-
-                                <button type="button" wire:click="markTimestamp({{ $i }})"
-                                        @class([
-                                            'absolute inset-x-0 bottom-0 px-1 py-1 text-[10px] font-medium transition',
-                                            'bg-accent text-[var(--accent-ink)]' => $timestampIndex === $i,
-                                            'bg-canvas/85 text-ink-muted'        => $timestampIndex !== $i,
-                                        ])>
-                                    {{ $timestampIndex === $i ? '✓ с бележка' : 'отбележи' }}
-                                </button>
+                                    <button type="button" wire:click="removePhoto({{ $i }})"
+                                            class="min-h-11 w-11 shrink-0 text-sm text-bad active:bg-surface-alt"
+                                            aria-label="Изтрий снимката">
+                                        ✕
+                                    </button>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -421,8 +460,15 @@
             <div class="grid gap-4 sm:grid-cols-2">
                 <div>
                     <label class="label" for="price">Цена (€)</label>
-                    <input id="price" type="number" step="0.01" min="1" wire:model.blur="price"
-                           class="mt-1 font-mono text-lg">
+                    {{-- inputmode="decimal", NOT type="number". A Bulgarian keypad
+                         offers a comma, Chrome and Safari call a comma invalid in a
+                         number input, and an invalid number input reports its value
+                         as the EMPTY STRING — so „450,00" vanished with no error and
+                         nothing on screen to explain it. Same keypad, without the
+                         browser editing the value behind our backs; the component
+                         normalises the comma on blur. --}}
+                    <input id="price" type="text" inputmode="decimal" autocomplete="off"
+                           wire:model.blur="price" class="mt-1 font-mono text-lg">
                     @error('price') <p class="error">{{ $message }}</p> @enderror
                 </div>
                 <div>
@@ -453,7 +499,7 @@
                 @if ($offers_enabled)
                     <div class="mt-3">
                         <label class="label" for="min_offer">Минимална оферта (€)</label>
-                        <input id="min_offer" type="number" step="0.01" min="1"
+                        <input id="min_offer" type="text" inputmode="decimal" autocomplete="off"
                                wire:model.blur="min_offer" class="mt-1 font-mono">
                         @error('min_offer') <p class="error">{{ $message }}</p> @enderror
                         <p class="hint">

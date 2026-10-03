@@ -123,6 +123,31 @@ class EditListing extends Component
         return $this->cents($this->price) !== (int) $this->listing()->price_cents;
     }
 
+    // --- money the user typed ---------------------------------------------
+
+    /**
+     * `cents()` below already handles the Bulgarian comma, but VALIDATION does
+     * not: `'numeric'` runs against the raw property and rejects „450,00" before
+     * `cents()` is ever reached. Normalising on the way in means the rule and the
+     * storage see the same value — which is the bug that was live in
+     * CreateListing, where the guidance partial normalised and publish() did not.
+     */
+    public function updatedPrice(): void
+    {
+        $this->price = $this->normaliseDecimal($this->price);
+    }
+
+    public function updatedMinOffer(): void
+    {
+        $this->min_offer = $this->normaliseDecimal($this->min_offer);
+    }
+
+    /** A comma is the decimal separator here and a space is the thousands one. */
+    private function normaliseDecimal(string $value): string
+    {
+        return str_replace([',', ' ', "\u{00A0}"], ['.', '', ''], trim($value));
+    }
+
     // --- photos -----------------------------------------------------------
 
     public function updatedPhotos(): void
@@ -130,10 +155,10 @@ class EditListing extends Component
         $listing = $this->listing();
         $limit   = max(1, (int) config('remarket.listings.max_images', 12));
 
-        $this->validate(['photos.*' => ['image', 'mimes:jpg,jpeg,png,webp,heic', 'max:12288']], [
+        $this->validate(['photos.*' => ['image', 'mimes:jpg,jpeg,png,webp,heic', 'max:10240']], [
             'photos.*.image' => 'Файлът трябва да е снимка.',
             'photos.*.mimes' => 'Поддържаме JPG, PNG, WEBP и HEIC.',
-            'photos.*.max'   => 'Максимум 12 MB на снимка.',
+            'photos.*.max'   => 'Максимум 10 MB на снимка.',
         ]);
 
         $processor = new ImageProcessor();

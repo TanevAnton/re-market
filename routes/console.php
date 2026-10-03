@@ -103,3 +103,17 @@ Schedule::command('remarket:prune-drafts')
 Schedule::command('remarket:purge-delivery-details')
     ->dailyAt('04:50')
     ->withoutOverlapping();
+
+/*
+ * Accounts past their deletion grace window, and expired data exports.
+ *
+ * The SECOND scheduled job whose only purpose is to destroy data, and it fails
+ * the same silent way as the first: an account somebody asked to delete two
+ * months ago still holding their email looks exactly like a site working
+ * perfectly. `remarket:doctor` reports on it for that reason.
+ *
+ * 05:10, after the delivery purge, so the two never contend for the same deals.
+ */
+Schedule::command('remarket:purge-accounts')
+    ->dailyAt('05:10')
+    ->withoutOverlapping();

@@ -32,6 +32,7 @@ use App\Livewire\Moderation\CatalogueQueue;
 use App\Livewire\Moderation\Queue as ModerationQueue;
 use App\Livewire\Messages\ShowThread;
 use App\Livewire\Offers\OfferInbox;
+use App\Livewire\Privacy\MyData;
 use App\Livewire\Profile\EditProfile;
 use App\Livewire\Profile\ShowProfile;
 use App\Livewire\ShowListing;
@@ -251,6 +252,16 @@ Route::middleware('auth')->group(function () {
         return back()->with('status', 'Изпратихме нов линк за потвърждение.');
     })->middleware('throttle:6,1')->name('verification.send');
     Route::get('/nastroyki', EditProfile::class)->name('profile.edit');
+
+    /*
+     * GDPR Art. 15 and Art. 17, self-service.
+     *
+     * Its own URL rather than a card at the bottom of settings, because the
+     * privacy policy has to be able to point AT something — „Settings, scroll
+     * down" is not a place — and because an irreversible button does not belong
+     * on the same form as „change my city".
+     */
+    Route::get('/moite-danni', MyData::class)->name('privacy.data');
 
     /*
      * The shortlist and the standing wants. Neither needs a verified email:
