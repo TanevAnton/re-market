@@ -12,6 +12,19 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        /*
+         * The app sits behind an Apache reverse proxy on the LAN, which
+         * terminates TLS and forwards over plain HTTP. Without this, every
+         * request appears to come from the proxy: rate limiting on login and
+         * registration becomes global instead of per-visitor, and the scheme
+         * is read as http, so generated URLs break on an https page.
+         *
+         * One exact address, never a subnet and never '*'. A trusted proxy
+         * may set X-Forwarded-For to anything it likes, so widening this
+         * lets anything on the LAN forge a client IP.
+         */
+        $middleware->trustProxies(at: ['192.168.1.77']);
+
         // Guards the actions where an unverified account could do damage -
         // listing, offering, messaging - never browsing.
         $middleware->alias([
