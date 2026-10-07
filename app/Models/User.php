@@ -111,6 +111,20 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->notify(new \App\Notifications\ResetPasswordLink($token));
     }
 
+    /**
+     * The verification mail, in Bulgarian.
+     *
+     * Overridden for the same reason as the reset link above: Laravel's own is
+     * in English, and it is the first thing anybody ever receives from this
+     * site. See VerifyEmailAddress — it is bilingual, which almost nothing else
+     * here is, because it arrives before the reader has had any chance to tell
+     * the site what language they read.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new \App\Notifications\VerifyEmailAddress);
+    }
+
     // --- phone -----------------------------------------------------------
 
     /**

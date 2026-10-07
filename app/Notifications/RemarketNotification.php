@@ -75,6 +75,15 @@ abstract class RemarketNotification extends Notification implements ShouldQueue
 
         return $mail
             ->action($this->action($notifiable), $this->url($notifiable))
+            /*
+             * The sender is no-reply@, so say where a reply should go.
+             *
+             * Without this header a person who hits reply - and some always will,
+             * especially the ones arguing with a moderation decision - writes a
+             * paragraph into a mailbox nobody reads, and concludes the site
+             * ignored them. support@ is where that belongs.
+             */
+            ->replyTo(config('legal.contact.users'))
             ->salutation('— '.config('app.name'));
     }
 

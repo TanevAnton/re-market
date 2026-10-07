@@ -59,19 +59,23 @@ CACHE_STORE=database
 # verification link goes to storage/logs/laravel.log and nobody can get in.
 #
 # Locally, leave it as log and dig the link out of the log.
-# On the server, point it at the re-tech.bg mailbox:
+# On the server, point it at the rigo.bg mailbox:
 #
 #   MAIL_MAILER=smtp
-#   MAIL_HOST=mail.re-tech.bg          <- confirm with the hosting panel
+#   MAIL_HOST=mail.rigo.bg             <- confirm with the hosting panel
 #   MAIL_PORT=465                      <- 465 for SSL, 587 for TLS
 #   MAIL_SCHEME=smtps                  <- smtps for 465, smtp for 587
-#   MAIL_USERNAME=no-reply@re-tech.bg
+#   MAIL_USERNAME=no-reply@rigo.bg
 #   MAIL_PASSWORD=
-#   MAIL_FROM_ADDRESS="no-reply@re-tech.bg"
+#   MAIL_FROM_ADDRESS="no-reply@rigo.bg"
 #
-# Deliverability: re-tech.bg needs SPF and DKIM covering this mailbox, or the
-# links land in spam and every signup stalls at "check your email". Same work
-# as the kt-pack.com fix.
+# The sender is no-reply, so every message carries Reply-To: support@rigo.bg.
+# A no-reply address that silently swallows replies is worse than no address:
+# somebody arguing with a moderation decision hits reply, writes a paragraph,
+# and concludes the site ignored them.
+#
+# Deliverability: rigo.bg needs SPF and DKIM covering this mailbox, or the
+# links land in spam and every signup stalls at "check your email".
 MAIL_MAILER=log
 MAIL_HOST=
 MAIL_PORT=587

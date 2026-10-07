@@ -55,6 +55,8 @@ class ResetPasswordLink extends Notification
             // The reassurance matters more than it looks: without it, somebody
             // who did not request this has no idea whether they need to act.
             ->line('Ако не си ти, няма нужда да правиш нищо — паролата ти остава същата.')
+            // no-reply@ sends it; support@ is where an answer should land.
+            ->replyTo(config('legal.contact.users'))
             ->salutation('— '.config('app.name'));
     }
 }
