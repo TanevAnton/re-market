@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\Admin\Dashboard as AdminDashboard;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
@@ -358,6 +359,18 @@ Route::middleware('auth')->group(function () {
      * somebody's company details on it should not be guessable OR reachable.
      */
     Route::get('/faktura/{invoice}', ShowInvoice::class)->name('invoice');
+
+    /*
+     * The operator's board. Admin-gated like every other queue here, and for
+     * the ordinary reason: it is a single screen that reads how much of other
+     * people's business is passing through the site.
+     *
+     * It decides nothing and changes nothing — it counts, and it links into the
+     * queues where the deciding happens.
+     */
+    Route::get('/tablo', AdminDashboard::class)
+        ->middleware('admin')
+        ->name('admin');
 
     /*
      * Turning bank statements into credit.

@@ -218,8 +218,17 @@
                     ->balance(auth()->user());
 
                 $isAdmin      = auth()->user()->is_admin;
-                $queued       = $isAdmin ? \App\Models\ModerationItem::queue()->count() : 0;
-                $uncatalogued = $isAdmin ? \App\Models\Listing::awaitingCatalogue()->count() : 0;
+
+                /*
+                 * Every admin figure below comes from one class, shared with
+                 * the board at /tablo. The two surfaces answer the same
+                 * questions, and once the definitions are written twice they
+                 * drift — a badge saying 12 over a screen showing 5 is how a
+                 * queue stops being worked.
+                 */
+                $pulse        = $isAdmin ? app(\App\Services\Admin\Pulse::class) : null;
+                $queued       = $pulse?->moderationQueue() ?? 0;
+                $uncatalogued = $pulse?->uncatalogued() ?? 0;
 
                 /*
                  * Answers to this user's wanted ads that they have not cleared.
@@ -231,10 +240,10 @@
                     ->count();
 
                 // Somebody has transferred money and is waiting on a human.
-                $pendingPayments = $isAdmin ? \App\Models\Payment::pending()->count() : 0;
+                $pendingPayments = $pulse?->pendingPayments() ?? 0;
 
                 // Theft claims nobody has decided yet.
-                $stolenClaims = $isAdmin ? \App\Models\StolenReport::pending()->count() : 0;
+                $stolenClaims = $pulse?->stolenClaims() ?? 0;
 
                 /*
                  * Traders who asked us to look their company up.
@@ -245,9 +254,7 @@
                  * sell exactly as before — makes this queue low-stakes, not
                  * invisible.
                  */
-                $traderRequests = $isAdmin
-                    ? \App\Models\User::where('trader_status', \App\Models\User::TRADER_PENDING)->count()
-                    : 0;
+                $traderRequests = $pulse?->traderRequests() ?? 0;
 
                 /*
                  * Support, both directions.
@@ -267,13 +274,7 @@
                         ->orWhereColumn('user_seen_message_id', '<', 'last_message_id'))
                     ->count();
 
-                $openTickets = $isAdmin
-                    ? \App\Models\Ticket::working()
-                        ->whereNotNull('last_message_id')
-                        ->where(fn ($q) => $q->whereNull('staff_seen_message_id')
-                            ->orWhereColumn('staff_seen_message_id', '<', 'last_message_id'))
-                        ->count()
-                    : 0;
+                $openTickets = $pulse?->openTickets() ?? 0;
 
                 /*
                  * What the closed menu owes the user.
@@ -567,6 +568,13 @@
 
                     @if ($isAdmin)
                         <hr class="my-1.5">
+
+                        {{-- First, and without a badge: it is the screen that
+                             says what the badges below add up to, and a count
+                             on it would be a count of counts. --}}
+                        <a href="{{ route('admin') }}" wire:navigate class="menu-item">
+                            <span>Табло</span>
+                        </a>
 
                         {{-- A queue nobody can see the size of is a queue nobody
                              works. Sellers sit invisible until it is worked. --}}

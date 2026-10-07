@@ -17,6 +17,18 @@ return [
     'support_email' => env('SUPPORT_EMAIL'),
 
     /*
+     * The clock a human reads the site's own numbers against.
+     *
+     * NOT `app.timezone`, which stays UTC so every stored timestamp means one
+     * unambiguous instant. This is the separate question of where one day ends
+     * and the next begins when somebody asks „колко обяви днес" — and in summer
+     * those two answers are three hours apart, which is enough to file a whole
+     * night's listings under the wrong day without anything looking wrong.
+     * Used by App\Services\Admin\Pulse.
+     */
+    'display_timezone' => env('DISPLAY_TIMEZONE', 'Europe/Sofia'),
+
+    /*
      * Paid visibility. Prices are in EURO cents, like every other price on
      * this site.
      *
