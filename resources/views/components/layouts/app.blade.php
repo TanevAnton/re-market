@@ -661,47 +661,74 @@
     {{ $slot }}
 </main>
 
-<footer class="mt-12 border-t border-line bg-surface">
-    <div class="mx-auto max-w-7xl px-4 py-8 text-sm text-ink-muted">
-        <a href="{{ route('home') }}" wire:navigate class="font-medium text-ink hover:text-accent">{{ config('app.name') }}</a>
-        <p class="mt-1">Пазар за компютърни компоненти и гейминг техника.</p>
-        <p class="mt-3 text-xs text-ink-faint">
-            Сделките се уговарят пряко между потребителите. Платформата не обработва плащания
-            и не е страна по договора.
-        </p>
+<footer class="mt-16 border-t border-line bg-surface">
+    <div class="mx-auto max-w-7xl px-4 py-12">
 
-        {{-- Reachable from every page: the DSA contact points are only
-             "published" if someone can actually find them. --}}
-        <nav class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-            <a href="{{ route('browse') }}" wire:navigate class="text-ink-muted hover:text-ink">Всички обяви</a>
-            <a href="{{ route('wanted') }}" wire:navigate class="text-ink-muted hover:text-ink">Търсения</a>
-            <a href="{{ route('valuation') }}" wire:navigate class="text-ink-muted hover:text-ink">Колко струва техниката ми</a>
-            <a href="{{ route('apple') }}" wire:navigate class="text-ink-muted hover:text-ink">Apple втора употреба</a>
-        </nav>
+        {{-- Four columns on a desktop, stacked on a phone. The brand takes two
+             of them: the sentence about who carries the risk in a deal is the
+             one thing in this footer a buyer might actually read, and it needs
+             room to be a paragraph rather than fine print. --}}
+        <div class="grid gap-10 md:grid-cols-4">
 
-        <nav class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-            {{-- First in the legal row, and reachable without an account: the
-                 person who needs it most is the one who cannot get in. --}}
-            <a href="{{ route('support') }}" wire:navigate class="text-ink-muted hover:text-ink">Поддръжка</a>
-            <a href="{{ route('safety.report') }}" wire:navigate class="text-ink-muted hover:text-ink">Отнета вещ</a>
-            <a href="{{ route('legal.terms') }}" wire:navigate class="text-ink-muted hover:text-ink">Общи условия</a>
-            <a href="{{ route('legal.privacy') }}" wire:navigate class="text-ink-muted hover:text-ink">Поверителност</a>
-            <a href="{{ route('legal.cookies') }}" wire:navigate class="text-ink-muted hover:text-ink">Бисквитки</a>
-            <a href="{{ route('legal.notice') }}" wire:navigate class="text-ink-muted hover:text-ink">Сигнали</a>
-            <a href="{{ route('legal.contacts') }}" wire:navigate class="text-ink-muted hover:text-ink">Контакти</a>
-        </nav>
+            <div class="md:col-span-2">
+                <a href="{{ route('home') }}" wire:navigate
+                   class="text-xl font-bold tracking-tight text-ink transition hover:text-accent">
+                    {{ config('app.name') }}
+                </a>
 
-        {{-- The address in plain text on every page, not only behind a link.
+                <p class="mt-2 text-sm text-ink-muted">
+                    Пазар за компютърни компоненти и гейминг техника.
+                </p>
+
+                <p class="mt-4 max-w-sm text-sm leading-relaxed text-ink-faint">
+                    Сделките се уговарят пряко между потребителите. Платформата не обработва плащания
+                    и не е страна по договора.
+                </p>
+            </div>
+
+            <div>
+                <p class="label text-ink">Разглеждане</p>
+                <nav class="mt-3 flex flex-col gap-2 text-sm">
+                    <a href="{{ route('browse') }}" wire:navigate class="text-ink-muted transition hover:text-accent">Всички обяви</a>
+                    <a href="{{ route('wanted') }}" wire:navigate class="text-ink-muted transition hover:text-accent">Търсения</a>
+                    <a href="{{ route('valuation') }}" wire:navigate class="text-ink-muted transition hover:text-accent">Колко струва техниката ми</a>
+                    <a href="{{ route('apple') }}" wire:navigate class="text-ink-muted transition hover:text-accent">Apple втора употреба</a>
+                </nav>
+            </div>
+
+            {{-- Reachable from every page: the DSA contact points are only
+                 „published" if somebody can actually find them, and support is
+                 first in the column because the person who needs it most is the
+                 one who cannot get in. --}}
+            <div>
+                <p class="label text-ink">Помощ и правила</p>
+                <nav class="mt-3 flex flex-col gap-2 text-sm">
+                    <a href="{{ route('support') }}" wire:navigate class="text-ink-muted transition hover:text-accent">Поддръжка</a>
+                    <a href="{{ route('safety.report') }}" wire:navigate class="text-ink-muted transition hover:text-accent">Отнета вещ</a>
+                    <a href="{{ route('legal.terms') }}" wire:navigate class="text-ink-muted transition hover:text-accent">Общи условия</a>
+                    <a href="{{ route('legal.privacy') }}" wire:navigate class="text-ink-muted transition hover:text-accent">Поверителност</a>
+                    <a href="{{ route('legal.cookies') }}" wire:navigate class="text-ink-muted transition hover:text-accent">Бисквитки</a>
+                    <a href="{{ route('legal.notice') }}" wire:navigate class="text-ink-muted transition hover:text-accent">Сигнали</a>
+                    <a href="{{ route('legal.contacts') }}" wire:navigate class="text-ink-muted transition hover:text-accent">Контакти</a>
+                </nav>
+            </div>
+        </div>
+
+        {{-- The trader line in plain text on every page, not only behind a link.
              DSA Art. 12 wants the user-facing contact point published, and some
              people will always rather use their own mail client than a form on
              a site they do not know yet. --}}
-        <p class="mt-4 text-xs text-ink-faint">
-            {{ config('legal.entity.name') }}@if (config('legal.entity.eik')), ЕИК {{ config('legal.entity.eik') }}@endif
-            @if (config('legal.contact.users'))
-                · <a href="mailto:{{ config('legal.contact.users') }}"
-                     class="text-ink-muted hover:text-ink">{{ config('legal.contact.users') }}</a>
-            @endif
-        </p>
+        <div class="mt-10 flex flex-col gap-2 border-t border-line pt-6 text-sm text-ink-faint sm:flex-row sm:items-center sm:justify-between">
+            <p>
+                {{ config('legal.entity.name') }}@if (config('legal.entity.eik')), ЕИК {{ config('legal.entity.eik') }}@endif
+                @if (config('legal.contact.users'))
+                    · <a href="mailto:{{ config('legal.contact.users') }}"
+                         class="text-ink-muted transition hover:text-accent">{{ config('legal.contact.users') }}</a>
+                @endif
+            </p>
+
+            <p class="shrink-0">© {{ date('Y') }} {{ config('app.name') }}</p>
+        </div>
     </div>
 </footer>
 
