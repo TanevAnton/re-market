@@ -12,6 +12,7 @@ enum ModerationTrigger: string
     case ContactInfo          = 'contact_info';
     case StolenClaim          = 'stolen_claim';           // confirmed report against this serial
     case DuplicateSerial      = 'duplicate_serial';       // same serial on another live listing
+    case Profanity            = 'profanity';              // slur or strong obscenity in the text
     case Manual               = 'manual';
 
     public function label(): string
@@ -25,6 +26,7 @@ enum ModerationTrigger: string
             self::ContactInfo           => 'Контакти в обявата',
             self::StolenClaim           => 'Сигнал за кражба',
             self::DuplicateSerial       => 'Повторен сериен номер',
+            self::Profanity             => 'Нецензурен език',
             self::Manual                => 'Ръчна проверка',
         };
     }
@@ -41,6 +43,12 @@ enum ModerationTrigger: string
             self::StolenClaim           => 0,
             self::PhashCollision        => 1,
             self::DuplicateSerial       => 1,
+            /*
+             * Same tier as a user report, and above a suspicious price.
+             * A slur sitting on a live listing is what a buyer screenshots;
+             * an odd price is what a moderator shrugs at.
+             */
+            self::Profanity             => 2,
             self::Reported              => 2,
             self::PriceOutlier          => 3,
             self::MissingTimestampPhoto => 4,

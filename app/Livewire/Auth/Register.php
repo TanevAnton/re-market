@@ -5,6 +5,7 @@ namespace App\Livewire\Auth;
 use App\Enums\SellerType;
 use App\Models\City;
 use App\Models\User;
+use App\Support\Profanity;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -45,6 +46,23 @@ class Register extends Component
 
                     if ($taken) {
                         $fail('Това потребителско име е заето.');
+                    }
+                },
+
+                /*
+                 * REFUSED OUTRIGHT HERE, unlike a listing, which is only held
+                 * for review. A username is permanent, it appears on every
+                 * listing and in every conversation, and there is no honest
+                 * version of the ones on the list — so there is nothing for a
+                 * moderator to weigh up.
+                 *
+                 * The message does not say which word matched. Naming it would
+                 * hand over a free hint for the next attempt, and it would mean
+                 * the site repeating a slur back at whoever typed it.
+                 */
+                function (string $attribute, mixed $value, \Closure $fail) {
+                    if (! Profanity::clean((string) $value)) {
+                        $fail('Избери друго потребителско име.');
                     }
                 },
             ],

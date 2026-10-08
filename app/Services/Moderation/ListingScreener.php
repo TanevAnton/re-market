@@ -5,6 +5,7 @@ namespace App\Services\Moderation;
 use App\Enums\ListingStatus;
 use App\Enums\ModerationTrigger;
 use App\Models\Listing;
+use App\Support\Profanity;
 use Illuminate\Support\Facades\DB;
 use App\Services\Wanted\WantedService;
 
@@ -37,6 +38,11 @@ class ListingScreener
         if ($context = $this->priceOutlier($listing)) {
             $this->moderation->enqueue($listing, ModerationTrigger::PriceOutlier, $context);
             $flagged[] = ModerationTrigger::PriceOutlier;
+        }
+
+        if ($context = $this->profanity($listing)) {
+            $this->moderation->enqueue($listing, ModerationTrigger::Profanity, $context);
+            $flagged[] = ModerationTrigger::Profanity;
         }
 
         // Anything flagged comes off the public site until it has been looked
@@ -117,6 +123,40 @@ class ListingScreener
         }
 
         return null;
+    }
+
+    /**
+     * A slur or strong obscenity in the text a buyer reads.
+     *
+     * LIKE THE OTHER TWO, THIS DECIDES NOTHING. It is a word list, and a word
+     * list cannot tell „шибана карта" written in frustration from an insult
+     * aimed at somebody — but it can get both in front of a person before a
+     * buyer screenshots the second one.
+     *
+     * The matched terms go into the context because the moderator needs to know
+     * WHICH word, in a description that may be four hundred words long.
+     * „Нецензурен език" on its own is a queue entry somebody has to re-read the
+     * whole listing to act on, and after the tenth one they stop reading.
+     *
+     * Title and description are reported separately: a slur in the title is on
+     * every card in the grid, which is a different problem from one buried in
+     * the last paragraph.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function profanity(Listing $listing): ?array
+    {
+        $inTitle       = Profanity::found((string) $listing->title);
+        $inDescription = Profanity::found((string) $listing->description);
+
+        if ($inTitle === [] && $inDescription === []) {
+            return null;
+        }
+
+        return array_filter([
+            'title'       => $inTitle ?: null,
+            'description' => $inDescription ?: null,
+        ]);
     }
 
     /**
