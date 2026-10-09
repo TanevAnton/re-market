@@ -220,4 +220,94 @@ class TurnstileTest extends TestCase
         $this->assertSame('', (string) env('TURNSTILE_SECRET_KEY'),
             'phpunit.xml must pin TURNSTILE_SECRET_KEY blank');
     }
+
+    // --- where the script comes from --------------------------------------
+
+    /*
+     * THE BUG THESE FOUR EXIST FOR, 9 Oct.
+     *
+     * The widget used to push Cloudflare's script into the layout's stack from
+     * inside its own @if, under @once. That works only when the widget is
+     * rendered during the INITIAL page render. The listing form renders it in
+     * the step-4 branch of a four-step wizard, so on first load it was never
+     * rendered at all - and a Livewire update cannot add to a stack the layout
+     * has already resolved.
+     *
+     * Result: an empty div on the publish step, window.turnstile undefined, no
+     * token, and every publish refused on blank($token) without so much as a
+     * request to Cloudflare. No widget to solve, nothing in the log, and
+     * "опитай отново" was the only advice the seller got.
+     *
+     * It was invisible for a month because an unconfigured Turnstile passes
+     * everything. The keys went in on 8 Oct and the form died the same evening.
+     * The code did not break - it started working, against a page that could
+     * never satisfy it.
+     */
+
+    /** The script is present on a page that renders no widget at all. */
+    public function test_the_layout_loads_the_script_so_any_component_can_use_it(): void
+    {
+        $this->configured();
+
+        $this->get(route('legal.terms'))
+            ->assertOk()
+            ->assertSee('challenges.cloudflare.com/turnstile/v0/api.js', false);
+    }
+
+    /** Unconfigured it stays silent, which is what keeps local work usable. */
+    public function test_an_unconfigured_site_loads_no_third_party_script(): void
+    {
+        $this->get(route('legal.terms'))
+            ->assertOk()
+            ->assertDontSee('challenges.cloudflare.com', false);
+    }
+
+    /**
+     * The widget file must not grow its own script tag back.
+     *
+     * Blade comments are stripped first. A guard that matches its own
+     * documentation has already happened twice here - the `group-hover` one and
+     * the `forceDelete` one - and the comment in that file necessarily
+     * discusses the very thing it forbids.
+     */
+    public function test_the_widget_ships_no_script_of_its_own(): void
+    {
+        $widget = file_get_contents(resource_path('views/components/turnstile.blade.php'));
+        $code   = preg_replace('/\{\{--.*?--\}\}/s', '', $widget);
+
+        $this->assertStringNotContainsString('challenges.cloudflare.com', $code,
+            'The script belongs in the layout. A push from a conditionally rendered '
+            .'component reaches nothing - see the comment in that file.');
+
+        $this->assertStringNotContainsString('@push', $code,
+            'Same reason: @push from a Livewire update cannot reach a resolved stack.');
+    }
+
+    // --- the listing form carries no challenge ----------------------------
+
+    /**
+     * Publishing is authenticated, so the challenge was already cleared at
+     * registration, and the controls that fit this step are the ones that
+     * exist: NEW_ACCOUNT_MODERATED_LISTINGS, the screener, the queue. None of
+     * them costs an honest seller anything, and this site has two sellers.
+     *
+     * If it is ever added back, it must be added back working - which means the
+     * script loading from the layout, as the tests above pin.
+     */
+    public function test_publishing_a_listing_asks_for_no_challenge(): void
+    {
+        $this->assertNotContains(
+            \App\Livewire\Concerns\ChecksTurnstile::class,
+            class_uses_recursive(\App\Livewire\Listings\CreateListing::class),
+            'The listing wizard deliberately carries no Turnstile check.',
+        );
+
+        $view = file_get_contents(resource_path('views/livewire/listings/create-listing.blade.php'));
+
+        $this->assertStringNotContainsString(
+            '<x-turnstile',
+            preg_replace('/\{\{--.*?--\}\}/s', '', $view),
+            'And no widget in the view either.',
+        );
+    }
 }

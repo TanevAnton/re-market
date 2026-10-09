@@ -549,9 +549,13 @@
         @if ($step < 4)
             <button type="button" wire:click="next" class="btn-primary">Продължи</button>
         @else
-            <x-turnstile />
-            @error('turnstile') <p class="error">{{ $message }}</p> @enderror
-
+            {{--
+                No Turnstile widget here. Publishing is authenticated, so the
+                challenge at registration has already been cleared, and a widget
+                in this branch could never work anyway: it is not rendered on
+                first page load, so its script never reaches the layout's stack.
+                See CreateListing::publish().
+            --}}
             <button type="button" wire:click="publish" class="btn-primary" wire:loading.attr="disabled">
                 <span wire:loading.remove wire:target="publish">Публикувай обявата</span>
                 <span wire:loading wire:target="publish">Публикуваме…</span>

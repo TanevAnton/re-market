@@ -732,6 +732,40 @@
     </div>
 </footer>
 
+{{--
+    TURNSTILE'S SCRIPT LOADS HERE, NOT FROM THE WIDGET COMPONENT.
+
+    It used to be pushed into the scripts stack from inside the widget
+    component, guarded so it happened only once. That works only when the widget
+    is rendered during the INITIAL page render. A component that renders it
+    conditionally - behind a wizard step, a tab, a modal - pushes nothing at
+    all, because a Livewire update cannot add to a stack the layout resolved
+    when the page was first built. The widget div then appears with no
+    window.turnstile behind it, waiting for a `turnstile-ready` event that
+    nobody will ever fire: an invisible widget, an empty token, and a challenge
+    that cannot be solved however many times the button is pressed.
+
+    That is exactly how the four-step listing form shipped unpublishable, and it
+    stayed invisible for a month because an unconfigured Turnstile passes
+    everything - the keys went in on 8 Oct and the form died the same evening.
+    The code did not break; it started working, against a page that could never
+    satisfy it.
+
+    Loading it here makes window.turnstile a property of the PAGE rather than of
+    whichever component happened to render first. The cost is one async,
+    cookieless, third-party script on every page instead of on the six that need
+    it; the benefit is that the failure above cannot recur.
+
+    (No Blade directives are named in this comment on purpose: directives are
+    compiled BEFORE comments are stripped, so one written here would really be
+    compiled.)
+--}}
+@if (\App\Support\Turnstile::enabled())
+    <script>window.__turnstileReady = () => window.dispatchEvent(new Event('turnstile-ready'));</script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=__turnstileReady&render=explicit"
+            async defer></script>
+@endif
+
 @stack('scripts')
 
 @livewireScripts

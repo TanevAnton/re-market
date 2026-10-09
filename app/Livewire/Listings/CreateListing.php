@@ -22,14 +22,11 @@ use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
-use App\Livewire\Concerns\ChecksTurnstile;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
 class CreateListing extends Component
 {
-    use ChecksTurnstile;
-
     use WithFileUploads;
 
     /*
@@ -659,12 +656,29 @@ class CreateListing extends Component
 
     // --- save -------------------------------------------------------------
 
+    /*
+     * NO TURNSTILE HERE, AND THAT IS DELIBERATE.
+     *
+     * Publishing is an authenticated action: whoever reaches this method
+     * already cleared a challenge at registration. The controls that fit this
+     * step are the ones that exist - NEW_ACCOUNT_MODERATED_LISTINGS, the
+     * screener, the moderation queue - and none of them cost an honest seller
+     * anything.
+     *
+     * A challenge on the last step of a four-step form was also the worst
+     * possible place for one. The widget only ever rendered inside the step-4
+     * branch, so on first page load it was never rendered at all, its script
+     * was never pushed into the layout's stack, and a Livewire update cannot
+     * add to a stack that is already resolved. Every publish then failed on an
+     * empty token with no widget on screen to solve - for a month, invisibly,
+     * because an unconfigured Turnstile passes everything and the keys only
+     * went in on 8 Oct.
+     *
+     * If a challenge is ever wanted here again, the script must load from the
+     * layout, not from a conditionally rendered component.
+     */
     public function publish()
     {
-        if (! $this->passesTurnstile()) {
-            return null;
-        }
-
         $this->processPendingPhotos();
 
         foreach (range(1, self::LAST_STEP) as $s) {
