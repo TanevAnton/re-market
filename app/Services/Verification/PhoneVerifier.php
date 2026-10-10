@@ -51,14 +51,14 @@ class PhoneVerifier
     }
 
     /**
-     * @return array{sent: bool, channel: ?string, reason: ?string}
+     * @return array{sent: bool, channel: ?string, reason: ?string, retry_after: ?int}
      */
     public function send(User $user, string $rawPhone): array
     {
         $e164 = PhoneNumber::normalize($rawPhone);
 
         if ($e164 === null) {
-            return ['sent' => false, 'channel' => null, 'reason' => 'invalid_number'];
+            return $this->refuse('invalid_number');
         }
 
         $hash = User::hashPhone($e164);
@@ -70,11 +70,30 @@ class PhoneVerifier
             ->exists();
 
         if ($taken) {
-            return ['sent' => false, 'channel' => null, 'reason' => 'number_in_use'];
+            return $this->refuse('number_in_use');
         }
 
         if (! $this->underLimits($hash)) {
-            return ['sent' => false, 'channel' => null, 'reason' => 'rate_limited'];
+            return $this->refuse('rate_limited');
+        }
+
+        /*
+         * THE CODE THEY ALREADY HAVE IS STILL GOOD.
+         *
+         * Sending a second one costs another message and makes nothing better:
+         * the first is still live, still the one in their hand, and the usual
+         * reason this method is called twice is that a carrier took ten seconds
+         * and the person pressed the button again. The caller is told to show
+         * the entry form, not an error - they are not being blocked, they are
+         * being told they already have what they are asking for.
+         */
+        if ($live = $this->liveCodeFor($hash)) {
+            return [
+                'sent'        => false,
+                'channel'     => $live->channel,
+                'reason'      => 'cooldown',
+                'retry_after' => $this->retryAfter($live),
+            ];
         }
 
         $code = $this->generateCode();
@@ -95,12 +114,51 @@ class PhoneVerifier
 
             $this->recordAttempt($hash);
 
-            return ['sent' => true, 'channel' => $channel->name(), 'reason' => null];
+            return ['sent' => true, 'channel' => $channel->name(), 'reason' => null, 'retry_after' => null];
         }
 
         Log::error("[verification] every channel failed for {$e164}");
 
-        return ['sent' => false, 'channel' => null, 'reason' => 'no_channel'];
+        return $this->refuse('no_channel');
+    }
+
+    /** @return array{sent: bool, channel: ?string, reason: ?string, retry_after: ?int} */
+    private function refuse(string $reason): array
+    {
+        return ['sent' => false, 'channel' => null, 'reason' => $reason, 'retry_after' => null];
+    }
+
+    /**
+     * The most recent code for this number that is still worth using.
+     *
+     * `isUsable()` matters as much as the window: a code whose five guesses are
+     * spent is dead, and refusing to replace it would lock the person out for
+     * the rest of the cooldown with no way forward.
+     */
+    private function liveCodeFor(string $hash): ?PhoneVerification
+    {
+        $cooldown = (int) config('remarket.verify.resend_cooldown', 90);
+
+        if ($cooldown <= 0) {
+            return null;
+        }
+
+        $recent = PhoneVerification::where('phone_hash', $hash)
+            ->whereNull('verified_at')
+            ->where('created_at', '>', now()->subSeconds($cooldown))
+            ->latest('id')
+            ->first();
+
+        return $recent?->isUsable() ? $recent : null;
+    }
+
+    /** Seconds left before another send is allowed. Never zero - zero reads as „now". */
+    private function retryAfter(PhoneVerification $live): int
+    {
+        $cooldown = (int) config('remarket.verify.resend_cooldown', 90);
+        $elapsed  = (int) $live->created_at->diffInSeconds(now());
+
+        return max(1, $cooldown - $elapsed);
     }
 
     /**

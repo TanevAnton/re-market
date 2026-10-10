@@ -95,6 +95,21 @@ class VerifyPhone extends Component
 
         $result = (new PhoneVerifier(request()->ip()))->send(auth()->user(), $this->phone);
 
+        /*
+         * Not an error. The previous code is still live, so show the entry form
+         * and say so. Telling somebody „опитай по-късно" when the thing they
+         * need is already sitting in their messages is how a person gives up
+         * two steps from the end.
+         */
+        if (! $result['sent'] && $result['reason'] === 'cooldown') {
+            $this->sent    = true;
+            $this->channel = $result['channel'];
+            $this->status  = 'Вече ти изпратихме код — провери съобщенията си. '
+                .'Нов код може да поискаш след '.$result['retry_after'].' сек.';
+
+            return;
+        }
+
         if (! $result['sent']) {
             $this->addError('phone', match ($result['reason']) {
                 'number_in_use' => 'Този номер вече е свързан с друг профил.',

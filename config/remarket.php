@@ -143,6 +143,23 @@ return [
         'code_ttl'     => (int) env('VERIFY_CODE_TTL_MINUTES', 10),
         'max_attempts' => (int) env('VERIFY_MAX_ATTEMPTS', 5),
 
+        /*
+         * Seconds before a SECOND code may be sent to the same number.
+         *
+         * This is the line that controls the SMS bill, and it is not the same
+         * job as the five-an-hour cap below. That one is an abuse limit, aimed
+         * at an attacker. This one is aimed at an ordinary impatient person:
+         * the code takes eight seconds to arrive, they press „изпрати отново"
+         * three times, and three more messages go out at EUR 0.076 each for a
+         * code that was already on its way. On OTP systems that retap is
+         * routinely the largest single source of avoidable spend.
+         *
+         * Inside the window the existing code stays live and the page says so,
+         * so nobody is blocked - they are told they already have one. Set it
+         * to 0 to switch the behaviour off entirely.
+         */
+        'resend_cooldown' => (int) env('VERIFY_RESEND_COOLDOWN', 90),
+
         // With none of these set, PhoneVerifier falls back to the log channel
         // so local signup works with no credentials and no spend.
         // Escape hatch for a staging or LAN box with no SMS credentials.
