@@ -117,13 +117,29 @@ class BulkGateChannel implements VerificationChannel
             return false;
         }
 
-        // `response` is a list for several recipients and may be a single
-        // object for one, so handle both rather than betting on either.
-        $block    = data_get($json, 'data.response');
+        /*
+         * TWO SHAPES, BOTH OBSERVED, NEITHER GUESSED.
+         *
+         * One recipient - which is every message this class sends - comes back
+         * flat, with no wrapper at all:
+         *
+         *   {"data":{"status":"accepted","message_id":"sms-6aca90330d7ba",
+         *            "part_id":["sms-..."],"number":"359878130616","channel":"sms"}}
+         *
+         * Several recipients come back with data.total and a data.response
+         * list, one entry each. The published example only shows the second,
+         * which is how this went wrong: the code looked for data.response.0 and
+         * found null, so a delivered SMS was reported as a failed one.
+         *
+         * „accepted" is the status seen live on 10 Oct 2026.
+         */
+        $data     = $json['data'];
         $statuses = [];
 
-        if (is_array($block)) {
-            $rows = array_is_list($block) ? $block : [$block];
+        if (isset($data['status'])) {
+            $statuses[] = (string) $data['status'];
+        } elseif (is_array($data['response'] ?? null)) {
+            $rows = array_is_list($data['response']) ? $data['response'] : [$data['response']];
 
             foreach ($rows as $row) {
                 if (is_array($row) && isset($row['status'])) {
