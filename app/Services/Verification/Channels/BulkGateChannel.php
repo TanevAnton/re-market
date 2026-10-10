@@ -37,13 +37,23 @@ class BulkGateChannel implements VerificationChannel
     private const ENDPOINT = 'https://portal.bulkgate.com/api/2.0/advanced/transactional';
 
     /**
-     * Per-recipient outcomes that mean the message is on its way.
+     * Per-recipient outcomes that mean the message did NOT go.
      *
-     * The others - error, blacklisted, invalid_number, invalid_sender,
-     * duplicity_message - arrive inside a perfectly successful HTTP 200, which
-     * is exactly how a broken integration reports itself as healthy.
+     * Listed as the REJECTIONS rather than the acceptances, which is the whole
+     * lesson of this class. The first version accepted anything that was not a
+     * recognised failure, so an HTML error page counted as a sent SMS. The
+     * second required one exact success shape, so a real send whose response
+     * was shaped differently was reported as failed - while the message sat in
+     * somebody's hand.
+     *
+     * Both were guesses about a response nobody had looked at. This version
+     * refuses on evidence of failure, accepts otherwise, and writes the body to
+     * the log whenever it meets a shape it does not recognise, so the next
+     * person works from an observation instead of a third guess.
      */
-    private const ACCEPTED = ['sent', 'accepted', 'scheduled'];
+    private const REJECTED = [
+        'error', 'blacklisted', 'invalid_number', 'invalid_sender', 'duplicity_message',
+    ];
 
     public function __construct(
         private readonly string $channel,   // 'viber' | 'sms'
@@ -88,38 +98,55 @@ class BulkGateChannel implements VerificationChannel
             return false;
         }
 
-        if (! $response->successful()) {
-            /*
-             * SAY WHY. This used to return false on a rejected send without
-             * logging anything: the user saw „кодът не можа да се изпрати", the
-             * cascade moved on, and the only record that BulkGate had refused
-             * was in BulkGate's own dashboard.
-             *
-             * The number is NOT logged. A phone number in laravel.log is
-             * personal data in a file nobody thinks of as a data store, and the
-             * whole point of hashing it everywhere else is defeated by writing
-             * it here in clear.
-             */
+        $json = $response->json();
+
+        /*
+         * Not an API answer at all. An unreachable or redirected endpoint ends
+         * up here as an HTML page with a 200, which is exactly how the original
+         * bug reported every failed send as a success for a month.
+         */
+        if (! $response->successful() || ! is_array($json) || ! array_key_exists('data', $json)) {
             Log::warning("[verification] bulkgate {$this->channel} refused the send", [
                 'http'   => $response->status(),
-                'type'   => $response->json('type'),
-                'error'  => $response->json('error'),
-                'detail' => $response->json('detail'),
+                'type'   => data_get($json, 'type'),
+                'error'  => data_get($json, 'error'),
+                'detail' => data_get($json, 'detail'),
+                'body'   => mb_substr($response->body(), 0, 500),
             ]);
 
             return false;
         }
 
-        // A 200 is not delivery. The per-recipient status is the real answer.
-        $status = $response->json('data.response.0.status');
+        // `response` is a list for several recipients and may be a single
+        // object for one, so handle both rather than betting on either.
+        $block    = data_get($json, 'data.response');
+        $statuses = [];
 
-        if (! in_array($status, self::ACCEPTED, true)) {
-            Log::warning("[verification] bulkgate {$this->channel} returned 200 but did not accept the message", [
-                'status' => $status,
-                'totals' => $response->json('data.total.status'),
+        if (is_array($block)) {
+            $rows = array_is_list($block) ? $block : [$block];
+
+            foreach ($rows as $row) {
+                if (is_array($row) && isset($row['status'])) {
+                    $statuses[] = (string) $row['status'];
+                }
+            }
+        }
+
+        if (array_intersect($statuses, self::REJECTED) !== []) {
+            Log::warning("[verification] bulkgate {$this->channel} did not accept the message", [
+                'statuses' => $statuses,
+                'totals'   => data_get($json, 'data.total.status'),
             ]);
 
             return false;
+        }
+
+        if ($statuses === []) {
+            // Accepted, but we could not find a status to confirm it with. Say
+            // so once, with the body, so the shape stops being a mystery.
+            Log::info("[verification] bulkgate {$this->channel} accepted, response shape unrecognised", [
+                'body' => mb_substr($response->body(), 0, 500),
+            ]);
         }
 
         return true;
