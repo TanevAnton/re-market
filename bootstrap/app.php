@@ -32,16 +32,25 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin'          => App\Http\Middleware\EnsureUserIsAdmin::class,
 
             /*
-             * The account gate WHILE SMS IS OFF. Laravel ships this alias by
-             * default; naming it here makes the dependency explicit and stops
-             * a framework default silently deciding who may post on the site.
+             * The account gate: a confirmed email OR a confirmed phone.
              *
-             * Email is a weaker proof than a phone number - a throwaway
-             * address costs nothing, so a ban costs nothing either. The
-             * moderation queue is what carries the weight until 'phone.verified'
-             * goes on.
+             * NOT Laravel's EnsureEmailIsVerified any more. Registration asks
+             * which way the person wants to prove the account, and both answers
+             * have to unlock it - otherwise somebody who verified by SMS is
+             * bounced to „потвърди имейла си" on every page that matters, with
+             * no way out, having already done what the site asked of them.
+             *
+             * Naming the alias here rather than inheriting the framework
+             * default is what made this a one-line change instead of an edit to
+             * every route, and it is why the default was named explicitly in
+             * the first place.
+             *
+             * Email remains the weaker proof - a throwaway address costs
+             * nothing, so a ban costs nothing either - which is why
+             * 'phone.verified' exists separately for the actions where that
+             * matters.
              */
-            'verified'       => Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+            'verified'       => App\Http\Middleware\EnsureAccountIsVerified::class,
         ]);
 
         // The theme cookie is written by JavaScript, so it cannot be encrypted:

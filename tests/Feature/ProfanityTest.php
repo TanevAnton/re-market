@@ -226,6 +226,7 @@ class ProfanityTest extends TestCase
         Livewire::test(Register::class)
             ->set('username', 'kursor_bg')
             ->set('email', 'kursor@example.com')
+            ->set('phone', '0888123456')
             ->set('password', 'Parola-123456')
             ->set('password_confirmation', 'Parola-123456')
             ->set('city_id', City::first()->id)

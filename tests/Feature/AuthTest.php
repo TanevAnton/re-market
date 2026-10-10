@@ -31,14 +31,19 @@ class AuthTest extends TestCase
         Livewire::test(Register::class)
             ->set('username', 'ivanko')
             ->set('email', 'ivan@example.com')
+            // Required since registration started asking for one. The number is
+            // stored as a hash and stays UNVERIFIED - signing up is a claim on a
+            // number, not proof of it.
+            ->set('phone', '0888123456')
             ->set('password', 'correct-horse-battery')
             ->set('password_confirmation', 'correct-horse-battery')
             ->set('seller_type', 'private')
             ->set('terms', true)
             ->call('register')
             ->assertHasNoErrors()
-            // Email is the gate while SMS is off, so signup lands there.
-            // Phone verification is still reachable and still stronger.
+            // verify_via defaults to email, so signup lands on the email
+            // notice. Choosing SMS lands on the phone page instead; either
+            // proof opens the account - see EnsureAccountIsVerified.
             ->assertRedirect(route('verification.notice'));
 
         $this->assertAuthenticated();
@@ -68,6 +73,7 @@ class AuthTest extends TestCase
         Livewire::test(Register::class)
             ->set('username', 'mailcheck')
             ->set('email', 'mailcheck@example.com')
+            ->set('phone', '0888123457')
             ->set('password', 'correct-horse-battery')
             ->set('password_confirmation', 'correct-horse-battery')
             ->set('terms', true)

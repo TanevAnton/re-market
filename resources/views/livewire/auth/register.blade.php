@@ -1,14 +1,12 @@
 <div class="mx-auto max-w-md">
     <h1 class="text-2xl font-semibold tracking-tight">Създай профил</h1>
-    {{-- This said "Ще ти поискаме телефон". It does not: register logs you in
-         and redirects to the email notice, and email is what gates posting,
-         offers and messages today. Phone verification still exists and is the
-         stronger proof, but promising it here and then never asking reads as
-         either a bug or a bait - and the first sentence on the signup page is
-         a bad place to be caught being wrong about your own product. --}}
+    {{-- The note that used to live here said this page does NOT ask for a
+         phone, because at the time it did not. It does now: the number is
+         required, and the person chooses whether to prove the account by email
+         or by SMS. Both unlock it - see EnsureAccountIsVerified. --}}
     <p class="mt-1 text-sm text-ink-muted">
-        Безплатно е. Потвърждаваш имейла си и си готов — това държи ботовете и
-        фалшивите обяви навън.
+        Безплатно е. Потвърждаваш профила си по имейл или с SMS и си готов —
+        това държи ботовете и фалшивите обяви навън.
     </p>
 
     <form wire:submit="register" class="mt-6 space-y-5">
@@ -27,6 +25,20 @@
                 <input id="email" type="email" wire:model.blur="email" autocomplete="email" class="mt-2">
                 @error('email') <p class="error">{{ $message }}</p> @enderror
                 <p class="hint">Ще получиш линк за потвърждение. Не се показва публично.</p>
+            </div>
+
+            {{-- inputmode="tel" rather than type="number": a number input strips
+                 the leading zero of 0888..., offers spinner arrows nobody wants
+                 on a phone number, and refuses a + sign. --}}
+            <div>
+                <label for="phone" class="label">Телефон</label>
+                <input id="phone" type="tel" inputmode="tel" wire:model.blur="phone"
+                       autocomplete="tel" placeholder="0888 123 456" class="mt-2">
+                @error('phone') <p class="error">{{ $message }}</p> @enderror
+                <p class="hint">
+                    Български мобилен номер. Не се показва публично — купувачите
+                    виждат само последните четири цифри, и то след сделка.
+                </p>
             </div>
 
             <div>
@@ -82,6 +94,36 @@
                 @endforeach
             </div>
             @error('seller_type') <p class="error">{{ $message }}</p> @enderror
+        </fieldset>
+
+        {{-- How to prove the account. Email is first and is the default: it is
+             free and instant, and a default nobody chose should not be the one
+             that costs money. --}}
+        <fieldset class="card-pad">
+            <legend class="label">Как да потвърдим профила</legend>
+            <div class="mt-3 space-y-2">
+                @foreach ([
+                    'email' => ['Имейл', 'Пращаме линк на имейла ти. Безплатно и веднага.'],
+                    'sms'   => ['SMS', 'Пращаме код на телефона ти. Полезно, ако имейлът ти се бави.'],
+                ] as $value => [$title, $note])
+                    <label @class([
+                        'flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm transition',
+                        'border-accent bg-accent-soft' => $verify_via === $value,
+                        'border-line hover:border-line-strong' => $verify_via !== $value,
+                    ])>
+                        <input type="radio" name="verify_via" value="{{ $value }}"
+                               wire:model.live="verify_via" class="mt-0.5">
+                        <span>
+                            <span class="font-medium">{{ $title }}</span>
+                            <span class="mt-0.5 block text-xs leading-relaxed text-ink-muted">{{ $note }}</span>
+                        </span>
+                    </label>
+                @endforeach
+            </div>
+            @error('verify_via') <p class="error">{{ $message }}</p> @enderror
+            <p class="hint mt-3">
+                Може да потвърдиш и двете по-късно от профила си.
+            </p>
         </fieldset>
 
         <div>

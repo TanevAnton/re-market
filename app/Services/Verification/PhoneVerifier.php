@@ -201,6 +201,20 @@ class PhoneVerifier
         $user->phone_verified_at = now();
         $user->save();
 
+        /*
+         * NO CLAIM-WIPING HERE, AND THAT IS NOT AN OVERSIGHT.
+         *
+         * An earlier version cleared other accounts' unproven claims on this
+         * number at verification time. It could never fire: users.phone_hash
+         * has a UNIQUE index, so by the time anybody verifies a number, no
+         * other row can be holding it. The claim is moved at REGISTRATION
+         * instead - see Register::register() - which is the only moment two
+         * accounts could want the same number.
+         *
+         * Dead code that implies a case which cannot happen is worse than no
+         * code: the next person to read it believes duplicates are possible.
+         */
+
         return ['verified' => true, 'reason' => null];
     }
 
