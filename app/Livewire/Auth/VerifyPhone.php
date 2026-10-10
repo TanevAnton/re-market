@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Auth;
 
+use App\Models\PhoneVerification;
 use App\Models\TelegramLink;
 use App\Services\Verification\PhoneNumber;
 use App\Services\Verification\PhoneVerifier;
@@ -16,6 +17,13 @@ class VerifyPhone extends Component
     public ?string $channel = null;
     public ?string $status = null;
 
+    /**
+     * Seconds until another code may be sent. Drives a live countdown in the
+     * view, so the person watches it tick rather than guessing what „по-късно"
+     * means and hammering the button.
+     */
+    public ?int $retryAfter = null;
+
     /** The pending Telegram handshake, once the user asks for one. */
     public ?string $telegramUrl = null;
 
@@ -23,7 +31,59 @@ class VerifyPhone extends Component
     {
         if (auth()->user()?->phone_verified_at) {
             $this->redirectRoute('browse', navigate: true);
+
+            return;
         }
+
+        /*
+         * ARRIVING FROM REGISTRATION: THE CODE IS ALREADY SENT.
+         *
+         * Register::register() sends it and puts the number in the session, so
+         * this page opens straight on the code box. Asking for the number a
+         * second time, on the screen that exists because they just gave it,
+         * reads as the site having forgotten - and every retype is a chance to
+         * mistype.
+         *
+         * The number cannot be recovered from the account: it is stored only as
+         * a hash. The session is what carries it, and it is cleared the moment
+         * the number is confirmed or the person asks for a different one.
+         */
+        if ($e164 = session('verify.phone')) {
+            $this->phone      = $e164;
+            $this->sent       = true;
+            $this->channel    = session('verify.channel');
+            $this->status     = $this->statusFor($this->channel);
+            $this->retryAfter = $this->cooldownLeft();
+        }
+    }
+
+    /** How long before another code may be sent, for a page opened mid-cooldown. */
+    private function cooldownLeft(): int
+    {
+        $cooldown = (int) config('remarket.verify.resend_cooldown', 90);
+
+        if ($cooldown <= 0) {
+            return 0;
+        }
+
+        $last = PhoneVerification::where('user_id', auth()->id())
+            ->whereNull('verified_at')
+            ->latest('id')
+            ->first();
+
+        return $last
+            ? max(0, $cooldown - (int) $last->created_at->diffInSeconds(now()))
+            : 0;
+    }
+
+    private function statusFor(?string $channel): string
+    {
+        return match ($channel) {
+            'telegram' => 'Изпратихме код в Telegram.',
+            'viber'    => 'Изпратихме код във Viber.',
+            'sms'      => 'Изпратихме код по SMS.',
+            default    => 'Кодът е записан в лога (режим за разработка).',
+        };
     }
 
     /**
@@ -102,10 +162,12 @@ class VerifyPhone extends Component
          * two steps from the end.
          */
         if (! $result['sent'] && $result['reason'] === 'cooldown') {
-            $this->sent    = true;
-            $this->channel = $result['channel'];
-            $this->status  = 'Вече ти изпратихме код — провери съобщенията си. '
-                .'Нов код може да поискаш след '.$result['retry_after'].' сек.';
+            $this->sent       = true;
+            $this->channel    = $result['channel'];
+            $this->retryAfter = $result['retry_after'];
+            $this->status     = 'Вече ти изпратихме код — провери съобщенията си.';
+
+            $this->dispatch('cooldown-started', seconds: $this->retryAfter);
 
             return;
         }
@@ -121,14 +183,16 @@ class VerifyPhone extends Component
             return;
         }
 
-        $this->sent    = true;
-        $this->channel = $result['channel'];
-        $this->status  = match ($result['channel']) {
-            'telegram' => 'Изпратихме код в Telegram.',
-            'viber'    => 'Изпратихме код във Viber.',
-            'sms'      => 'Изпратихме код по SMS.',
-            default    => 'Кодът е записан в лога (режим за разработка).',
-        };
+        $this->sent       = true;
+        $this->channel    = $result['channel'];
+        $this->status     = $this->statusFor($result['channel']);
+        $this->retryAfter = (int) config('remarket.verify.resend_cooldown', 90);
+
+        // Remember it for a refresh: the number is only on the account as a
+        // hash, so without this the page would ask for it again.
+        session(['verify.phone' => $this->phone, 'verify.channel' => $result['channel']]);
+
+        $this->dispatch('cooldown-started', seconds: $this->retryAfter);
     }
 
     public function confirm()
@@ -150,12 +214,17 @@ class VerifyPhone extends Component
             return;
         }
 
+        session()->forget(['verify.phone', 'verify.channel']);
+
         return $this->redirectRoute('browse', navigate: true);
     }
 
+    /** „Друг номер" - forget the one we were given and ask again. */
     public function startOver(): void
     {
-        $this->reset(['sent', 'code', 'channel', 'status']);
+        session()->forget(['verify.phone', 'verify.channel']);
+
+        $this->reset(['sent', 'code', 'channel', 'status', 'retryAfter', 'phone']);
     }
 
     #[Layout('components.layouts.app')]

@@ -47,7 +47,7 @@
                 <input id="phone" type="tel" wire:model="phone" placeholder="0888 123 456"
                        autocomplete="tel" autofocus>
                 @error('phone') <p class="error">{{ $message }}</p> @enderror
-                <p class="hint">Пробваме Telegram, после Viber, накрая SMS.</p>
+                <p class="hint">Пробваме Telegram, после SMS.</p>
             </div>
 
             <button type="submit" class="btn-primary w-full" wire:loading.attr="disabled">
@@ -71,9 +71,30 @@
                 Потвърди
             </button>
 
-            <button type="button" wire:click="startOver" class="btn-ghost w-full">
-                Друг номер / изпрати пак
-            </button>
+            {{-- The countdown runs in the browser, not on the server.
+                 Livewire would need a poll per second per visitor to animate a
+                 number that only ever goes down by one - and the value is not a
+                 fact worth a round trip, it is a reassurance. Alpine owns the
+                 ticking; the server owns when it starts, and says so by
+                 dispatching cooldown-started after every send. --}}
+            <div x-data="{ left: @js($retryAfter ?? 0) }"
+                 x-init="setInterval(() => { if (left > 0) left-- }, 1000)"
+                 @cooldown-started.window="left = $event.detail.seconds"
+                 class="space-y-2">
+
+                <button type="button" wire:click="sendCode" class="btn-ghost w-full"
+                        x-bind:disabled="left > 0" wire:loading.attr="disabled">
+                    <span x-show="left === 0" wire:loading.remove wire:target="sendCode">Изпрати нов код</span>
+                    <span x-show="left > 0" x-cloak>
+                        Нов код след <span x-text="left"></span> сек.
+                    </span>
+                    <span wire:loading wire:target="sendCode">Изпращаме…</span>
+                </button>
+
+                <button type="button" wire:click="startOver" class="btn-ghost w-full text-xs">
+                    Друг номер
+                </button>
+            </div>
         </form>
     @endif
 </div>

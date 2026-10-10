@@ -208,6 +208,19 @@ class Register extends Component
             $result = (new PhoneVerifier(request()->ip()))->send($user, $e164);
 
             if ($result['sent']) {
+                /*
+                 * Hand the number to the verify page. It cannot recover it from
+                 * the account - the number is stored only as a hash - and
+                 * asking for it again on the very screen that exists because
+                 * they just gave it reads as the site having forgotten.
+                 * Cleared the moment it is confirmed, or if they ask for a
+                 * different one.
+                 */
+                session([
+                    'verify.phone'   => $e164,
+                    'verify.channel' => $result['channel'],
+                ]);
+
                 return $this->redirectRoute('phone.verify', navigate: true);
             }
 
