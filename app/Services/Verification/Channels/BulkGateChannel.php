@@ -178,11 +178,16 @@ class BulkGateChannel implements VerificationChannel
      * code would cost two segments: roughly EUR 46 a month instead of EUR 23,
      * for politeness nobody reads.
      *
-     * This is 64 characters with a six-digit code and a two-digit TTL, and it
+     * This is 66 characters with a six-digit code and a two-digit TTL, and it
      * still carries the three things that matter: who it is from, how long it
      * lasts, and what to do if you did not ask for it. The last one is not
      * manners - a code arriving unexpectedly is the first sign somebody is
-     * trying to take an account, and the message is the only place to say so.
+     * trying to take an account, and the message is the only place to say so,
+     * because by definition that person is not looking at the site.
+     *
+     * „поискал", not „искал": the perfective is „did not REQUEST it". The
+     * imperfective reads as „did not want it", which is both odd and not the
+     * question being asked. Same wording as the sample filed with BulkGate.
      *
      * CHECK THE LENGTH AGAIN if this text is ever edited. One character over
      * doubles the bill silently; nothing fails, nothing is logged, the code
@@ -191,7 +196,7 @@ class BulkGateChannel implements VerificationChannel
     private function text(string $code): string
     {
         return sprintf(
-            '%s код: %s. Валиден %d мин. Ако не си го искал, игнорирай.',
+            '%s код: %s. Валиден %d мин. Ако не си го поискал, игнорирай.',
             config('app.name'),
             $code,
             (int) config('remarket.verify.code_ttl', 10),
