@@ -37,6 +37,7 @@ use App\Livewire\Privacy\MyData;
 use App\Livewire\Profile\EditProfile;
 use App\Livewire\Profile\ShowProfile;
 use App\Livewire\ShowListing;
+use App\Http\Controllers\ChangeEmail;
 use App\Http\Controllers\Sitemap;
 use App\Http\Controllers\VerifyEmail;
 use App\Livewire\Wanted\BrowseWanted;
@@ -230,6 +231,26 @@ Route::get('/podkrepa/{ticket}', ShowTicket::class)->name('support.ticket');
 Route::get('/potvardi-imeil/{id}/{hash}', VerifyEmail::class)
     ->middleware('throttle:6,1')
     ->name('verification.verify');
+
+/*
+ * Changing the address, both halves — PUBLIC for the same reason, and here the
+ * argument is stronger than above.
+ *
+ * The confirmation link is opened in the NEW mailbox, which is very often not
+ * the device the change was asked for on. And the cancel link exists for
+ * somebody whose password an attacker already knows, because the change
+ * required it: telling that person to log in first is telling them to rely on
+ * the one thing that is no longer theirs alone.
+ *
+ * Neither link signs anyone in. See App\Http\Controllers\ChangeEmail.
+ */
+Route::get('/smeni-imeil/{id}/{token}', [ChangeEmail::class, 'confirm'])
+    ->middleware('throttle:6,1')
+    ->name('email.change.confirm');
+
+Route::get('/otkazhi-smyana-imeil/{id}/{token}', [ChangeEmail::class, 'cancel'])
+    ->middleware('throttle:6,1')
+    ->name('email.change.cancel');
 
 // --- guests ---------------------------------------------------------------
 Route::middleware('guest')->group(function () {

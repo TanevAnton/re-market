@@ -4,6 +4,7 @@ namespace App\Livewire\Profile;
 
 use App\Enums\SellerType;
 use App\Models\City;
+use App\Services\Account\EmailChange;
 use App\Services\Traders\TraderVerification;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
@@ -25,6 +26,10 @@ class EditProfile extends Component
     public string $current_password = '';
     public string $password = '';
     public string $password_confirmation = '';
+
+    /** The change-of-address form: the new address, and the password to prove it. */
+    public string $new_email = '';
+    public string $email_password = '';
 
     public function mount(): void
     {
@@ -118,6 +123,61 @@ class EditProfile extends Component
         }
 
         session()->flash('status', 'Заявката е изпратена. Ще проверим фирмата в Търговския регистър.');
+    }
+
+    /**
+     * Ask to move the account to a different address.
+     *
+     * THE PASSWORD IS NOT CEREMONY. Without it, any unattended logged-in
+     * session is a one-click account takeover: change the address, walk away,
+     * then „forgot password" from the new mailbox. It is the same reason
+     * updatePassword() below asks for it, and it is why this cannot simply be
+     * another field in save().
+     *
+     * Nothing is written to users.email here. EmailChange parks the new address
+     * and only adopts it when somebody opens the link in that inbox - so a typo
+     * costs nothing, which is the whole bug this exists to fix.
+     */
+    public function requestEmailChange(): void
+    {
+        $this->validate([
+            'new_email'      => ['required', 'email', 'max:255'],
+            'email_password' => ['required', 'current_password'],
+        ], [
+            'new_email.required'              => 'Въведи новия имейл адрес.',
+            'new_email.email'                 => 'Това не е валиден имейл адрес.',
+            'email_password.required'         => 'Въведи паролата си.',
+            'email_password.current_password' => 'Паролата е грешна.',
+        ]);
+
+        try {
+            app(EmailChange::class)->request(auth()->user(), $this->new_email);
+        } catch (RuntimeException $e) {
+            // „Already yours", „already taken", „just sent you one" - every
+            // refusal comes back as a sentence that belongs on this screen.
+            $this->addError('new_email', $e->getMessage());
+
+            return;
+        }
+
+        $this->reset(['new_email', 'email_password']);
+
+        session()->flash('status', 'Изпратихме линк за потвърждение на новия адрес. '
+            .'Старият остава активен, докато не го потвърдиш.');
+    }
+
+    /** „Отказ" next to a pending change, for somebody who is logged in. */
+    public function cancelEmailChange(): void
+    {
+        $user = auth()->user();
+
+        $user->forceFill([
+            'pending_email'         => null,
+            'pending_email_token'   => null,
+            'pending_email_sent_at' => null,
+        ])->save();
+
+        session()->flash('status', 'Смяната на имейла е отказана.');
     }
 
     public function updatePassword(): void

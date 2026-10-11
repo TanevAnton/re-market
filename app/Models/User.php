@@ -77,6 +77,15 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+
+            /*
+             * Not fillable anywhere, on purpose. A pending address that could
+             * be set by mass assignment would turn any update() call that
+             * happens to receive request data into a way to point somebody
+             * else's account at an attacker's mailbox. EmailChange writes these
+             * three with forceFill() and nothing else touches them.
+             */
+            'pending_email_sent_at' => 'datetime',
             'phone_verified_at' => 'datetime',
             'suspended_until'   => 'datetime',
             'banned_at'         => 'datetime',

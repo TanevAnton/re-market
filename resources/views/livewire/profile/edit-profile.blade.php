@@ -170,6 +170,73 @@
         <button type="submit" class="btn-secondary">Запази известията</button>
     </form>
 
+    {{-- ── Email address ──────────────────────────────────────────────────
+         Its own form rather than a field in the one at the top, because it
+         needs the password and a half-filled city dropdown must not be what
+         stands between somebody and fixing a mistyped address.
+
+         Nothing here writes to users.email. The new address waits until
+         somebody opens the link sent to it — see App\Services\Account\
+         EmailChange — so a typo in this form costs nothing, which is the whole
+         point. --}}
+    <div class="card-pad space-y-4">
+        <h2 class="text-sm font-semibold uppercase tracking-wider text-ink-muted">Имейл адрес</h2>
+
+        <div class="flex flex-wrap items-center gap-2 text-sm">
+            <span class="font-medium">{{ auth()->user()->email }}</span>
+            @if (auth()->user()->email_verified_at)
+                <span class="badge-good">потвърден</span>
+            @else
+                <span class="badge-warn">непотвърден</span>
+            @endif
+        </div>
+
+        @if (auth()->user()->pending_email)
+            {{-- A change is in flight. Showing it is not decoration: this box is
+                 where somebody who did NOT ask for it finds out, if they
+                 happened to miss the mail. --}}
+            <div class="rounded-lg border border-warn/40 bg-warn-soft p-3 text-sm">
+                <p class="text-warn">
+                    Чака потвърждение на
+                    <span class="font-semibold">{{ auth()->user()->pending_email }}</span>.
+                </p>
+                <p class="mt-1 text-xs leading-relaxed text-ink-muted">
+                    Адресът на профила се сменя чак когато отвориш линка, изпратен
+                    на новия адрес. Дотогава този тук работи както досега.
+                </p>
+                <button type="button" wire:click="cancelEmailChange" class="btn-ghost btn-sm mt-2 px-0">
+                    Откажи смяната
+                </button>
+            </div>
+        @endif
+
+        <form wire:submit="requestEmailChange" class="space-y-4">
+            <div>
+                <label class="label" for="new_email">Нов имейл адрес</label>
+                <input id="new_email" type="email" wire:model="new_email"
+                       autocomplete="email" class="mt-1">
+                @error('new_email') <p class="error">{{ $message }}</p> @enderror
+            </div>
+
+            <div>
+                <label class="label" for="email_password">Паролата ти</label>
+                <input id="email_password" type="password" wire:model="email_password"
+                       autocomplete="current-password" class="mt-1">
+                @error('email_password') <p class="error">{{ $message }}</p> @enderror
+                <p class="hint">
+                    Искаме я, защото смяната на имейла е и смяна на начина за
+                    възстановяване на профила.
+                </p>
+            </div>
+
+            <button type="submit" class="btn-secondary" wire:loading.attr="disabled"
+                    wire:target="requestEmailChange">
+                <span wire:loading.remove wire:target="requestEmailChange">Изпрати потвърждение</span>
+                <span wire:loading wire:target="requestEmailChange">Изпращаме…</span>
+            </button>
+        </form>
+    </div>
+
     <form wire:submit="updatePassword" class="card-pad space-y-4">
         <h2 class="text-sm font-semibold uppercase tracking-wider text-ink-muted">Смяна на парола</h2>
 
