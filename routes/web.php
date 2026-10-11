@@ -38,6 +38,7 @@ use App\Livewire\Profile\EditProfile;
 use App\Livewire\Profile\ShowProfile;
 use App\Livewire\ShowListing;
 use App\Http\Controllers\Sitemap;
+use App\Http\Controllers\VerifyEmail;
 use App\Livewire\Wanted\BrowseWanted;
 use App\Livewire\Wanted\ManageWanted;
 use App\Livewire\Wanted\ShowWanted;
@@ -45,7 +46,6 @@ use App\Livewire\Safety\CheckSerial;
 use App\Livewire\Safety\ReportStolen;
 use App\Livewire\Safety\StolenQueue;
 use App\Livewire\Traders\TraderQueue;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -210,6 +210,27 @@ Route::get('/kradeno', ReportStolen::class)->name('safety.report');
 Route::get('/podkrepa', SupportCentre::class)->name('support');
 Route::get('/podkrepa/{ticket}', ShowTicket::class)->name('support.ticket');
 
+/*
+ * Email verification — PUBLIC on purpose, and the only auth route that is.
+ *
+ * The route NAME is not free choice: Laravel's VerifyEmail notification builds
+ * its signed link from route('verification.verify'), so renaming it breaks
+ * registration rather than just a link.
+ *
+ * Behind `auth`, as Laravel ships it, this route only ever worked in the
+ * browser that registered — anywhere else it bounced to the login screen and
+ * asked somebody to sign in to the account they were busy proving they own.
+ * The signature on the URL is the proof and it travels with the link, so the
+ * device opening it is irrelevant. The controller verifies and deliberately
+ * does NOT sign anyone in; its comment explains why that is a feature.
+ *
+ * No `signed` middleware: the controller checks the signature itself so that
+ * an expired link gets a page offering a new one instead of a bare 403.
+ */
+Route::get('/potvardi-imeil/{id}/{hash}', VerifyEmail::class)
+    ->middleware('throttle:6,1')
+    ->name('verification.verify');
+
 // --- guests ---------------------------------------------------------------
 Route::middleware('guest')->group(function () {
     Route::get('/registraciya', Register::class)->name('register');
@@ -241,12 +262,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/potvardi-imeil', VerifyEmailNotice::class)
         ->name('verification.notice');
 
-    Route::get('/potvardi-imeil/{id}/{hash}', function (EmailVerificationRequest $request) {
-        $request->fulfill();
-
-        return redirect()->route('browse')->with('status', 'Имейлът е потвърден.');
-    })->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
-
+    /*
+     * verification.verify is NOT here. It used to be, and that is precisely
+     * what made a verification link only work in the browser that registered.
+     * It now lives in the public section above — the signature on the URL is
+     * the proof, not the session. See App\Http\Controllers\VerifyEmail.
+     */
     Route::post('/potvardi-imeil/prati', function (Request $request) {
         $request->user()->sendEmailVerificationNotification();
 
