@@ -4,9 +4,17 @@
          phone, because at the time it did not. It does now: the number is
          required, and the person chooses whether to prove the account by email
          or by SMS. Both unlock it - see EnsureAccountIsVerified. --}}
+    {{-- One sentence, two versions, because the one the visitor reads has to be
+         the one that is true today. Promising „или с SMS" while the SMS channel
+         is switched off is a small lie on the first screen of the site. --}}
     <p class="mt-1 text-sm text-ink-muted">
-        Безплатно е. Потвърждаваш профила си по имейл или с SMS и си готов —
-        това държи ботовете и фалшивите обяви навън.
+        @if ($this->phoneVerificationEnabled())
+            Безплатно е. Потвърждаваш профила си по имейл или с SMS и си готов —
+            това държи ботовете и фалшивите обяви навън.
+        @else
+            Безплатно е. Потвърждаваш имейла си и си готов — това държи ботовете
+            и фалшивите обяви навън.
+        @endif
     </p>
 
     <form wire:submit="register" class="mt-6 space-y-5">
@@ -98,7 +106,14 @@
 
         {{-- How to prove the account. Email is first and is the default: it is
              free and instant, and a default nobody chose should not be the one
-             that costs money. --}}
+             that costs money.
+
+             HIDDEN WHOLESALE while phone verification is off, rather than
+             showing one option. A fieldset headed „Как да потвърдим профила"
+             with a single radio in it is a question that is not a question, and
+             it invites somebody to wonder what the other answer was. The block
+             comes back untouched when the flag does. --}}
+        @if ($this->phoneVerificationEnabled())
         <fieldset class="card-pad">
             <legend class="label">Как да потвърдим профила</legend>
             <div class="mt-3 space-y-2">
@@ -125,6 +140,7 @@
                 Може да потвърдиш и двете по-късно от профила си.
             </p>
         </fieldset>
+        @endif
 
         <div>
             <label class="flex items-start gap-2 text-sm">
@@ -147,6 +163,33 @@
             <span wire:loading wire:target="register">Момент…</span>
         </button>
     </form>
+
+    {{-- „Влез с Google".
+
+         NO GOOGLE LOGO HERE, and that is on purpose rather than an omission.
+         Google's identity guidelines require their OFFICIAL mark on this
+         button, so a hand-drawn approximation is both wrong and a trademark
+         problem. Drop the official SVG into resources/views/partials/ and swap
+         the span below for it. Until then the button is text, which is honest
+         and works.
+
+         Hidden entirely when the credentials are not configured, rather than
+         rendering a button that dead-ends on an error page. --}}
+    @if (filled(config('services.google.client_id')))
+        <div class="mt-5">
+            <div class="flex items-center gap-3">
+                <span class="h-px flex-1 bg-line"></span>
+                <span class="text-xs text-ink-faint">или</span>
+                <span class="h-px flex-1 bg-line"></span>
+            </div>
+
+            <a href="{{ route('google.redirect') }}" class="btn-secondary mt-4 w-full">
+                <span class="font-semibold">G</span>
+                Продължи с Google
+            </a>
+        </div>
+    @endif
+
 
     <p class="mt-6 text-center text-sm text-ink-muted">
         Вече имаш профил?

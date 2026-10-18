@@ -153,8 +153,23 @@
                          'Отваряш и пробваш вещта в офиса на куриера, преди да платиш. Продавач, който отказва, е отбелязан на обявата.'],
                         ['filters', 'Филтри по истински спецификации',
                          'Видеокарта под 300 мм, с 12 GB и без 12VHPWR — три клика. В обява на свободен текст е невъзможно.'],
-                        ['phone-check', 'Един профил на номер',
-                         'Всеки профил е потвърден с телефон, а номерът не се пази в четим вид. Ботовете не минават.'],
+                        /*
+                         * REWRITTEN 18 Oct, when phone verification was switched
+                         * off. It used to say „Всеки профил е потвърден с телефон.
+                         * Ботовете не минават." — which stopped being true the
+                         * moment nobody was asked to prove a number, and a claim
+                         * the site does not keep is worse on the front page than
+                         * anywhere else.
+                         *
+                         * What is still enforced, and all this now says: a
+                         * confirmed mailbox is required before anybody can
+                         * publish or deal, the number is on file against the
+                         * account, and it is stored as a hash rather than in
+                         * clear. Put the old sentence back the day
+                         * remarket.verify.phone_enabled goes back to true.
+                         */
+                        ['phone-check', 'Профил с потвърден имейл',
+                         'Без потвърден имейл не се публикува и не се сделкува. Телефонът остава на файл, записан като пръстов отпечатък, не в четим вид.'],
                         ['handshake', 'Една цена, една оферта',
                          'Няма „последна цена?“. Купувачът праща оферта, продавачът приема, отказва или праща насрещна — веднъж.'],
                     ];

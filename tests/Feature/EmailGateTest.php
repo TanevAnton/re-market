@@ -162,11 +162,23 @@ class EmailGateTest extends TestCase
     }
 
     /**
-     * Phone verification is still reachable and still the stronger proof - it
-     * is just not what unlocks the site today.
+     * THE EMAIL GATE DOES NOT BLOCK THE PHONE PAGE.
+     *
+     * That is the only thing this asserts, and the flag is set by hand so it
+     * keeps asserting it. Since 18 Oct `remarket.verify.phone_enabled` is false
+     * in production and /potvardi-telefon is a 404 - so without this line the
+     * test would pass against a page that no longer exists, proving nothing
+     * about the gate it is named after.
+     *
+     * The previous name, „phone verification is still available", described the
+     * site rather than the gate. It stopped being true the day the flag went
+     * off, which is how a test ends up defending a sentence instead of a
+     * behaviour.
      */
-    public function test_phone_verification_is_still_available(): void
+    public function test_the_email_gate_does_not_block_the_phone_verify_page(): void
     {
+        config(['remarket.verify.phone_enabled' => true]);
+
         $this->actingAs($this->unverified)
             ->get(route('phone.verify'))
             ->assertOk();

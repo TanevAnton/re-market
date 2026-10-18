@@ -29,6 +29,19 @@ class VerifyPhone extends Component
 
     public function mount(): void
     {
+        /*
+         * CLOSED WHILE remarket.verify.phone_enabled IS FALSE.
+         *
+         * A 404 rather than a redirect or an apologetic page, because while the
+         * flag is off this page is not a thing that exists. Reachable, it is a
+         * live „изпрати код" button wired to a gateway that bills per message —
+         * so a stale bookmark, a link in an old email, or anybody who simply
+         * types the URL becomes money spent on a feature the site is not
+         * offering. The whole point of the flag is that nothing asks for a code;
+         * leaving one door open would defeat it.
+         */
+        abort_unless((bool) config('remarket.verify.phone_enabled'), 404);
+
         if (auth()->user()?->phone_verified_at) {
             $this->redirectRoute('browse', navigate: true);
 

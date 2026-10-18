@@ -55,6 +55,33 @@
         </form>
     </div>
 
+    {{-- „Влез с Google".
+
+         NO GOOGLE LOGO HERE, and that is on purpose rather than an omission.
+         Google's identity guidelines require their OFFICIAL mark on this button
+         - a hand-drawn approximation of it is both wrong and a trademark
+         problem. Drop the official SVG into resources/views/partials/ and swap
+         the span below for it. Until then the button is text, which is honest
+         and works.
+
+         Hidden entirely when the credentials are not configured, rather than
+         rendering a button that dead-ends on an error page. --}}
+    @if (filled(config('services.google.client_id')))
+        <div class="mt-5">
+            <div class="flex items-center gap-3">
+                <span class="h-px flex-1 bg-line"></span>
+                <span class="text-xs text-ink-faint">или</span>
+                <span class="h-px flex-1 bg-line"></span>
+            </div>
+
+            <a href="{{ route('google.redirect') }}"
+               class="btn-secondary mt-4 w-full">
+                <span class="font-semibold">G</span>
+                Продължи с Google
+            </a>
+        </div>
+    @endif
+
     <p class="mt-6 text-center text-sm text-ink-muted">
         Нямаш профил?
         <a href="{{ route('register') }}" wire:navigate class="link font-medium">Регистрирай се</a>

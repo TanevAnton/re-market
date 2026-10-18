@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Admin\Dashboard as AdminDashboard;
+use App\Livewire\Auth\CompleteGoogleSignup;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
@@ -38,6 +39,7 @@ use App\Livewire\Profile\EditProfile;
 use App\Livewire\Profile\ShowProfile;
 use App\Livewire\ShowListing;
 use App\Http\Controllers\ChangeEmail;
+use App\Http\Controllers\GoogleAuth;
 use App\Http\Controllers\Sitemap;
 use App\Http\Controllers\VerifyEmail;
 use App\Livewire\Wanted\BrowseWanted;
@@ -256,6 +258,32 @@ Route::get('/otkazhi-smyana-imeil/{id}/{token}', [ChangeEmail::class, 'cancel'])
 Route::middleware('guest')->group(function () {
     Route::get('/registraciya', Register::class)->name('register');
     Route::get('/vhod', Login::class)->name('login');
+
+    /*
+     * „Влез с Google".
+     *
+     * In the GUEST group, so somebody already signed in is sent away rather
+     * than quietly swapped onto another account by a stale tab.
+     *
+     * The callback path is registered in the Google Cloud console and must
+     * match to the character - scheme, host, port, path. Change this line and
+     * the console changes with it, or Google refuses the exchange with
+     * redirect_uri_mismatch and says nothing useful in the browser.
+     *
+     * register.complete creates nothing by itself: it reads a payload the
+     * callback parked in the session, and without one it sends the visitor
+     * back to the ordinary register page. See App\Http\Controllers\GoogleAuth.
+     */
+    Route::get('/vhod/google', [GoogleAuth::class, 'redirect'])
+        ->middleware('throttle:10,1')
+        ->name('google.redirect');
+
+    Route::get('/vhod/google/callback', [GoogleAuth::class, 'callback'])
+        ->middleware('throttle:10,1')
+        ->name('google.callback');
+
+    Route::get('/zavarshi-registraciya', CompleteGoogleSignup::class)
+        ->name('register.complete');
 
     /*
      * Password reset. Until these existed, forgetting a password meant losing

@@ -28,6 +28,25 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    /*
+     * Sign in with Google.
+     *
+     * The secret lives in .env on each machine and on the server, never in the
+     * repository. The redirect must match what is registered in the Google
+     * Cloud console EXACTLY - scheme, host, port and path - or Google refuses
+     * the exchange with redirect_uri_mismatch, which is the single most common
+     * way this is broken and says nothing useful in the browser.
+     *
+     * Local and production are different clients or at least different
+     * redirects: http://localhost:8000/vhod/google/callback and
+     * https://rigo.bg/vhod/google/callback.
+     */
+    'google' => [
+        'client_id'     => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect'      => env('GOOGLE_REDIRECT_URI'),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

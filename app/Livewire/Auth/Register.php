@@ -34,8 +34,20 @@ class Register extends Component
      *
      * Defaults to email because it is free and instant. SMS costs EUR 0.076 a
      * code, and a default nobody chose is the most expensive kind of default.
+     *
+     * WHILE remarket.verify.phone_enabled IS FALSE this is not a choice at all:
+     * the radios do not render, validation pins it to „email", and register()
+     * never calls PhoneVerifier. The property stays rather than being deleted,
+     * because the flag is meant to be flipped back and a feature that has to be
+     * rebuilt to be re-enabled is a feature that will not be.
      */
     public string $verify_via = 'email';
+
+    /** Whether the site is currently asking anybody to prove a phone number. */
+    public function phoneVerificationEnabled(): bool
+    {
+        return (bool) config('remarket.verify.phone_enabled');
+    }
 
     public bool $terms = false;
 
@@ -95,6 +107,14 @@ class Register extends Component
              * its phone hash precisely so a ban cannot be shed by deleting the
              * profile and signing up again (Art. 17(3)(b) - erasure does not
              * extend to defeating an enforcement).
+             *
+             * WHILE PHONE VERIFICATION IS OFF, nothing is ever PROVEN, so this
+             * check matches nothing and no number is ever refused. The claim
+             * simply moves to whoever registered last. That is the intended
+             * behaviour of the lenient rule, not a hole opened by the flag -
+             * but it does mean „one profile per number" is currently a
+             * convention rather than something the site enforces, which is why
+             * the front page no longer says otherwise.
              */
             'phone' => [
                 'required', 'string',
@@ -118,7 +138,15 @@ class Register extends Component
                 },
             ],
 
-            'verify_via'  => ['required', Rule::in(['email', 'sms'])],
+            /*
+             * The allowed set SHRINKS when phone verification is off, rather
+             * than the rule being dropped. A hand-crafted POST carrying
+             * verify_via=sms would otherwise walk straight into PhoneVerifier
+             * and spend EUR 0.076 on a channel the site is not offering.
+             */
+            'verify_via'  => ['required', Rule::in(
+                $this->phoneVerificationEnabled() ? ['email', 'sms'] : ['email'],
+            )],
             'password'    => ['required', 'confirmed', Password::defaults()],
             'city_id'     => ['nullable', 'exists:cities,id'],
             'seller_type' => ['required', Rule::enum(SellerType::class)],
@@ -204,7 +232,7 @@ class Register extends Component
         event(new Registered($user));
         Auth::login($user, remember: true);
 
-        if ($data['verify_via'] === 'sms') {
+        if ($data['verify_via'] === 'sms' && $this->phoneVerificationEnabled()) {
             $result = (new PhoneVerifier(request()->ip()))->send($user, $e164);
 
             if ($result['sent']) {

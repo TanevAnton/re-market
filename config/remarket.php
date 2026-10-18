@@ -137,6 +137,33 @@ return [
     ],
 
     'verify' => [
+        /*
+         * THE MASTER SWITCH FOR PROVING A PHONE NUMBER. Off since 18 Oct.
+         *
+         * Everything below still works and nothing was deleted - BulkGate is
+         * live, the cascade is intact, the tests still cover it. This one flag
+         * decides whether the site ASKS anybody to prove a number.
+         *
+         * While it is false:
+         *   - registration still REQUIRES a phone and still stores it hashed,
+         *     so the uniqueness rule and the ban-evasion check are unchanged,
+         *   - but the number is a claim nobody is asked to prove, so
+         *     phone_verified_at stays null for everyone who signs up now,
+         *   - the „email or SMS" choice disappears from the register page and
+         *     every new account is proved by email,
+         *   - /potvardi-telefon refuses rather than quietly spending money.
+         *
+         * WHAT THIS COSTS, so it is a decision rather than a drift: an unproven
+         * number stops being evidence of anything. One person can hold several
+         * accounts by giving a different number each time, real or not. The
+         * bot defence that remains is Turnstile plus a confirmed mailbox, which
+         * is what most marketplaces run on and is weaker than what this site
+         * was claiming a week ago. The front page copy was changed to match -
+         * see the trust band in livewire/home.blade.php. If this flag goes back
+         * to true, that copy goes back too.
+         */
+        'phone_enabled' => (bool) env('VERIFY_PHONE_ENABLED', false),
+
         // Cheapest channel first. Telegram ~$0.01, Viber ~EUR 0.017, SMS ~EUR 0.04.
         // The same volume on Twilio Verify would be roughly 10x the SMS price.
         'channels'     => explode(',', (string) env('VERIFY_CHANNELS', 'telegram,viber,sms')),

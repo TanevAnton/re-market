@@ -43,6 +43,15 @@ class RegistrationPhoneTest extends TestCase
 
         // The log channel reports success without sending or spending.
         config(['remarket.verify.channels' => ['log']]);
+
+        /*
+         * PHONE VERIFICATION IS OFF IN PRODUCTION since 18 Oct
+         * (remarket.verify.phone_enabled). Turned ON here on purpose: these
+         * tests exist to prove the feature works, and a test that passes
+         * because the thing it covers is switched off is not coverage. Flip
+         * the production flag back and this line becomes a no-op.
+         */
+        config(['remarket.verify.phone_enabled' => true]);
     }
 
     /** @return array<string, mixed> */

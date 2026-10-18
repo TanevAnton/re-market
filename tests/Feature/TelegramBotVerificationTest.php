@@ -53,6 +53,16 @@ class TelegramBotVerificationTest extends TestCase
             'remarket.verify.telegram_bot_username' => 'remarket_bot',
         ]);
 
+        /*
+         * PHONE VERIFICATION IS OFF IN PRODUCTION since 18 Oct
+         * (remarket.verify.phone_enabled). Turned ON here on purpose: these
+         * tests exist to prove the feature works, and a test that passes
+         * because the thing it covers is switched off is not coverage. Flip
+         * the production flag back and this line becomes a no-op.
+         */
+        config(['remarket.verify.phone_enabled' => true]);
+
+
         Http::fake(function (Request $request) {
             if (str_contains($request->url(), '/getMe')) {
                 return $this->botIdentity

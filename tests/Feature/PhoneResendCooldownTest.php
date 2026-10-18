@@ -43,6 +43,16 @@ class PhoneResendCooldownTest extends TestCase
             'remarket.verify.code_ttl'        => 10,
         ]);
 
+        /*
+         * PHONE VERIFICATION IS OFF IN PRODUCTION since 18 Oct
+         * (remarket.verify.phone_enabled). Turned ON here on purpose: these
+         * tests exist to prove the feature works, and a test that passes
+         * because the thing it covers is switched off is not coverage. Flip
+         * the production flag back and this line becomes a no-op.
+         */
+        config(['remarket.verify.phone_enabled' => true]);
+
+
         RateLimiter::clear('verify:ip:127.0.0.1');
     }
 
