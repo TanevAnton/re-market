@@ -19,16 +19,24 @@
 
          Both backdrop layers fade to nothing INSIDE the band. The band is only
          as wide as the layout container, so anything still visible at its edge
-         would be cut in a straight line on a wide monitor. --}}
-    <section class="relative overflow-hidden">
-        <div class="pointer-events-none absolute inset-0"
-             style="background-image: linear-gradient(var(--grid) 1px, transparent 1px),
-                                      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-                    background-size: 44px 44px;
-                    -webkit-mask-image: radial-gradient(30% 130% at 32% 0%, #000 0%, transparent 100%);
-                            mask-image: radial-gradient(30% 130% at 32% 0%, #000 0%, transparent 100%);"></div>
-        <div class="pointer-events-none absolute left-[6%] -top-36 h-72 w-[46%] opacity-[0.28]"
-             style="background: radial-gradient(closest-side, var(--glow), transparent);"></div>
+         would be cut in a straight line on a wide monitor.
+
+         THE CLIPPING IS ON THE BACKDROP, NOT ON THE BAND. It used to be on the
+         section itself, which was fine until the search grew a list that drops
+         below it - a clipped band cuts that list off at its own bottom edge.
+         The band is also lifted one layer so the list lies over the categories
+         underneath; it stays below the sticky header, which is one layer up. --}}
+    <section class="relative z-20">
+        <div class="pointer-events-none absolute inset-0 overflow-hidden">
+            <div class="absolute inset-0"
+                 style="background-image: linear-gradient(var(--grid) 1px, transparent 1px),
+                                          linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+                        background-size: 44px 44px;
+                        -webkit-mask-image: radial-gradient(30% 130% at 32% 0%, #000 0%, transparent 100%);
+                                mask-image: radial-gradient(30% 130% at 32% 0%, #000 0%, transparent 100%);"></div>
+            <div class="absolute left-[6%] -top-36 h-72 w-[46%] opacity-[0.28]"
+                 style="background: radial-gradient(closest-side, var(--glow), transparent);"></div>
+        </div>
 
         <div class="relative mx-auto flex max-w-7xl flex-col gap-6 px-4 pt-8 pb-7
                     lg:flex-row lg:items-end lg:justify-between lg:gap-10 lg:pt-11 lg:pb-10">
@@ -53,61 +61,10 @@
                 </p>
             </div>
 
-            {{-- Straight to browse with ?q= - the same parameter the filters
-                 already read from the URL, so search and filtering are one
-                 screen rather than two.
-
-                 The slash key focuses the field from anywhere on the page, the
-                 way it does in most tools this audience uses. It is ignored
-                 while somebody is typing in another field. --}}
-            <form method="GET" action="{{ route('browse') }}" class="w-full shrink-0 lg:w-[540px]"
-                  x-data
-                  x-on:keydown.window="if ($event.key === '/' && ! ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName) && ! document.activeElement.isContentEditable) { $event.preventDefault(); $refs.q.focus() }">
-
-                <label class="group flex h-[50px] cursor-text items-center gap-3 rounded-xl border border-line
-                              bg-surface/60 pr-2 pl-4 transition
-                              hover:border-line-strong
-                              focus-within:border-accent focus-within:bg-surface
-                              focus-within:shadow-[0_0_0_3px_var(--accent-soft),0_0_28px_-8px_var(--glow)]">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                         stroke-linecap="round" aria-hidden="true" class="h-4 w-4 shrink-0 text-ink-faint">
-                        <circle cx="11" cy="11" r="6.5"/>
-                        <path d="m16 16 4.5 4.5"/>
-                    </svg>
-
-                    {{-- No important modifiers. The base input style lives in
-                         the base layer and every utility here is in the
-                         utilities layer, which wins on layer order. --}}
-                    <input x-ref="q" type="search" name="q" autocomplete="off"
-                           placeholder="Търси модел — RTX 4070, 7800X3D…"
-                           aria-label="Търсене на компоненти"
-                           class="peer min-w-0 flex-1 border-0 bg-transparent p-0 text-[14.5px]
-                                  focus:border-0 focus:ring-0">
-
-                    <kbd class="hidden rounded-md border border-line-strong px-2 py-0.5 font-mono text-[11px] text-ink-faint
-                                group-focus-within:hidden peer-[:not(:placeholder-shown)]:hidden sm:inline">/</kbd>
-
-                    {{-- Shown while the field is focused OR has text in it. The
-                         second half is not decoration: some browsers do not
-                         focus a button on click, so a button that only exists
-                         while the field is focused disappears between the
-                         press and the release, and the click lands on nothing. --}}
-                    <button type="submit"
-                            class="hidden h-8 shrink-0 rounded-lg bg-accent px-3.5 text-[12.5px] font-semibold
-                                   text-[var(--accent-ink)] transition hover:brightness-110
-                                   group-focus-within:block peer-[:not(:placeholder-shown)]:block">
-                        Търси
-                    </button>
-                </label>
-
-                <p class="mt-2.5 flex flex-wrap gap-x-3.5 gap-y-1 font-mono text-[11.5px] text-ink-faint">
-                    <span>популярно:</span>
-                    @foreach (['RTX 4070', 'RX 7800 XT', 'Ryzen 7 5800X3D', 'DDR5 32GB'] as $suggestion)
-                        <a href="{{ route('browse', ['q' => $suggestion]) }}" wire:navigate
-                           class="text-ink-muted transition hover:text-accent">{{ $suggestion }}</a>
-                    @endforeach
-                </p>
-            </form>
+            {{-- The search field, its suggestions and the shortcuts under it
+                 are a component of their own - see HomeSearch for why. It is
+                 still a plain form to the browse page underneath. --}}
+            <livewire:home-search />
         </div>
 
         {{-- A rule that fades at both ends rather than a border, for the same
@@ -177,11 +134,17 @@
                                          .'group-hover:[filter:drop-shadow(0_0_7px_var(--glow))]',
                         ])
 
-                        <span @class([
-                            'absolute right-2.5 top-2.5 font-mono text-[11px] tabular lg:right-3.5 lg:top-3.5',
-                            'text-accent'    => $category['count'] > 0,
-                            'text-ink-faint' => $category['count'] === 0,
-                        ])>{{ $category['count'] }}</span>
+                        {{-- A number only where there is something to count.
+                             Every category is still here - an empty one says
+                             what the site is for - but nineteen zeros in a
+                             grid say the site is dead, which is a different
+                             and louder message. With the zeros gone, the
+                             accent marks exactly the tiles that have stock. --}}
+                        @if ($category['count'] > 0)
+                            <span data-tile-count="{{ $category['count'] }}"
+                                  class="absolute right-2.5 top-2.5 font-mono text-[11px] tabular text-accent
+                                         lg:right-3.5 lg:top-3.5">{{ $category['count'] }}</span>
+                        @endif
 
                         <span class="text-[12.5px] font-semibold leading-tight lg:text-[13.5px]">
                             {{ $category['label'] }}
@@ -210,35 +173,60 @@
                                 — всичко останало, което не влиза в горните
                             </span>
                         </span>
-                        <span @class([
-                            'ml-auto font-mono text-[11px] tabular',
-                            'text-accent'    => $other['count'] > 0,
-                            'text-ink-faint' => $other['count'] === 0,
-                        ])>{{ $other['count'] }}</span>
+                        @if ($other['count'] > 0)
+                            <span data-tile-count="{{ $other['count'] }}"
+                                  class="ml-auto font-mono text-[11px] tabular text-accent">{{ $other['count'] }}</span>
+                        @endif
                     </a>
                 @endif
             </div>
         </section>
 
-        {{-- ── Sell ──────────────────────────────────────────────────────────
+        {{-- ── Sell, and ask ─────────────────────────────────────────────────
              One strip, and ABOVE the listings rather than below them. Supply is
              worth more than demand for the first year, and a visitor who has
              scrolled past a short grid has already decided the place is empty.
-             It used to be a two-column card with three numbered steps; the ask
-             survives as a sentence, which is all it ever needed to be. --}}
+
+             TWO HALVES NOW, because the page used to have an answer for only
+             one of the two people who arrive at a thin marketplace. The seller
+             got a button. The buyer who did not find the card got nothing, and
+             left - which is the worst outcome available, since „Търся" turns
+             exactly that visit into a notification for the next seller who has
+             one. The selling half stays first and stays the filled button; the
+             asking half is the quiet one.
+
+             Same construction as the category panel: one bordered box, and the
+             divider is its own background showing through a 1px gap, so it is
+             a horizontal rule when the halves stack and a vertical one when
+             they sit side by side, with no breakpoint-specific border. --}}
         <section class="pb-12 sm:pb-14">
-            <div class="flex flex-wrap items-center justify-between gap-x-5 gap-y-4 rounded-xl border border-line
-                        border-l-2 border-l-accent bg-surface py-4 pr-4 pl-5">
-                <div>
-                    <p class="text-[14.5px] font-semibold">Имаш видеокарта, която събира прах?</p>
-                    <p class="mt-0.5 text-[12.5px] text-ink-muted">
-                        Снимаш с телефона, избираш модела и спецификациите се попълват сами.
-                        Купувачът плаща при получаване.
-                    </p>
+            <div class="grid gap-px overflow-hidden rounded-xl border border-line border-l-2 border-l-accent bg-line
+                        lg:grid-cols-[1.35fr_1fr]">
+                <div class="flex flex-wrap items-center justify-between gap-x-5 gap-y-4 bg-surface py-4 pr-4 pl-5">
+                    <div class="min-w-[220px] flex-1">
+                        <p class="text-[14.5px] font-semibold">Имаш видеокарта, която събира прах?</p>
+                        <p class="mt-0.5 text-[12.5px] text-ink-muted">
+                            Снимаш с телефона, избираш модела и спецификациите се попълват сами.
+                            Купувачът плаща при получаване.
+                        </p>
+                    </div>
+
+                    <a href="{{ auth()->check() ? route('listing.create') : route('register') }}" wire:navigate
+                       class="btn-primary shrink-0">Пусни обява — безплатно</a>
                 </div>
 
-                <a href="{{ auth()->check() ? route('listing.create') : route('register') }}" wire:navigate
-                   class="btn-primary shrink-0">Пусни обява — безплатно</a>
+                <div class="flex flex-wrap items-center justify-between gap-x-5 gap-y-4 bg-surface py-4 pr-4 pl-5">
+                    <div class="min-w-[200px] flex-1">
+                        <p class="text-[14.5px] font-semibold">Не намираш каквото търсиш?</p>
+                        <p class="mt-0.5 text-[12.5px] text-ink-muted">
+                            Кажи модела и до каква цена. Продавачите, които имат такава част,
+                            получават известие.
+                        </p>
+                    </div>
+
+                    <a href="{{ auth()->check() ? route('wanted.create') : route('register') }}" wire:navigate
+                       class="btn-secondary shrink-0">Пусни „Търся“</a>
+                </div>
             </div>
         </section>
 
@@ -339,6 +327,39 @@
                 </div>
             @endif
         </section>
+
+        {{-- ── What buyers are asking for ────────────────────────────────────
+             Demand, shown to the people who can meet it. Somebody with a card
+             in a drawer has no reason to post it to an empty-looking site; a
+             named person offering a named price for that exact card is a
+             reason. It is also real content on a page that is short of it -
+             every line here was written by a buyer, none of it by us.
+
+             Renders nothing when nobody is asking. The strip above already
+             makes the invitation; a heading over an empty row would only
+             repeat it more quietly.
+
+             Deliberately not called „Търсени": that word is already the
+             heading of the popular-models row further down, and two sections
+             a scroll apart with nearly the same name read as one mistake. --}}
+        @if ($wanted->isNotEmpty())
+            <section class="pb-12 sm:pb-14">
+                <div class="mb-5 flex items-baseline gap-3.5">
+                    <h2 class="whitespace-nowrap text-[17px] font-bold tracking-tight">
+                        <span class="mr-1.5 font-mono font-medium text-accent">//</span>Купувачи търсят
+                    </h2>
+                    <span class="h-px flex-1 self-center bg-line"></span>
+                    <a href="{{ route('wanted') }}" wire:navigate
+                       class="whitespace-nowrap text-[12.5px] text-ink-muted transition hover:text-accent">Всички търсения →</a>
+                </div>
+
+                <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    @foreach ($wanted as $ad)
+                        @include('partials.wanted-card', ['ad' => $ad])
+                    @endforeach
+                </div>
+            </section>
+        @endif
 
         {{-- ── Why this is not a general classifieds board ───────────────────
              Not marketing copy: these four are rules the code enforces. If any

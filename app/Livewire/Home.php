@@ -7,6 +7,7 @@ use App\Enums\ListingStatus;
 use App\Models\Deal;
 use App\Models\Listing;
 use App\Models\Part;
+use App\Models\WantedAd;
 use App\Support\SpecFilter;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -28,8 +29,9 @@ class Home extends Component
      * Categories with a live count, in one grouped query rather than nineteen.
      *
      * Empty categories stay visible: a marketplace that hides what it has none
-     * of tells a visitor nothing about what it is for, and the count being
-     * honestly zero is better than the category being missing.
+     * of tells a visitor nothing about what it is for. The count here is
+     * honestly zero for them; the view simply does not print a zero, because a
+     * grid of nineteen of them says something else entirely.
      *
      * WHERE THE THREE-LETTER CODES WENT. This grid used to carry a mono badge
      * per category - GPU, CPU, RAM - on the argument that those are what the
@@ -135,6 +137,30 @@ class Home extends Component
     }
 
     /**
+     * The newest „Търся" requests - demand, on the page sellers land on.
+     *
+     * One row of four, the same width as the listing rails, and the same
+     * eager loads the „Търсения" page uses because it is the same card.
+     *
+     * `visible()` and nothing else decides what is here: a request still
+     * waiting for review, one that expired or one that was fulfilled drops out
+     * the moment that is true, with no flag for anybody to remember to clear.
+     * This is the most public page on the site, so the rule is the strict one.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, WantedAd>
+     */
+    public function wanted()
+    {
+        return WantedAd::query()
+            ->visible()
+            ->with(['city', 'part'])
+            ->withCount(['responses as response_count' => fn ($r) => $r->pending()])
+            ->latest('id')
+            ->limit(4)
+            ->get();
+    }
+
+    /**
      * The models people are actually selling, as search chips.
      *
      * These ARE the landing pages now, not chips pointing at a search. That is
@@ -194,6 +220,7 @@ class Home extends Component
             // share one slot and the query for the loser is not worth running.
             'mostViewed'    => $promoted->isEmpty() ? $this->mostViewed() : collect(),
             'popularParts'  => $this->popularParts(),
+            'wanted'        => $this->wanted(),
             'stats'         => $stats,
         ])->layoutData([
             /*
