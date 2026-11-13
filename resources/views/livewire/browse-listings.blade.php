@@ -13,6 +13,162 @@
     $chips = $this->activeFilters();
 @endphp
 
+{{-- One root for Livewire, holding two things: the series menu, on the
+     graphics-card page only, and the filters-and-results grid that was the
+     whole of this file before it. The grid is left exactly as it was, one
+     level in, so its diff is two lines. --}}
+<div>
+
+@if ($seriesMenu)
+    {{-- ------------------------------------------- cards by series ------
+
+         The same panel as the category menu on the home page - hairlines,
+         a count in the corner, ticks on hover - so the step from „Видеокарти"
+         to „RTX 30" feels like the same gesture as the one before it.
+
+         Buttons, not links: a series is a filter on this page rather than a
+         page of its own, and it is noindex for the reason given in
+         BrowseListings::meta(). The address bar still follows, so the result
+         can be shared.
+
+         On a phone it is ONE swipeable row. Twelve tiles in a grid would be
+         four rows of menu before the first listing, on the screen where most
+         of the traffic is and where the listing is what was come for. --}}
+    <div class="mb-6">
+        <div class="mb-4 flex items-baseline gap-3.5">
+            <h2 class="whitespace-nowrap text-[17px] font-bold tracking-tight">
+                <span class="mr-1.5 font-mono font-medium text-accent">//</span>{{ \App\Support\SpecFilter::categoryLabel('gpu') }}
+            </h2>
+            <span class="h-px flex-1 self-center bg-line"></span>
+            <span class="hidden whitespace-nowrap text-[12.5px] text-ink-faint sm:inline">избери серия, после модел</span>
+        </div>
+
+        {{-- `relative` so a tile's offsetLeft is measured from this row, which
+             is what the line below scrolls by: a link that arrives with a
+             series already chosen should open with that tile in view, not
+             somewhere off the right edge of a phone. On a wide screen the row
+             is a grid that does not scroll and the line does nothing. --}}
+        <div class="relative flex snap-x gap-px overflow-x-auto rounded-2xl border border-line bg-line
+                    [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
+                    lg:grid lg:grid-cols-6 lg:overflow-hidden"
+             x-data
+             x-init="(() => { const on = $el.querySelector('[data-on]'); if (on) $el.scrollLeft = on.offsetLeft - 14; })()">
+
+            @foreach ($seriesMenu['tiles'] as $tile)
+                @php
+                    $on = $seriesMenu['active'] && $seriesMenu['active']['key'] === $tile['key'];
+                @endphp
+
+                <button type="button"
+                        wire:click="pickSeries('{{ $tile['key'] }}')"
+                        wire:key="series-{{ $tile['key'] }}"
+                        aria-pressed="{{ $on ? 'true' : 'false' }}"
+                        @if ($on) data-on @endif
+                        @class([
+                            'group relative flex min-h-[84px] w-[132px] shrink-0 snap-start flex-col justify-between gap-3',
+                            'cursor-pointer p-3 text-left transition-colors lg:min-h-[92px] lg:w-auto lg:px-4 lg:py-3.5',
+                            'bg-accent-soft'             => $on,
+                            'bg-canvas hover:bg-surface' => ! $on,
+                        ])>
+
+                    {{-- Corner ticks: shown on hover, and held while chosen. --}}
+                    <span @class([
+                        'pointer-events-none absolute left-[6px] top-[6px] h-[9px] w-[9px] border-l-[1.5px] border-t-[1.5px]',
+                        'border-accent transition-opacity',
+                        'opacity-100'                        => $on,
+                        'opacity-0 group-hover:opacity-100'  => ! $on,
+                    ])></span>
+                    <span @class([
+                        'pointer-events-none absolute right-[6px] bottom-[6px] h-[9px] w-[9px] border-r-[1.5px] border-b-[1.5px]',
+                        'border-accent transition-opacity',
+                        'opacity-100'                        => $on,
+                        'opacity-0 group-hover:opacity-100'  => ! $on,
+                    ])></span>
+
+                    <span class="flex items-center gap-1.5 font-mono text-[10.5px] uppercase tracking-[0.12em] text-ink-faint">
+                        <span class="h-1.5 w-1.5 shrink-0 rounded-full" style="background: {{ $tile['dot'] }}"></span>
+                        {{ $tile['brand'] }}
+                    </span>
+
+                    <span @class([
+                        'absolute right-3 top-3 font-mono text-[11px] tabular',
+                        'text-accent'    => $tile['count'] > 0,
+                        'text-ink-faint' => $tile['count'] === 0,
+                    ])>{{ $tile['count'] }}</span>
+
+                    <span class="block">
+                        <span @class([
+                            'block font-mono text-[15.5px] font-bold leading-none tracking-tight lg:text-[17px]',
+                            'text-accent'    => $on,
+                            'text-ink-muted' => ! $on && $tile['count'] === 0,
+                        ])>{{ $tile['label'] }}</span>
+                        <span class="mt-1.5 block truncate font-mono text-[11px] leading-none text-ink-faint">{{ $tile['range'] }}</span>
+                    </span>
+                </button>
+            @endforeach
+
+            @for ($i = 0; $i < $seriesMenu['pad']; $i++)
+                <span class="hidden bg-canvas lg:block"></span>
+            @endfor
+
+            {{-- Last in the grid, first in the swipe row: on a phone it is
+                 the way back out, and the way out should not be eleven tiles
+                 to the right. --}}
+            <button type="button" wire:click="pickSeries('')" wire:key="series-all"
+                    class="group relative order-first flex min-h-[84px] w-[132px] shrink-0 cursor-pointer snap-start flex-col
+                           justify-between gap-3 bg-canvas p-3 text-left transition-colors hover:bg-surface
+                           lg:order-none lg:min-h-[92px] lg:w-auto lg:px-4 lg:py-3.5">
+                <span class="pointer-events-none absolute left-[6px] top-[6px] h-[9px] w-[9px] border-l-[1.5px] border-t-[1.5px]
+                             border-accent opacity-0 transition-opacity group-hover:opacity-100"></span>
+                <span class="pointer-events-none absolute right-[6px] bottom-[6px] h-[9px] w-[9px] border-r-[1.5px] border-b-[1.5px]
+                             border-accent opacity-0 transition-opacity group-hover:opacity-100"></span>
+
+                <span class="font-mono text-[10.5px] uppercase tracking-[0.12em] text-ink-faint">Всички</span>
+
+                <span @class([
+                    'absolute right-3 top-3 font-mono text-[11px] tabular',
+                    'text-accent'    => $seriesMenu['total'] > 0,
+                    'text-ink-faint' => $seriesMenu['total'] === 0,
+                ])>{{ $seriesMenu['total'] }}</span>
+
+                <span class="block text-[13.5px] font-semibold leading-tight lg:text-[14.5px]">Всички видеокарти</span>
+            </button>
+        </div>
+
+        {{-- The models of the chosen series. One press here is the ordinary
+             chipset facet being set, so the sidebar, the chips below and a
+             saved search all agree about what was chosen without being told. --}}
+        @if ($seriesMenu['active'])
+            <div class="mt-3 flex items-center gap-2 overflow-x-auto pb-0.5
+                        [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
+                        lg:flex-wrap lg:overflow-visible">
+                <span class="shrink-0 font-mono text-[11.5px] text-ink-faint">модел:</span>
+
+                @foreach ($seriesMenu['active']['models'] as $model)
+                    @php
+                        $picked = in_array($model['chipset'], $seriesMenu['chosen'], true);
+                    @endphp
+
+                    <button type="button"
+                            wire:click="pickModel({{ \Illuminate\Support\Js::from($model['chipset']) }})"
+                            wire:key="model-{{ $model['chipset'] }}"
+                            aria-pressed="{{ $picked ? 'true' : 'false' }}"
+                            @class([
+                                'inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5',
+                                'text-[12.5px] transition-colors',
+                                'border-accent bg-accent-soft text-accent' => $picked,
+                                'border-line text-ink-muted hover:border-accent hover:text-accent' => ! $picked,
+                                'opacity-55' => ! $picked && $model['count'] === 0,
+                            ])>
+                        {{ $model['chipset'] }}
+                        <span class="font-mono text-[11px] tabular text-ink-faint">{{ $model['count'] }}</span>
+                    </button>
+                @endforeach
+            </div>
+        @endif
+    </div>
+@endif
+
 <div class="grid gap-6 lg:grid-cols-[260px_1fr]"
      x-data="{ open: false }">
 
@@ -307,8 +463,20 @@
                      of the best buyer on a used marketplace, and the one most
                      likely to leave and not come back. "Try broader criteria"
                      hands them nothing; a standing alert keeps them. --}}
+                @php
+                    $emptyFor = $this->emptyFor();
+                @endphp
+
                 <div class="card border-dashed p-12 text-center">
-                    <p class="font-medium">Няма обяви по тези филтри</p>
+                    {{-- Somebody who pressed one tile is told about that
+                         tile, not about „these filters". --}}
+                    <p class="font-medium">
+                        @if ($emptyFor)
+                            В момента няма обяви за {{ $emptyFor }}
+                        @else
+                            Няма обяви по тези филтри
+                        @endif
+                    </p>
                     <p class="mx-auto mt-1 max-w-md text-sm text-ink-muted">
                         Пазарът за втора употреба се движи бързо — това, което търсиш,
                         може да се появи утре.
@@ -319,6 +487,14 @@
                             <button type="button" wire:click="startSaveSearch" class="btn-primary">
                                 Извести ме при нова обява
                             </button>
+                            @if ($emptyFor)
+                                {{-- The other half of „it is not here yet":
+                                     say you want one, and let a seller find
+                                     you instead. --}}
+                                <a href="{{ route('wanted.create') }}" wire:navigate class="btn-secondary">
+                                    Пусни „Търся“
+                                </a>
+                            @endif
                             <button type="button" wire:click="clearFilters" class="btn-ghost">
                                 Изчисти филтрите
                             </button>
@@ -328,6 +504,13 @@
                             </a>
                         @endif
                     </div>
+
+                    @if ($emptyFor)
+                        <p class="mt-4 text-xs text-ink-faint">
+                            Имаш такава за продан?
+                            <a href="{{ route('listing.create') }}" wire:navigate class="link">Пусни обява</a>
+                        </p>
+                    @endif
                 </div>
             @else
                 @if ($listings->isNotEmpty())
@@ -380,4 +563,6 @@
             @endif
         </div>
     </section>
+</div>
+
 </div>

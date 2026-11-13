@@ -7,6 +7,7 @@ use App\Models\City;
 use App\Models\Listing;
 use App\Models\SavedSearch;
 use App\Services\Search\SavedSearchService;
+use App\Support\GpuSeries;
 use App\Support\SpecFilter;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -45,6 +46,14 @@ class BrowseListings extends Component
     /** Dynamic facet selections, keyed by spec name. */
     #[Url(as: 'f', except: [])]
     public array $specs = [];
+
+    /**
+     * A graphics-card series - „rtx-30", „rx-6000" - from the menu above the
+     * results. Only means anything while the category is `gpu`; see
+     * activeSeries(), which is the one place that decides whether it applies.
+     */
+    #[Url(as: 'seriya', except: '')]
+    public string $series = '';
 
     /**
      * Set on the one page load where the city filter was applied for the user
@@ -133,9 +142,11 @@ class BrowseListings extends Component
             $this->resetPage();
         }
 
-        // Spec facets are category-specific and meaningless once you switch.
+        // Spec facets are category-specific and meaningless once you switch -
+        // and so is a graphics-card series on a page of power supplies.
         if ($name === 'category') {
-            $this->specs = [];
+            $this->specs  = [];
+            $this->series = '';
         }
 
         // Once the visitor has touched the city filter themselves, the notice
@@ -176,10 +187,168 @@ class BrowseListings extends Component
 
     public function clearFilters(): void
     {
-        $this->reset(['q', 'priceMin', 'priceMax', 'condition', 'city', 'specs']);
+        $this->reset(['q', 'priceMin', 'priceMax', 'condition', 'city', 'specs', 'series']);
         $this->cityDefaulted = false;
         $this->currentCity   = false;
         $this->resetPage();
+    }
+
+    // --- graphics cards by series ----------------------------------------
+
+    /**
+     * The series being filtered on, or null.
+     *
+     * THE ONE GATE. `series` is a public property bound to the query string,
+     * so it can hold anything a visitor types after `seriya=` and it survives
+     * in the URL when the category is changed by hand. Everything that acts on
+     * a series - the query, the chip, the page title, a saved search - asks
+     * here, so „only for graphics cards, only a series that exists" is written
+     * once instead of at each of those five places.
+     *
+     * @return array{key: string, brand: string, label: string, pattern: string}|null
+     */
+    public function activeSeries(): ?array
+    {
+        return $this->category === 'gpu' ? GpuSeries::find($this->series) : null;
+    }
+
+    /** Pick a series from the menu. Picking the one already chosen lets go of it. */
+    public function pickSeries(string $key): void
+    {
+        if ($this->category !== 'gpu') {
+            return;
+        }
+
+        $key = GpuSeries::find($key) ? $key : '';
+
+        $this->series = $this->series === $key ? '' : $key;
+
+        // A model belongs to the series it was picked in. Carried across,
+        // „RTX 3070" inside „RX 6000" is a page with nothing on it and no
+        // visible reason why.
+        unset($this->specs['chipset']);
+
+        $this->resetPage();
+    }
+
+    /**
+     * Pick a model from the row under the menu.
+     *
+     * Writes the ordinary chipset facet rather than a filter of its own, so
+     * the sidebar, the chips, a saved search and a shared link all already
+     * know what it means.
+     */
+    public function pickModel(string $chipset): void
+    {
+        $series = $this->activeSeries();
+
+        // The row only ever offers models from the chosen series, so anything
+        // else did not come from the row.
+        if (! $series || ! GpuSeries::contains($series['key'], $chipset)) {
+            return;
+        }
+
+        $chosen = array_values((array) ($this->specs['chipset'] ?? []));
+
+        if (in_array($chipset, $chosen, true)) {
+            $chosen = array_values(array_diff($chosen, [$chipset]));
+        } else {
+            $chosen = [$chipset];
+        }
+
+        if ($chosen === []) {
+            unset($this->specs['chipset']);
+        } else {
+            $this->specs['chipset'] = $chosen;
+        }
+
+        $this->resetPage();
+    }
+
+    /**
+     * The menu above the results, or null on any page that is not graphics
+     * cards.
+     *
+     * THE NUMBERS FOLLOW THE OTHER FILTERS. With „София" and „до 400 €" set, a
+     * tile says how many cards of that series are in Sofia under 400 € - which
+     * is the number of listings pressing it will show. A count of everything
+     * on the site, over a page that then shows two, teaches people the numbers
+     * are decoration.
+     *
+     * They deliberately IGNORE the series and the model, because those are the
+     * two things the menu chooses between: a tile that counted only the series
+     * already selected would show every other tile as empty.
+     *
+     * Two queries and no join: listings grouped by part, then the catalogue's
+     * part => chipset map, summed in PHP. The grouped query reuses baseQuery()
+     * so a filter added there is counted here without being told.
+     *
+     * @return array{
+     *     tiles: list<array<string, mixed>>, total: int, pad: int,
+     *     active: array<string, mixed>|null, chosen: list<string>
+     * }|null
+     */
+    public function seriesMenu(): ?array
+    {
+        if ($this->category !== 'gpu') {
+            return null;
+        }
+
+        $rows = $this->baseQuery(forSeriesMenu: true)
+            ->toBase()
+            ->selectRaw('listings.part_id AS part_id, COUNT(*) AS n')
+            ->groupBy('listings.part_id')
+            ->get();
+
+        $byPart = [];
+        $total  = 0;
+
+        foreach ($rows as $row) {
+            // Listings whose model is not in the catalogue have no part, and
+            // so no series - but they are still graphics cards, and „Всички"
+            // has to count them or it disagrees with the grid under it.
+            $total += (int) $row->n;
+
+            if ($row->part_id !== null) {
+                $byPart[(int) $row->part_id] = (int) $row->n;
+            }
+        }
+
+        $tiles  = GpuSeries::menu(GpuSeries::chipsetsByPart(), $byPart);
+        $active = $this->activeSeries();
+
+        return [
+            'tiles'  => $tiles,
+            'total'  => $total,
+            // Six across on a wide screen. The tiles plus „Всички" rarely fill
+            // the last row on their own, and an unfilled grid cell shows the
+            // panel's hairline colour as a solid block.
+            'pad'    => (6 - (count($tiles) + 1) % 6) % 6,
+            'active' => $active
+                ? collect($tiles)->firstWhere('key', $active['key'])
+                : null,
+            'chosen' => array_values(array_map('strval', (array) ($this->specs['chipset'] ?? []))),
+        ];
+    }
+
+    /**
+     * What an empty result is empty OF, when that is a series or one model.
+     *
+     * „Няма обяви по тези филтри" is true and useless to somebody who pressed
+     * one tile. Naming the card turns the same dead end into a sentence they
+     * can act on - leave an alert, or post a „Търся".
+     */
+    public function emptyFor(): ?string
+    {
+        $series = $this->activeSeries();
+
+        if (! $series) {
+            return null;
+        }
+
+        $chosen = array_values((array) ($this->specs['chipset'] ?? []));
+
+        return count($chosen) === 1 ? (string) $chosen[0] : $series['label'];
     }
 
     // --- saving this search ----------------------------------------------
@@ -204,6 +373,10 @@ class BrowseListings extends Component
             'sast' => $this->condition,
             'grad' => $this->city,
             'f'    => $this->specs,
+            // Only when it is actually applied. A stale `seriya` left in the
+            // URL of a keyboards page must not turn „no filters" into a search
+            // worth saving.
+            'seriya' => $this->activeSeries() ? $this->series : '',
         ];
     }
 
@@ -318,6 +491,12 @@ class BrowseListings extends Component
             ];
         }
 
+        // Straight after the category it narrows, and before the model it
+        // contains - the row then reads the way the menu was pressed.
+        if ($series = $this->activeSeries()) {
+            $chips[] = ['label' => 'Серия: '.$series['label'], 'key' => 'series', 'spec' => null];
+        }
+
         $filter = $this->filter();
 
         foreach ($this->specs as $key => $value) {
@@ -359,7 +538,10 @@ class BrowseListings extends Component
     {
         match (true) {
             $key === 'q'        => $this->q = '',
-            $key === 'category' => $this->reset(['category', 'specs']),
+            $key === 'category' => $this->reset(['category', 'specs', 'series']),
+            // The model stays: „RTX 3070" on its own is still a real search,
+            // and taking away two filters for one click is a surprise.
+            $key === 'series'   => $this->series = '',
             $key === 'city'     => $this->city = '',
             $key === 'price'    => $this->reset(['priceMin', 'priceMax']),
             $key === 'spec'     => $this->removeSpec((string) $spec),
@@ -387,6 +569,27 @@ class BrowseListings extends Component
             return [];
         }
 
+        $options = $this->allFacetOptions($key, $spec);
+
+        // With a series chosen, the model list in the sidebar is that series.
+        // Left whole, it offers fifty cards of which forty-odd would empty the
+        // page - which is the filter this method exists not to be.
+        //
+        // Narrowed here, AFTER the cache, so the cached list stays the whole
+        // category and one entry serves every series.
+        if ($key === 'chipset' && ($series = $this->activeSeries())) {
+            return array_values(array_filter(
+                $options,
+                fn ($chipset) => GpuSeries::contains($series['key'], (string) $chipset),
+            ));
+        }
+
+        return $options;
+    }
+
+    /** Every value a facet has in this category, cached. */
+    private function allFacetOptions(string $key, array $spec): array
+    {
         return Cache::remember(
             "facet:{$this->category}:{$key}",
             now()->addMinutes(10),
@@ -486,7 +689,7 @@ class BrowseListings extends Component
      * builder means the two can never drift: a facet added here applies to
      * both, or to neither.
      */
-    private function baseQuery(): \Illuminate\Database\Eloquent\Builder
+    private function baseQuery(bool $forSeriesMenu = false): \Illuminate\Database\Eloquent\Builder
     {
         $filter = $this->filter();
 
@@ -509,7 +712,17 @@ class BrowseListings extends Component
         }
 
         foreach ($this->specs as $key => $value) {
+            // The series menu counts across models, so it must not be
+            // narrowed to the one that is selected. See seriesMenu().
+            if ($forSeriesMenu && $key === 'chipset') {
+                continue;
+            }
+
             $query = $filter->apply($query, $key, $value);
+        }
+
+        if (! $forSeriesMenu && ($series = $this->activeSeries())) {
+            $query->whereHas('part', fn ($part) => GpuSeries::constrain($part, $series['key']));
         }
 
         return $query;
@@ -575,6 +788,7 @@ class BrowseListings extends Component
             'conditions' => ListingCondition::cases(),
             'facets'     => $filter->facets(),
             'filter'     => $filter,
+            'seriesMenu' => $this->seriesMenu(),
         ])->layoutData($this->meta($listings->total(), $listings->currentPage()));
     }
 
@@ -596,6 +810,7 @@ class BrowseListings extends Component
     private function meta(int $total, int $page): array
     {
         $categoryLabel = $this->category ? SpecFilter::categoryLabel($this->category) : null;
+        $series        = $this->activeSeries();
 
         // Anything beyond the category is a slice, not a page.
         $isSlice = $this->q !== ''
@@ -604,6 +819,11 @@ class BrowseListings extends Component
             || $this->condition !== []
             || $this->city !== ''
             || $this->specs !== []
+            // A series is a slice like any other. The pages worth ranking for
+            // „RTX 3070 втора употреба" are the model pages, which have a
+            // price history and a spec sheet; eleven more thin lists would
+            // only compete with them.
+            || $series !== null
             // Page 2 onward is the same content under a different address.
             // Read off the paginator rather than the component - it is the
             // thing that actually decided which page this is.
@@ -611,6 +831,7 @@ class BrowseListings extends Component
 
         $title = match (true) {
             $this->q !== ''      => 'Търсене: '.$this->q,
+            $series !== null     => $categoryLabel.' '.$series['label'].' втора употреба',
             $categoryLabel !== null => $categoryLabel.' втора употреба',
             default              => 'Обяви за компютърен хардуер',
         };
