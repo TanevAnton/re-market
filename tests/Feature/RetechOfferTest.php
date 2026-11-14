@@ -245,8 +245,12 @@ class RetechOfferTest extends TestCase
         config(['remarket.retech.name' => 'ZZPARTNER']);
 
         $this->get(route('home'))
-            ->assertSee('Услуга на ZZPARTNER')
-            ->assertSee('ZZPARTNER изкупува видеокарти директно')
+            ->assertSee('Продай я директно на ZZPARTNER')
+            ->assertDontSee('RE-Tech');
+
+        $this->get(route('browse', ['kat' => 'gpu']))
+            ->assertSee('ZZPARTNER я изкупува')
+            ->assertSee('Към ZZPARTNER')
             ->assertDontSee('RE-Tech');
     }
 
@@ -258,16 +262,39 @@ class RetechOfferTest extends TestCase
     }
 
     /**
+     * The banner and the home page row say whose it is in two words, where
+     * anybody can see them, and keep the full sentence behind those words.
+     * Short is fine; hidden is not.
+     */
+    public function test_the_short_shapes_still_say_it_is_ours_in_plain_sight(): void
+    {
+        foreach (['row', 'banner'] as $variant) {
+            $html = view('partials.retech-buyback', ['placement' => 'home', 'variant' => $variant])->render();
+
+            $this->assertStringContainsString('наш магазин', strip_tags($html), $variant);
+            $this->assertStringContainsString('title="'.e(RetechOffer::name().' и '.config('app.name').' '.self::DISCLOSURE), $html, $variant);
+        }
+
+        // The two with room for it print the sentence itself.
+        foreach (['card', 'line'] as $variant) {
+            $html = view('partials.retech-buyback', ['placement' => 'home', 'variant' => $variant])->render();
+
+            $this->assertStringContainsString(self::DISCLOSURE, strip_tags($html), $variant);
+        }
+    }
+
+    /**
      * One claim: that the shop buys them. A price, a speed or a promise typed
-     * in here would go stale on this side without anybody noticing.
+     * in here would go stale on this side without anybody noticing. Checked on
+     * the words a visitor reads, in every shape the offer takes.
      */
     public function test_the_offer_promises_nothing_about_price_or_speed(): void
     {
-        $html = $this->get(route('browse', ['kat' => 'gpu']))->getContent();
+        foreach (['card', 'line', 'row', 'banner'] as $variant) {
+            $text = strip_tags(view('partials.retech-buyback', ['placement' => 'home', 'variant' => $variant])->render());
 
-        preg_match('/<div[^>]*data-retech-offer="gpu-page"[^>]*>.*?<\/div>/su', $html, $m);
-
-        $this->assertNotEmpty($m);
-        $this->assertDoesNotMatchRegularExpression('/€|лв|минут|час|веднага|най-добра|гаранти/u', $m[0]);
+            $this->assertNotSame('', trim($text), $variant);
+            $this->assertDoesNotMatchRegularExpression('/€|лв|минут|час|веднага|най-добр|гаранти/u', $text, $variant);
+        }
     }
 }

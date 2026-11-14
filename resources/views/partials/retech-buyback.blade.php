@@ -19,6 +19,13 @@
      own page, and a promise made here is one that goes stale without anybody
      on this side noticing.
 
+     THE TWO LOUD SHAPES SAY IT IN TWO WORDS. On the banner and the home page
+     row the disclosure is a small tag, „наш магазин", with the full sentence
+     behind it as its tooltip. A banner that spends two of its three lines on
+     a company name is a banner nobody reads, and „ours" is the whole of what
+     a visitor needs from it at a glance. The card and the form sentence have
+     the room, and keep the sentence in full.
+
      Renders nothing at all while the offer has no address - see RetechOffer. --}}
 @php
     $offer   = \App\Support\RetechOffer::class;
@@ -67,39 +74,74 @@
         {{-- A full-width row at the foot of the home page strip. Quieter than
              the two halves above it on purpose: listing here and asking here
              are what the site is for, and this is the alternative to both. --}}
-        <div class="col-span-full flex flex-wrap items-baseline gap-x-3 gap-y-1 bg-surface py-3 pr-4 pl-5 text-[12.5px] text-ink-muted {{ $class }}"
+        <div class="col-span-full flex flex-wrap items-center gap-x-3 gap-y-1.5 bg-surface py-3 pr-4 pl-5 text-[13px] text-ink-muted {{ $class }}"
              data-retech-offer="{{ $placement }}">
-            <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-faint">Услуга на {{ $shop }}</span>
+            <span>Не ти се чака купувач?</span>
 
-            <span>
-                Не ти се чака купувач?
-                <a href="{{ $url }}" target="_blank" rel="noopener"
-                   class="font-medium text-ink transition hover:text-accent">{{ $shop }} изкупува видеокарти директно
-                    <span aria-hidden="true">↗</span><span class="sr-only">(отваря се в нов раздел)</span></a>
-            </span>
+            <a href="{{ $url }}" target="_blank" rel="noopener"
+               class="font-semibold text-ink transition hover:text-accent">Продай я директно на {{ $shop }}
+                <span aria-hidden="true">↗</span><span class="sr-only">(отваря се в нов раздел)</span></a>
 
-            <span class="text-ink-faint">{{ $disclosure }}</span>
+            <span title="{{ $disclosure }}"
+                  class="cursor-help whitespace-nowrap rounded-full border border-line-strong px-2 py-0.5 font-mono
+                         text-[10px] uppercase tracking-[0.12em] text-ink-faint">наш магазин</span>
         </div>
 
     @else
-        {{-- The banner over the graphics cards. One line on a wide screen. It
-             is read mostly by people who came to buy, so it asks the question
-             that sorts out the few who did not. --}}
-        <div class="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-line bg-surface px-4 py-3 text-[13px] {{ $class }}"
-             data-retech-offer="{{ $placement }}">
-            <span class="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-faint">Услуга на {{ $shop }}</span>
+        {{-- The banner over the graphics cards.
 
-            <span class="min-w-[200px] flex-1 text-ink-muted">
-                <span class="font-medium text-ink">Продаваш видеокарта?</span>
-                {{ $shop }} я изкупува директно.
-                <span class="text-ink-faint">{{ $disclosure }}</span>
-            </span>
+             A headline, one short line under it, one button. It is read mostly
+             by people who came to buy, so it has about a second to be
+             understood by the few who came to see what theirs is going for -
+             and three sentences in grey was not doing that.
 
-            <a href="{{ $url }}" target="_blank" rel="noopener" class="btn-secondary btn-sm shrink-0">
-                Към {{ $shop }}
-                <span aria-hidden="true">↗</span>
-                <span class="sr-only">(отваря се в нов раздел)</span>
-            </a>
+             The look is borrowed from the home page band rather than invented:
+             the same accent glow and the same faint grid, both mixed from the
+             accent so they follow the theme. Both layers sit behind the text
+             and fade out before they reach it. --}}
+        <div class="relative isolate overflow-hidden rounded-xl border border-accent/30 bg-surface {{ $class }}"
+             data-retech-offer="{{ $placement }}"
+             style="--glow: color-mix(in oklab, var(--accent) 32%, transparent);
+                    --grid: color-mix(in oklab, var(--accent) 10%, transparent);">
+            <span class="pointer-events-none absolute inset-0 -z-10"
+                  style="background: linear-gradient(90deg, var(--accent-soft), transparent 60%);"></span>
+            <span class="pointer-events-none absolute inset-y-0 right-0 -z-10 w-1/2"
+                  style="background-image: linear-gradient(var(--grid) 1px, transparent 1px),
+                                           linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+                         background-size: 26px 26px;
+                         -webkit-mask-image: linear-gradient(90deg, transparent, #000);
+                                 mask-image: linear-gradient(90deg, transparent, #000);"></span>
+
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3.5 sm:px-5">
+                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-accent/30 bg-canvas/70 text-accent"
+                      style="box-shadow: 0 0 24px -6px var(--glow);">
+                    @include('partials.category-icon', ['category' => 'gpu', 'class' => 'h-6 w-6'])
+                </span>
+
+                <span class="min-w-[190px] flex-1">
+                    <span class="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                        <span class="text-[15.5px] font-bold leading-tight tracking-tight">Продай видеокартата си директно</span>
+
+                        <span title="{{ $disclosure }}"
+                              class="cursor-help whitespace-nowrap rounded-full border border-line-strong px-2 py-0.5 font-mono
+                                     text-[10px] uppercase tracking-[0.12em] text-ink-faint">наш магазин</span>
+                    </span>
+
+                    {{-- Wide screens only. On a phone it wraps to two lines
+                         and doubles the height of a banner that sits above
+                         the listings; the headline and the button already say
+                         what and where. --}}
+                    <span class="mt-1 hidden text-[12.5px] text-ink-muted sm:block">
+                        {{ $shop }} я изкупува — без да чакаш купувач.
+                    </span>
+                </span>
+
+                <a href="{{ $url }}" target="_blank" rel="noopener" class="btn-primary btn-sm shrink-0">
+                    Към {{ $shop }}
+                    <span aria-hidden="true">↗</span>
+                    <span class="sr-only">(отваря се в нов раздел)</span>
+                </a>
+            </div>
         </div>
     @endif
 @endif
