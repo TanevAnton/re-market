@@ -171,33 +171,70 @@ class RetechOfferTest extends TestCase
         Livewire::test(Valuation::class)->assertDontSeeHtml('data-retech-offer');
     }
 
-    public function test_the_listing_form_mentions_it_once_a_graphics_card_is_chosen(): void
+    /**
+     * Said before the seller starts, not after: the banner is on the form
+     * from the first step, while it could still be about what they are
+     * selling.
+     */
+    public function test_the_listing_form_carries_it_from_the_start(): void
     {
-        $form = Livewire::actingAs($this->seller())
-            ->test(CreateListing::class)
-            ->set('category', 'gpu')
-            // `step` is locked against the browser, so the form is walked the
-            // way a person walks it.
-            ->call('next')
-            ->assertSet('step', 2);
+        $form = Livewire::actingAs($this->seller())->test(CreateListing::class);
 
-        // Not while the model is still being searched for.
-        $form->assertDontSeeHtml('data-retech-offer');
-
-        $form->call('choosePart', $this->gpu->id)
-            ->assertSeeHtml('data-retech-offer="listing-form"')
+        // Nothing chosen yet, so it may well be a graphics card.
+        $form->assertSeeHtml('data-retech-offer="listing-form"')
             ->assertSeeHtml($this->href('listing-form'))
             ->assertSee(self::DISCLOSURE);
+
+        // `step` is locked against the browser, so the form is walked the
+        // way a person walks it.
+        $form->set('category', 'gpu')
+            ->assertSeeHtml('data-retech-offer="listing-form"')
+            ->call('next')
+            ->assertSet('step', 2)
+            ->assertSeeHtml('data-retech-offer="listing-form"')
+            ->call('choosePart', $this->gpu->id)
+            ->assertSeeHtml('data-retech-offer="listing-form"');
     }
 
-    public function test_the_listing_form_says_nothing_for_a_processor(): void
+    /** Once: the sentence that used to sit under the chosen model is gone. */
+    public function test_the_listing_form_carries_it_once(): void
+    {
+        $html = Livewire::actingAs($this->seller())
+            ->test(CreateListing::class)
+            ->set('category', 'gpu')
+            ->call('next')
+            ->call('choosePart', $this->gpu->id)
+            ->html();
+
+        $this->assertSame(1, substr_count($html, 'data-retech-offer='));
+    }
+
+    public function test_the_listing_form_drops_it_for_a_category_the_shop_does_not_buy(): void
     {
         Livewire::actingAs($this->seller())
             ->test(CreateListing::class)
             ->set('category', 'cpu')
+            // Gone the moment the category is known, still on step one.
+            ->assertSet('step', 1)
+            ->assertDontSeeHtml('data-retech-offer')
             ->call('next')
             ->assertSet('step', 2)
             ->call('choosePart', $this->cpu->id)
+            ->assertDontSeeHtml('data-retech-offer');
+    }
+
+    /**
+     * From step three the seller is describing and pricing their own listing.
+     * An offer to go somewhere else is an interruption by then.
+     */
+    public function test_the_listing_form_drops_it_once_the_listing_is_being_written(): void
+    {
+        Livewire::actingAs($this->seller())
+            ->test(CreateListing::class)
+            ->set('category', 'gpu')
+            ->call('next')
+            ->call('next')
+            ->assertSet('step', 3)
             ->assertDontSeeHtml('data-retech-offer');
     }
 
@@ -278,8 +315,8 @@ class RetechOfferTest extends TestCase
             $this->assertStringContainsString('title="'.e(RetechOffer::name().' и '.config('app.name').' '.self::DISCLOSURE), $html, $variant);
         }
 
-        // The two with room for it print the sentence itself.
-        foreach (['card', 'line'] as $variant) {
+        // The one with room for it prints the sentence itself.
+        foreach (['card'] as $variant) {
             $html = view('partials.retech-buyback', ['placement' => 'home', 'variant' => $variant])->render();
 
             $this->assertStringContainsString(self::DISCLOSURE, strip_tags($html), $variant);
@@ -293,7 +330,7 @@ class RetechOfferTest extends TestCase
      */
     public function test_the_offer_promises_nothing_about_price_or_speed(): void
     {
-        foreach (['card', 'line', 'hero', 'banner'] as $variant) {
+        foreach (['card', 'hero', 'banner'] as $variant) {
             $text = strip_tags(view('partials.retech-buyback', ['placement' => 'home', 'variant' => $variant])->render());
 
             $this->assertNotSame('', trim($text), $variant);

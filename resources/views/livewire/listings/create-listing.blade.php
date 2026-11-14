@@ -95,6 +95,29 @@
         </div>
     @endif
 
+    {{-- ------------------------------------------- the other way to sell
+
+         The shop buys graphics cards outright, and this is where somebody is
+         about to spend ten minutes listing one - so it is said here, before
+         they start, rather than after.
+
+         ON THE FIRST TWO STEPS ONLY, and only while it could still apply:
+         before a category is chosen, and after that only if the category is
+         one the shop buys. Pick „Процесори" and it goes. From step three on
+         the seller is describing and pricing their own listing, and a banner
+         offering to take them somewhere else has stopped being information
+         and started being an interruption.
+
+         Absent until the offer has an address; see RetechOffer. --}}
+    @if ($step <= 2 && \App\Support\RetechOffer::enabled()
+            && ($category === '' || \App\Support\RetechOffer::appliesTo($category)))
+        @include('partials.retech-buyback', [
+            'placement' => 'listing-form',
+            'variant'   => 'banner',
+            'class'     => 'mb-6',
+        ])
+    @endif
+
     {{-- ==================================================== step 1 --}}
     @if ($step === 1)
         <h1 class="text-xl font-semibold tracking-tight">Какво продаваш?</h1>
@@ -137,18 +160,6 @@
                     <button type="button" wire:click="clearPart" class="btn-ghost btn-sm">Смени</button>
                 </div>
             </div>
-
-            {{-- Once it is known to be a graphics card: the shop buys these
-                 outright. One sentence, under the chosen model and outside
-                 the form's own fields, so it reads as an aside and the listing
-                 carries on exactly as before for everybody who ignores it. --}}
-            @if (\App\Support\RetechOffer::appliesTo($category))
-                @include('partials.retech-buyback', [
-                    'placement' => 'listing-form',
-                    'variant'   => 'line',
-                    'class'     => 'mt-3',
-                ])
-            @endif
         @elseif ($partNotListed)
             <div class="mt-5">
                 <label class="label" for="customPart">Име на модела</label>

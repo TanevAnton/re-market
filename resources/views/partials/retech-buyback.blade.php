@@ -2,12 +2,11 @@
      $placement (one of RetechOffer::PLACEMENTS) and $variant; takes an
      optional $class.
 
-     FOUR SHAPES, ONE SET OF WORDS. The offer sits in four places that have
-     nothing in common visually - a card on the price check page, a sentence in
-     the listing form, a large banner on the home page, a slimmer one over the
-     graphics cards - so the shape is chosen by the caller. What is said is not: every
-     shape names the shop, makes the same single claim, and ends with the same
-     disclosure.
+     THREE SHAPES, ONE SET OF WORDS. The offer sits in four places - a card
+     on the price check page, a large banner on the home page, and a slimmer
+     banner both over the graphics cards and at the top of the listing form -
+     so the shape is chosen by the caller. What is said is not: every shape
+     names the shop, makes the same single claim, and says whose shop it is.
 
      THE DISCLOSURE IS THE POINT OF HAVING ONE FILE. The shop and this site are
      the same company. A visitor is entitled to know that the „other option"
@@ -19,12 +18,11 @@
      own page, and a promise made here is one that goes stale without anybody
      on this side noticing.
 
-     THE TWO LOUD SHAPES SAY IT IN TWO WORDS. On both banners the disclosure
-     is a small tag, „наш магазин", with the full sentence
-     behind it as its tooltip. A banner that spends two of its three lines on
-     a company name is a banner nobody reads, and „ours" is the whole of what
-     a visitor needs from it at a glance. The card and the form sentence have
-     the room, and keep the sentence in full.
+     THE BANNERS SAY IT IN TWO WORDS. On both banners the disclosure is a
+     small tag, „наш магазин", with the full sentence behind it as its tooltip.
+     A banner that spends two of its three lines on a company name is a banner
+     nobody reads, and „ours" is the whole of what a visitor needs from it at
+     a glance. The card has the room, and keeps the sentence in full.
 
      Renders nothing at all while the offer has no address - see RetechOffer. --}}
 @php
@@ -59,16 +57,6 @@
 
             <p class="hint mt-3">{{ $disclosure }}</p>
         </section>
-
-    @elseif ($variant === 'line')
-        {{-- Inside a form somebody is already filling in, so a sentence and
-             not a box: it must not look like the next field. --}}
-        <p class="hint {{ $class }}" data-retech-offer="{{ $placement }}">
-            Не ти се чака купувач?
-            <a href="{{ $url }}" target="_blank" rel="noopener" class="link">{{ $shop }} изкупува видеокарти директно
-                <span aria-hidden="true">↗</span><span class="sr-only">(отваря се в нов раздел)</span></a>.
-            {{ $disclosure }}
-        </p>
 
     @elseif ($variant === 'hero')
         {{-- The home page banner. The larger of the two, because here it is
@@ -130,7 +118,8 @@
         </div>
 
     @else
-        {{-- The banner over the graphics cards.
+        {{-- The slim banner: over the graphics cards, and at the top of the
+             listing form.
 
              A headline, one short line under it, one button. It is read mostly
              by people who came to buy, so it has about a second to be

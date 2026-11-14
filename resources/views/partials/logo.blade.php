@@ -15,6 +15,17 @@
      as thin and unfinished beside it. 2.2 is the same drawing doing a different
      job, not an inconsistency.
 
+     TWO COLOURS SINCE NOVEMBER. The lower-left half is the accent, through
+     `currentColor`; the upper-right half is the text colour, which is close
+     to white on the dark theme and close to black on the light one. That is
+     the same split the RE-Tech mark has, on purpose - the two sites are one
+     company and now look like it.
+
+     It is the text colour and not literal white because white on the light
+     theme is half a logo. Read from the theme's own `--ink`, it is the same
+     colour as the word beside it in both themes, so the mark and the wordmark
+     stay one lockup.
+
      Optional: $class for sizing, $stroke to override the weight. --}}
 
 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -41,5 +52,5 @@
          Arcs rather than a filled donut with wedges cut out of it, so the
          weight is one number to change instead of a shape to redraw. --}}
     <path d="M14.44 19.09 A7.5 7.5 0 0 1 4.91 9.56"/>
-    <path d="M9.56 4.91 A7.5 7.5 0 0 1 19.09 14.44"/>
+    <path d="M9.56 4.91 A7.5 7.5 0 0 1 19.09 14.44" style="stroke: var(--ink);"/>
 </svg>
