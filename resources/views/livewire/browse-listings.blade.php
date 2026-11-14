@@ -37,24 +37,24 @@
      The separators are the accent slash the section headings on the home
      page open with, so the trail reads as the same family of heading rather
      than as a second kind of navigation. --}}
-<nav aria-label="Път до страницата" class="mb-4 flex items-baseline gap-3.5">
-    <ol class="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+<nav aria-label="Път до страницата" class="mb-5 flex items-baseline gap-3.5">
+    <ol class="flex min-w-0 flex-wrap items-baseline gap-x-2.5 gap-y-1">
         @foreach ($crumbs as $i => $crumb)
-            <li class="flex min-w-0 items-baseline gap-x-2" wire:key="crumb-{{ $i }}-{{ $crumb['level'] ?? 'here' }}">
+            <li class="flex min-w-0 items-baseline gap-x-2.5" wire:key="crumb-{{ $i }}-{{ $crumb['level'] ?? 'here' }}">
                 @if ($i > 0)
-                    <span aria-hidden="true" class="font-mono text-[12.5px] font-medium text-accent">/</span>
+                    <span aria-hidden="true" class="font-mono text-[14px] font-medium text-accent sm:text-[15px]">/</span>
                 @endif
 
                 @if ($i === count($crumbs) - 1)
-                    <h1 aria-current="page" class="min-w-0 text-[17px] font-bold leading-tight tracking-tight">
+                    <h1 aria-current="page" class="min-w-0 text-[19px] font-bold leading-tight tracking-tight sm:text-[21px]">
                         {{ $crumb['label'] }}
                     </h1>
                 @elseif ($crumb['level'])
                     <a href="{{ $crumb['url'] }}" wire:click.prevent="crumb('{{ $crumb['level'] }}')"
-                       class="whitespace-nowrap text-[12.5px] text-ink-muted transition hover:text-accent">{{ $crumb['label'] }}</a>
+                       class="whitespace-nowrap text-[14px] text-ink-muted transition hover:text-accent sm:text-[15px]">{{ $crumb['label'] }}</a>
                 @else
                     <a href="{{ $crumb['url'] }}" wire:navigate
-                       class="whitespace-nowrap text-[12.5px] text-ink-muted transition hover:text-accent">{{ $crumb['label'] }}</a>
+                       class="whitespace-nowrap text-[14px] text-ink-muted transition hover:text-accent sm:text-[15px]">{{ $crumb['label'] }}</a>
                 @endif
             </li>
         @endforeach

@@ -112,8 +112,8 @@
             <div class="grid grid-cols-3 gap-px overflow-hidden rounded-2xl border border-line bg-line lg:grid-cols-6">
                 @foreach ($tiles as $category)
                     <a href="{{ route('browse', ['kat' => $category['key']]) }}" wire:navigate
-                       class="group relative flex min-h-[108px] flex-col justify-between bg-canvas p-3.5
-                              transition-colors hover:bg-surface lg:min-h-[124px] lg:p-[18px]">
+                       class="group relative flex min-h-[116px] flex-col justify-between gap-3 bg-canvas p-3.5
+                              transition-colors hover:bg-surface lg:min-h-[136px] lg:p-[18px]">
 
                         {{-- Corner ticks, on hover only. Two spans rather than
                              pseudo-elements so they are ordinary utilities and
@@ -129,7 +129,7 @@
                              follows, with no second asset. --}}
                         @include('partials.category-icon', [
                             'category' => $category['key'],
-                            'class'    => 'h-[26px] w-[26px] text-ink-muted transition duration-200 lg:h-[30px] lg:w-[30px] '
+                            'class'    => 'h-[34px] w-[34px] text-ink-muted transition duration-200 lg:h-[42px] lg:w-[42px] '
                                          .'group-hover:-translate-y-px group-hover:text-accent '
                                          .'group-hover:[filter:drop-shadow(0_0_7px_var(--glow))]',
                         ])
@@ -165,7 +165,7 @@
                               transition-colors hover:bg-surface lg:px-[18px]">
                         @include('partials.category-icon', [
                             'category' => $other['key'],
-                            'class'    => 'h-[22px] w-[22px] shrink-0 text-ink-muted transition group-hover:text-accent',
+                            'class'    => 'h-[28px] w-[28px] shrink-0 text-ink-muted transition group-hover:text-accent',
                         ])
                         <span class="text-[13px] font-semibold">
                             {{ $other['label'] }}
