@@ -13,18 +13,23 @@
     $chips = $this->activeFilters();
 @endphp
 
-{{-- One root for Livewire, holding two things: the series menu, on the
-     graphics-card page only, and the filters-and-results grid that was the
-     whole of this file before it. The grid is left exactly as it was, one
+{{-- One root for Livewire, holding two things: the series menu, in the
+     categories that have one (graphics cards and processors), and the
+     filters-and-results grid that was the whole of this file before it. The grid is left exactly as it was, one
      level in, so its diff is two lines. --}}
 <div>
 
 @if ($seriesMenu)
-    {{-- ------------------------------------------- cards by series ------
+    {{-- ------------------------------------------- parts by series ------
 
          The same panel as the category menu on the home page - hairlines,
          a count in the corner, ticks on hover - so the step from „Видеокарти"
          to „RTX 30" feels like the same gesture as the one before it.
+
+         Nothing in this block knows which category it is drawing. The title,
+         the tiles, the models and the label on the last tile all arrive in
+         the menu data, so graphics cards and processors are one piece of
+         markup and a third category would be no new markup at all.
 
          Buttons, not links: a series is a filter on this page rather than a
          page of its own, and it is noindex for the reason given in
@@ -37,7 +42,7 @@
     <div class="mb-6">
         <div class="mb-4 flex items-baseline gap-3.5">
             <h2 class="whitespace-nowrap text-[17px] font-bold tracking-tight">
-                <span class="mr-1.5 font-mono font-medium text-accent">//</span>{{ \App\Support\SpecFilter::categoryLabel('gpu') }}
+                <span class="mr-1.5 font-mono font-medium text-accent">//</span>{{ $seriesMenu['title'] }}
             </h2>
             <span class="h-px flex-1 self-center bg-line"></span>
             <span class="hidden whitespace-nowrap text-[12.5px] text-ink-faint sm:inline">избери серия, после модел</span>
@@ -131,13 +136,14 @@
                     'text-ink-faint' => $seriesMenu['total'] === 0,
                 ])>{{ $seriesMenu['total'] }}</span>
 
-                <span class="block text-[13.5px] font-semibold leading-tight lg:text-[14.5px]">Всички видеокарти</span>
+                <span class="block text-[13.5px] font-semibold leading-tight lg:text-[14.5px]">{{ $seriesMenu['allLabel'] }}</span>
             </button>
         </div>
 
-        {{-- The models of the chosen series. One press here is the ordinary
-             chipset facet being set, so the sidebar, the chips below and a
-             saved search all agree about what was chosen without being told. --}}
+        {{-- The models of the chosen series. What a press does underneath
+             differs by category - see BrowseListings::pickModel() - but here
+             it is one call either way, and the chips below and a saved search
+             agree about what was chosen without being told. --}}
         @if ($seriesMenu['active'])
             <div class="mt-3 flex items-center gap-2 overflow-x-auto pb-0.5
                         [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
@@ -146,12 +152,12 @@
 
                 @foreach ($seriesMenu['active']['models'] as $model)
                     @php
-                        $picked = in_array($model['chipset'], $seriesMenu['chosen'], true);
+                        $picked = in_array($model['name'], $seriesMenu['chosen'], true);
                     @endphp
 
                     <button type="button"
-                            wire:click="pickModel({{ \Illuminate\Support\Js::from($model['chipset']) }})"
-                            wire:key="model-{{ $model['chipset'] }}"
+                            wire:click="pickModel({{ \Illuminate\Support\Js::from($model['name']) }})"
+                            wire:key="model-{{ $model['name'] }}"
                             aria-pressed="{{ $picked ? 'true' : 'false' }}"
                             @class([
                                 'inline-flex shrink-0 cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5',
@@ -160,7 +166,7 @@
                                 'border-line text-ink-muted hover:border-accent hover:text-accent' => ! $picked,
                                 'opacity-55' => ! $picked && $model['count'] === 0,
                             ])>
-                        {{ $model['chipset'] }}
+                        {{ $model['name'] }}
                         <span class="font-mono text-[11px] tabular text-ink-faint">{{ $model['count'] }}</span>
                     </button>
                 @endforeach

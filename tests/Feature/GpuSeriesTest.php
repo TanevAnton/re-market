@@ -127,7 +127,7 @@ class GpuSeriesTest extends TestCase
     {
         $tile = $this->tile($this->gpuPage()->instance()->seriesMenu(), 'rtx-30');
 
-        $models = array_column($tile['models'], 'chipset');
+        $models = array_column($tile['models'], 'name');
 
         $this->assertSame('RTX 3050', $models[0]);
         $this->assertSame('RTX 3090 Ti', end($models));
@@ -274,11 +274,11 @@ class GpuSeriesTest extends TestCase
         $this->listingFor('GeForce RTX 4060 Ti 16GB');
 
         $tile  = $this->tile($this->gpuPage()->instance()->seriesMenu(), 'rtx-40');
-        $model = collect($tile['models'])->firstWhere('chipset', 'RTX 4060 Ti');
+        $model = collect($tile['models'])->firstWhere('name', 'RTX 4060 Ti');
 
         $this->assertSame(2, $model['count']);
         $this->assertSame(2, $tile['count']);
-        $this->assertCount(1, collect($tile['models'])->where('chipset', 'RTX 4060 Ti'));
+        $this->assertCount(1, collect($tile['models'])->where('name', 'RTX 4060 Ti'));
     }
 
     /** A tile says how many listings pressing it will show - with the filters as they are. */

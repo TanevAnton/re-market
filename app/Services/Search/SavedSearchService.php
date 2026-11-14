@@ -5,7 +5,7 @@ namespace App\Services\Search;
 use App\Models\Listing;
 use App\Models\SavedSearch;
 use App\Models\User;
-use App\Support\GpuSeries;
+use App\Support\PartSeries;
 use App\Support\SpecFilter;
 use Illuminate\Database\Eloquent\Builder;
 use RuntimeException;
@@ -27,7 +27,7 @@ use RuntimeException;
 class SavedSearchService
 {
     /** Everything a criteria blob may contain. Anything else is discarded. */
-    private const KEYS = ['kat', 'q', 'ot', 'do', 'sast', 'grad', 'f', 'seriya'];
+    private const KEYS = ['kat', 'q', 'ot', 'do', 'sast', 'grad', 'f', 'seriya', 'model'];
 
     /**
      * How many a person may keep.
@@ -145,21 +145,35 @@ class SavedSearchService
         }
 
         /*
-         * A graphics-card series, stored as its key rather than expanded into
-         * the models it holds today.
+         * A series - „RTX 50", „Ryzen 5000" - stored as its key rather than
+         * expanded into the models it holds today.
          *
          * Somebody who saved „RTX 50" wants to hear about the card that joins
-         * that series next year. A list of chipsets frozen at the moment of
+         * that series next year. A list of names frozen at the moment of
          * saving would go quiet on exactly the listings the alert is for.
          *
-         * Guarded the way the browse page guards it - graphics cards only, and
-         * only a key that exists - because a criteria blob is user input and a
-         * key it should not have must narrow nothing.
+         * Guarded the way the browse page guards it - only in a category that
+         * has series, and only a key that exists - because a criteria blob is
+         * user input and a key it should not have must narrow nothing.
          */
-        if (($c['kat'] ?? null) === 'gpu' && is_string($c['seriya'] ?? null) && GpuSeries::find($c['seriya'])) {
+        $set = PartSeries::for(is_string($c['kat'] ?? null) ? $c['kat'] : '');
+
+        if ($set && is_string($c['seriya'] ?? null) && $set->find($c['seriya'])) {
             $series = $c['seriya'];
 
-            $query->whereHas('part', fn (Builder $part) => GpuSeries::constrain($part, $series));
+            $query->whereHas('part', fn (Builder $part) => $set->constrain($part, $series));
+        }
+
+        /*
+         * One model by name, where the category has no facet for it - today,
+         * processors. Where it does (a graphics card's chipset) the model is
+         * already in `f` and was applied above, so a `model` beside it is
+         * ignored rather than applied twice in two different ways.
+         */
+        if ($set && ! $set->facet() && is_string($c['model'] ?? null)) {
+            $model = $c['model'];
+
+            $query->whereHas('part', fn (Builder $part) => $set->constrainName($part, $model));
         }
 
         if ($since) {
@@ -224,7 +238,13 @@ class SavedSearchService
             $parts[] = SpecFilter::categoryLabel($kat);
         }
 
-        if (is_string($c['seriya'] ?? null) && ($series = GpuSeries::find($c['seriya']))) {
+        $set = PartSeries::for(is_string($c['kat'] ?? null) ? $c['kat'] : '');
+
+        // The model says more than its series does, so it replaces it: „Ryzen
+        // 7 5800X3D" already tells anybody it is a Ryzen 5000.
+        if ($set && ! $set->facet() && is_string($c['model'] ?? null)) {
+            $parts[] = $c['model'];
+        } elseif ($set && is_string($c['seriya'] ?? null) && ($series = $set->find($c['seriya']))) {
             $parts[] = $series['label'];
         }
 
