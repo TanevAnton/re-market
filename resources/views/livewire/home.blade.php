@@ -227,20 +227,21 @@
                     <a href="{{ auth()->check() ? route('wanted.create') : route('register') }}" wire:navigate
                        class="btn-secondary shrink-0">Пусни „Търся“</a>
                 </div>
-
-                {{-- The third way to deal with a card in a drawer: sell it
-                     straight to the shop. A row under the two halves rather
-                     than a third half - listing and asking are what the site
-                     is for, this is the alternative to both, and it is the
-                     same company saying so about itself. Absent until the
-                     offer has an address; see RetechOffer. --}}
-                @if (\App\Support\RetechOffer::enabled())
-                    @include('partials.retech-buyback', [
-                        'placement' => 'home',
-                        'variant'   => 'row',
-                    ])
-                @endif
             </div>
+
+            {{-- The third way to deal with a card in a drawer: sell it
+                 straight to the shop. Its own banner under the strip, not a
+                 third half of it - listing and asking are what the site is
+                 for, this is the alternative to both, and it is the same
+                 company saying so about itself. Absent until the offer has
+                 an address; see RetechOffer. --}}
+            @if (\App\Support\RetechOffer::enabled())
+                @include('partials.retech-buyback', [
+                    'placement' => 'home',
+                    'variant'   => 'hero',
+                    'class'     => 'mt-4',
+                ])
+            @endif
         </section>
 
         {{-- ── Paid positions ────────────────────────────────────────────────

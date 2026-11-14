@@ -201,10 +201,13 @@ class RetechOfferTest extends TestCase
             ->assertDontSeeHtml('data-retech-offer');
     }
 
-    public function test_the_home_page_strip_carries_it(): void
+    public function test_the_home_page_carries_it(): void
     {
         $this->get(route('home'))
             ->assertOk()
+            // In the words that were asked for.
+            ->assertSee('Не ти се чака купувач?')
+            ->assertSee('Продай на '.RetechOffer::name())
             ->assertSee('data-retech-offer="home"', false)
             ->assertSee($this->href('home'), false)
             ->assertSee(self::DISCLOSURE);
@@ -245,7 +248,7 @@ class RetechOfferTest extends TestCase
         config(['remarket.retech.name' => 'ZZPARTNER']);
 
         $this->get(route('home'))
-            ->assertSee('Продай я директно на ZZPARTNER')
+            ->assertSee('Продай на ZZPARTNER')
             ->assertDontSee('RE-Tech');
 
         $this->get(route('browse', ['kat' => 'gpu']))
@@ -262,13 +265,13 @@ class RetechOfferTest extends TestCase
     }
 
     /**
-     * The banner and the home page row say whose it is in two words, where
+     * Both banners say whose it is in two words, where
      * anybody can see them, and keep the full sentence behind those words.
      * Short is fine; hidden is not.
      */
     public function test_the_short_shapes_still_say_it_is_ours_in_plain_sight(): void
     {
-        foreach (['row', 'banner'] as $variant) {
+        foreach (['hero', 'banner'] as $variant) {
             $html = view('partials.retech-buyback', ['placement' => 'home', 'variant' => $variant])->render();
 
             $this->assertStringContainsString('наш магазин', strip_tags($html), $variant);
@@ -290,7 +293,7 @@ class RetechOfferTest extends TestCase
      */
     public function test_the_offer_promises_nothing_about_price_or_speed(): void
     {
-        foreach (['card', 'line', 'row', 'banner'] as $variant) {
+        foreach (['card', 'line', 'hero', 'banner'] as $variant) {
             $text = strip_tags(view('partials.retech-buyback', ['placement' => 'home', 'variant' => $variant])->render());
 
             $this->assertNotSame('', trim($text), $variant);

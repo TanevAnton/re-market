@@ -4,8 +4,8 @@
 
      FOUR SHAPES, ONE SET OF WORDS. The offer sits in four places that have
      nothing in common visually - a card on the price check page, a sentence in
-     the listing form, a row in the home page strip, a banner over the graphics
-     cards - so the shape is chosen by the caller. What is said is not: every
+     the listing form, a large banner on the home page, a slimmer one over the
+     graphics cards - so the shape is chosen by the caller. What is said is not: every
      shape names the shop, makes the same single claim, and ends with the same
      disclosure.
 
@@ -19,8 +19,8 @@
      own page, and a promise made here is one that goes stale without anybody
      on this side noticing.
 
-     THE TWO LOUD SHAPES SAY IT IN TWO WORDS. On the banner and the home page
-     row the disclosure is a small tag, „наш магазин", with the full sentence
+     THE TWO LOUD SHAPES SAY IT IN TWO WORDS. On both banners the disclosure
+     is a small tag, „наш магазин", with the full sentence
      behind it as its tooltip. A banner that spends two of its three lines on
      a company name is a banner nobody reads, and „ours" is the whole of what
      a visitor needs from it at a glance. The card and the form sentence have
@@ -70,21 +70,63 @@
             {{ $disclosure }}
         </p>
 
-    @elseif ($variant === 'row')
-        {{-- A full-width row at the foot of the home page strip. Quieter than
-             the two halves above it on purpose: listing here and asking here
-             are what the site is for, and this is the alternative to both. --}}
-        <div class="col-span-full flex flex-wrap items-center gap-x-3 gap-y-1.5 bg-surface py-3 pr-4 pl-5 text-[13px] text-ink-muted {{ $class }}"
-             data-retech-offer="{{ $placement }}">
-            <span>Не ти се чака купувач?</span>
+    @elseif ($variant === 'hero')
+        {{-- The home page banner. The larger of the two, because here it is
+             not sitting above somebody's search results - it is one of the
+             few things on the page that is an offer rather than a list.
 
-            <a href="{{ $url }}" target="_blank" rel="noopener"
-               class="font-semibold text-ink transition hover:text-accent">Продай я директно на {{ $shop }}
-                <span aria-hidden="true">↗</span><span class="sr-only">(отваря се в нов раздел)</span></a>
+             TWO HALVES OF ONE SENTENCE. The question is the reader's own
+             thought, in the ordinary colour; the answer is in the accent,
+             because the answer is the part that is ours to say. On a phone
+             each takes a line of its own, which is where the sentence breaks
+             when it is spoken anyway.
 
-            <span title="{{ $disclosure }}"
-                  class="cursor-help whitespace-nowrap rounded-full border border-line-strong px-2 py-0.5 font-mono
-                         text-[10px] uppercase tracking-[0.12em] text-ink-faint">наш магазин</span>
+             Same glow and grid as the home page band and the banner below it,
+             plus the corner ticks the category tiles show on hover - held
+             here, since this is the one tile on the page that is always
+             pointing at something. --}}
+        <div class="relative isolate overflow-hidden rounded-2xl border border-accent/35 bg-surface {{ $class }}"
+             data-retech-offer="{{ $placement }}"
+             style="--glow: color-mix(in oklab, var(--accent) 38%, transparent);
+                    --grid: color-mix(in oklab, var(--accent) 11%, transparent);">
+            <span class="pointer-events-none absolute inset-0 -z-10"
+                  style="background: linear-gradient(100deg, var(--accent-soft), transparent 64%);"></span>
+            <span class="pointer-events-none absolute -top-24 -left-10 -z-10 h-64 w-96 opacity-50"
+                  style="background: radial-gradient(closest-side, var(--glow), transparent);"></span>
+            <span class="pointer-events-none absolute inset-y-0 right-0 -z-10 w-3/5"
+                  style="background-image: linear-gradient(var(--grid) 1px, transparent 1px),
+                                           linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+                         background-size: 30px 30px;
+                         -webkit-mask-image: linear-gradient(90deg, transparent, #000);
+                                 mask-image: linear-gradient(90deg, transparent, #000);"></span>
+
+            <span class="pointer-events-none absolute left-[9px] top-[9px] h-3 w-3 border-l-2 border-t-2 border-accent"></span>
+            <span class="pointer-events-none absolute right-[9px] bottom-[9px] h-3 w-3 border-r-2 border-b-2 border-accent"></span>
+
+            <div class="flex flex-wrap items-center gap-x-6 gap-y-5 px-5 py-6 sm:px-8 sm:py-7">
+                <span class="grid h-14 w-14 shrink-0 place-items-center rounded-xl border border-accent/35 bg-canvas/70 text-accent sm:h-16 sm:w-16"
+                      style="box-shadow: 0 0 34px -6px var(--glow);">
+                    @include('partials.category-icon', ['category' => 'gpu', 'class' => 'h-8 w-8 sm:h-9 sm:w-9'])
+                </span>
+
+                <div class="min-w-[220px] flex-1">
+                    <p class="text-[21px] font-extrabold leading-[1.2] tracking-tight sm:text-[25px]">
+                        <span class="block lg:inline">Не ти се чака купувач?</span>
+                        <span class="block text-accent lg:inline">Продай на {{ $shop }}</span>
+                    </p>
+
+                    <span title="{{ $disclosure }}"
+                          class="mt-2.5 inline-block cursor-help whitespace-nowrap rounded-full border border-line-strong px-2 py-0.5
+                                 font-mono text-[10px] uppercase tracking-[0.12em] text-ink-faint">наш магазин</span>
+                </div>
+
+                <a href="{{ $url }}" target="_blank" rel="noopener"
+                   class="btn-primary shrink-0 px-6 py-3 text-[15px]" style="box-shadow: 0 0 30px -8px var(--glow);">
+                    Към {{ $shop }}
+                    <span aria-hidden="true">↗</span>
+                    <span class="sr-only">(отваря се в нов раздел)</span>
+                </a>
+            </div>
         </div>
 
     @else
