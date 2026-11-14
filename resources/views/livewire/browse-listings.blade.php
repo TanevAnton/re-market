@@ -10,14 +10,62 @@
      none of it out literally: comments are processed later, so a directive
      written inside one is still picked up by that regex. --}}
 @php
-    $chips = $this->activeFilters();
+    $chips  = $this->activeFilters();
+    $crumbs = $this->breadcrumbs();
 @endphp
 
-{{-- One root for Livewire, holding two things: the series menu, in the
-     categories that have one (graphics cards and processors), and the
-     filters-and-results grid that was the whole of this file before it. The grid is left exactly as it was, one
-     level in, so its diff is two lines. --}}
+{{-- One root for Livewire, holding three things: the trail back up, the
+     series menu in the categories that have one (graphics cards and
+     processors), and the filters-and-results grid that was the whole of this
+     file before it. The grid is left exactly as it was, one level in. --}}
 <div>
+
+{{-- ------------------------------------------------ the way back up ------
+
+     Начало / Обяви / Процесори / Ryzen 5000. Every step but the last is one
+     level up; the last is where you are, and is the heading of the page -
+     which the listings page did not have until now.
+
+     Each step is a real link with a real address, and an ordinary click on
+     it is caught and handled in place instead. The address is for a new tab,
+     a crawler and a browser with no script. The in-place version exists
+     because going up a level should not cost somebody the city and the price
+     they already chose - see BrowseListings::crumb().
+
+     „Начало" is the exception: it leaves this page, so it is only a link.
+
+     The separators are the accent slash the section headings on the home
+     page open with, so the trail reads as the same family of heading rather
+     than as a second kind of navigation. --}}
+<nav aria-label="Път до страницата" class="mb-4 flex items-baseline gap-3.5">
+    <ol class="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+        @foreach ($crumbs as $i => $crumb)
+            <li class="flex min-w-0 items-baseline gap-x-2" wire:key="crumb-{{ $i }}-{{ $crumb['level'] ?? 'here' }}">
+                @if ($i > 0)
+                    <span aria-hidden="true" class="font-mono text-[12.5px] font-medium text-accent">/</span>
+                @endif
+
+                @if ($i === count($crumbs) - 1)
+                    <h1 aria-current="page" class="min-w-0 text-[17px] font-bold leading-tight tracking-tight">
+                        {{ $crumb['label'] }}
+                    </h1>
+                @elseif ($crumb['level'])
+                    <a href="{{ $crumb['url'] }}" wire:click.prevent="crumb('{{ $crumb['level'] }}')"
+                       class="whitespace-nowrap text-[12.5px] text-ink-muted transition hover:text-accent">{{ $crumb['label'] }}</a>
+                @else
+                    <a href="{{ $crumb['url'] }}" wire:navigate
+                       class="whitespace-nowrap text-[12.5px] text-ink-muted transition hover:text-accent">{{ $crumb['label'] }}</a>
+                @endif
+            </li>
+        @endforeach
+    </ol>
+
+    <span class="h-px min-w-4 flex-1 self-center bg-line"></span>
+
+    @if ($seriesMenu)
+        <span class="hidden whitespace-nowrap text-[12.5px] text-ink-faint sm:inline">избери серия, после модел</span>
+    @endif
+</nav>
 
 @if ($seriesMenu)
     {{-- ------------------------------------------- parts by series ------
@@ -40,13 +88,8 @@
          four rows of menu before the first listing, on the screen where most
          of the traffic is and where the listing is what was come for. --}}
     <div class="mb-6">
-        <div class="mb-4 flex items-baseline gap-3.5">
-            <h2 class="whitespace-nowrap text-[17px] font-bold tracking-tight">
-                <span class="mr-1.5 font-mono font-medium text-accent">//</span>{{ $seriesMenu['title'] }}
-            </h2>
-            <span class="h-px flex-1 self-center bg-line"></span>
-            <span class="hidden whitespace-nowrap text-[12.5px] text-ink-faint sm:inline">избери серия, после модел</span>
-        </div>
+        {{-- No heading of its own any more: the trail above ends in the name
+             of the category, which is the title this block used to carry. --}}
 
         {{-- `relative` so a tile's offsetLeft is measured from this row, which
              is what the line below scrolls by: a link that arrives with a

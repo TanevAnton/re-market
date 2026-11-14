@@ -296,13 +296,19 @@ class BrowseListings extends Component
         // A model belongs to the series it was picked in. Carried across,
         // „RTX 3070" inside „RX 6000" is a page with nothing on it and no
         // visible reason why.
-        if ($facet = $set->facet()) {
+        $this->forgetModel();
+
+        $this->resetPage();
+    }
+
+    /** Let go of whichever model is chosen, wherever this category keeps it. */
+    private function forgetModel(): void
+    {
+        if ($facet = $this->seriesSet()?->facet()) {
             unset($this->specs[$facet]);
         }
 
         $this->partModel = '';
-
-        $this->resetPage();
     }
 
     /**
@@ -438,6 +444,98 @@ class BrowseListings extends Component
         $chosen = $this->chosenModels();
 
         return count($chosen) === 1 ? $chosen[0] : $series['label'];
+    }
+
+    // --- the way back up ---------------------------------------------------
+
+    /**
+     * Where this page is, as a trail: Начало / Обяви / Процесори / Ryzen 5000.
+     *
+     * THE PROBLEM IT SOLVES was a real one: from inside a category the only
+     * way back out was the „Обяви" link in the header, which is a long way
+     * from where the eye is and says nothing about being „up". Every step of
+     * the trail is one level up, and the last one - where you are - is the
+     * heading of the page.
+     *
+     * Each step carries BOTH a plain address and a level. The address is what
+     * a crawler, a new tab or a browser without scripts follows. The level is
+     * what an ordinary click uses instead - see crumb() - so going up does not
+     * throw away the city or the price somebody has already set.
+     *
+     * A model is on the trail only when exactly one is chosen under a series.
+     * Two ticked in the sidebar are a filter, not a place.
+     *
+     * @return list<array{label: string, url: string|null, level: string|null}>
+     */
+    public function breadcrumbs(): array
+    {
+        $trail = [
+            // Off this page altogether, so an address and no level.
+            ['label' => 'Начало', 'url' => route('home'), 'level' => null],
+            ['label' => 'Обяви',  'url' => route('browse'), 'level' => 'all'],
+        ];
+
+        if ($this->category !== '') {
+            $trail[] = [
+                'label' => SpecFilter::categoryLabel($this->category),
+                'url'   => route('browse', ['kat' => $this->category]),
+                'level' => 'category',
+            ];
+
+            if ($series = $this->activeSeries()) {
+                $trail[] = [
+                    'label' => $series['label'],
+                    'url'   => route('browse', ['kat' => $this->category, 'seriya' => $series['key']]),
+                    'level' => 'series',
+                ];
+
+                $chosen = $this->chosenModels();
+
+                if (count($chosen) === 1) {
+                    $trail[] = ['label' => $chosen[0], 'url' => null, 'level' => null];
+                }
+            }
+        }
+
+        // The last step is where you already are, so it leads nowhere.
+        $last = array_key_last($trail);
+
+        $trail[$last]['url']   = null;
+        $trail[$last]['level'] = null;
+
+        return $trail;
+    }
+
+    /**
+     * Go up to one level of the trail.
+     *
+     * Only what is BELOW that level is let go of: going from „Ryzen 5000" up
+     * to „Процесори" drops the series and the model and nothing else. The
+     * search text, the city, the price and the condition stay, because they
+     * were never part of where you are - they are how you are looking.
+     */
+    public function crumb(string $level): void
+    {
+        switch ($level) {
+            case 'all':
+                $this->reset(['category', 'specs', 'series', 'partModel']);
+                break;
+
+            case 'category':
+                $this->series = '';
+                $this->forgetModel();
+                break;
+
+            case 'series':
+                $this->forgetModel();
+                break;
+
+            // Anything else did not come from the trail.
+            default:
+                return;
+        }
+
+        $this->resetPage();
     }
 
     // --- saving this search ----------------------------------------------
