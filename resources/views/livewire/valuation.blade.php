@@ -202,6 +202,19 @@
             </div>
         </section>
 
+        {{-- The other way to sell it: straight to the shop, for somebody who
+             would rather not wait. BELOW the site's own ask and never instead
+             of it - listing here is what this page is for, and this is the
+             alternative for the person that does not suit. Graphics cards
+             only; see RetechOffer. --}}
+        @if (\App\Support\RetechOffer::appliesTo($part->category))
+            @include('partials.retech-buyback', [
+                'placement' => 'valuation',
+                'variant'   => 'card',
+                'class'     => 'mt-6',
+            ])
+        @endif
+
         {{-- What a buyer will hold the item up against. Shown to the SELLER
              on purpose: these are the questions they are about to be asked,
              and a listing that answers them up front sells faster. --}}

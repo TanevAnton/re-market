@@ -521,6 +521,27 @@ return [
         'retention_days' => (int) env('DELIVERY_RETENTION_DAYS', 30),
     ],
 
+    /*
+     * RE-Tech - the shop run by the same company as this site.
+     *
+     * The marketplace points at one of its services: buying a used graphics
+     * card outright, for a seller who would rather not wait for a buyer. The
+     * offer is drawn in four places and always with a line saying the two are
+     * one company; see App\Support\RetechOffer and the partial it feeds.
+     *
+     * `buyback_url` is the switch. Empty, nothing is shown anywhere. It has to
+     * be an https address - the page on the shop's site that explains the
+     * buyback - and it is not a secret, so it can sit in `.env.example` too.
+     *
+     * `buyback_categories` is which category pages and which models the offer
+     * appears beside. Graphics cards only, because that is what is bought.
+     */
+    'retech' => [
+        'name'               => env('RETECH_NAME', 'RE-Tech'),
+        'buyback_url'        => env('RETECH_BUYBACK_URL'),
+        'buyback_categories' => ['gpu'],
+    ],
+
     'demo' => [
         'per_category' => (int) env('DEMO_PER_CATEGORY', 10),
 

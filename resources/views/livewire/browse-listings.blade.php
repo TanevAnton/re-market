@@ -218,6 +218,19 @@
     </div>
 @endif
 
+{{-- The shop buys graphics cards outright, and says so above the graphics
+     cards. One slim line, under the series menu and over the listings, and
+     only in the categories the offer covers - see RetechOffer. Most people
+     here came to buy; the banner is for the few who came to see what theirs
+     is going for. --}}
+@if (\App\Support\RetechOffer::appliesTo($category))
+    @include('partials.retech-buyback', [
+        'placement' => 'gpu-page',
+        'variant'   => 'banner',
+        'class'     => 'mb-6',
+    ])
+@endif
+
 <div class="grid gap-6 lg:grid-cols-[260px_1fr]"
      x-data="{ open: false }">
 

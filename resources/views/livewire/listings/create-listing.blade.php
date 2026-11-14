@@ -137,6 +137,18 @@
                     <button type="button" wire:click="clearPart" class="btn-ghost btn-sm">Смени</button>
                 </div>
             </div>
+
+            {{-- Once it is known to be a graphics card: the shop buys these
+                 outright. One sentence, under the chosen model and outside
+                 the form's own fields, so it reads as an aside and the listing
+                 carries on exactly as before for everybody who ignores it. --}}
+            @if (\App\Support\RetechOffer::appliesTo($category))
+                @include('partials.retech-buyback', [
+                    'placement' => 'listing-form',
+                    'variant'   => 'line',
+                    'class'     => 'mt-3',
+                ])
+            @endif
         @elseif ($partNotListed)
             <div class="mt-5">
                 <label class="label" for="customPart">Име на модела</label>

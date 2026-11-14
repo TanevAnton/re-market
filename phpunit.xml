@@ -99,6 +99,17 @@
         -->
         <env name="NEW_ACCOUNT_MODERATED_LISTINGS" value="0"/>
 
+        <!--
+            The RE-Tech buyback offer is OFF for the suite, whatever `.env`
+            says on the machine running it.
+
+            Turned on, it adds a banner and a link to four pages - and every
+            test that counts links or asserts what a page does NOT contain
+            would then depend on a line in somebody's local `.env`.
+            RetechOfferTest turns it on for itself with config().
+        -->
+        <env name="RETECH_BUYBACK_URL" value=""/>
+
         <env name="BILLING_IBAN" value=""/>
         <env name="BILLING_BIC" value=""/>
         <env name="BILLING_BANK" value=""/>
