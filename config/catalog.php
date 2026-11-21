@@ -46,7 +46,7 @@ return [
                 'vram_gb' => [
                     'type' => 'int', 'scope' => 'part', 'unit' => 'GB', 'required' => true,
                     'label' => ['bg' => 'Видео памет', 'en' => 'VRAM'],
-                    'facet' => 'terms', 'options' => [2,3,4,6,8,10,12,16,20,24,32],
+                    'facet' => 'terms', 'options' => [2,3,4,6,8,10,11,12,16,20,24,32],
                     'priority' => 2,
                 ],
                 'vram_type' => [
