@@ -232,7 +232,10 @@ class CreateListing extends Component
      */
     public function saveDraft(): void
     {
-        if (! auth()->check() || $this->step < 2) {
+        // Photos come first now, so step 1 can already hold real work: files
+        // on disk that nothing else points at. A draft is what gives them an
+        // owner to be swept by - see ListingDraft::discard().
+        if (! auth()->check() || ($this->step < 2 && $this->stored === [])) {
             // Nothing before a category is chosen is worth keeping, and a
             // draft row created by merely opening the page would prompt on the
             // next visit about a form nobody filled in.
@@ -334,6 +337,154 @@ class CreateListing extends Component
             $this->itemSpecs(),
             fn ($s) => ! ($s['required'] ?? false),
         );
+    }
+
+    /**
+     * A category tile, pressed.
+     *
+     * Sets the category and moves on in one tap: with the tiles as the main
+     * way in, a „Продължи" button under them was a second press for a choice
+     * that had already been made. Goes through next(), so it is validated like
+     * every other way of leaving step 1.
+     *
+     * Changing to a DIFFERENT category drops the model with it - a graphics
+     * card chosen under „Процесори" is a contradiction that would otherwise
+     * reach the database.
+     */
+    public function pickCategory(string $key): void
+    {
+        if (! array_key_exists($key, config('catalog.categories'))) {
+            return;
+        }
+
+        if ($this->category !== $key) {
+            $this->resetForNewCategory();
+        }
+
+        $this->category   = $key;
+        $this->partSearch = '';
+
+        $this->next();
+    }
+
+    /** What belongs to the old category and means nothing under the new one. */
+    private function resetForNewCategory(): void
+    {
+        if ($this->partId !== null) {
+            $this->title = '';
+        }
+
+        $this->partId        = null;
+        $this->partNotListed = false;
+        $this->customPart    = '';
+        $this->specs         = [];
+    }
+
+    /**
+     * Matches across every category, for the one search box on step 1.
+     *
+     * Somebody who knows what they are selling types the model; they should
+     * not have to say which shelf it is on first. Empty once a category is
+     * chosen - from then on step 2 searches inside it.
+     */
+    public function anyResults()
+    {
+        if ($this->category !== '' || mb_strlen($this->partSearch) < 2) {
+            return collect();
+        }
+
+        return Part::search($this->partSearch)->limit(8)->get();
+    }
+
+    /**
+     * A result from the step-1 search: the category AND the model in one tap,
+     * straight on to the details.
+     *
+     * Step 2 exists to answer exactly these two questions, so it is skipped
+     * rather than shown with both answers filled in.
+     */
+    public function chooseAnyPart(int $id): void
+    {
+        $part = Part::find($id);
+
+        if (! $part || ! array_key_exists($part->category, config('catalog.categories'))) {
+            return;
+        }
+
+        if ($this->category !== $part->category) {
+            $this->resetForNewCategory();
+        }
+
+        $this->category = $part->category;
+        $this->choosePart($id);
+        $this->partSearch = '';
+
+        $this->step = 3;
+
+        $this->saveDraft();
+    }
+
+    /**
+     * How much of what helps a listing sell has been filled in.
+     *
+     * Not a score of the item and not a forecast: it counts the things this
+     * form can ask for, weighted by how often buyers ask about them first. The
+     * weights are in one table so the advice and the number cannot disagree.
+     * Anything the site cannot take (a serial, while that is off) is left out
+     * of the total rather than counted against the seller.
+     *
+     * @return array{percent: int, level: string, tips: list<string>}
+     */
+    public function completeness(): array
+    {
+        $photos = count($this->stored);
+        $desc   = mb_strlen(trim($this->description));
+
+        $checks = [
+            // weight, done, what to say when it is not
+            [20, $photos >= 1,                              'Добави поне една снимка.'],
+            [10, $photos >= 3,                              'Три или повече снимки — от различни страни — вдигат доверието.'],
+            [15, $this->partId !== null,                    'Избери модела от каталога: така обявата излиза във филтрите и до цената за модела.'],
+            [10, mb_strlen(trim($this->title)) >= 8,        'Дай ѝ заглавие: модел и състояние, кратко.'],
+            [10, $desc >= 20,                               'Опиши състоянието — поне две изречения.'],
+            [5,  $desc >= 150,                              'Кажи откога е, има ли кутия и защо я продаваш.'],
+            [10, $this->cents($this->price) > 0,            'Сложи цена.'],
+            [5,  $this->city_id !== null,                   'Избери град.'],
+            [5,  $this->timestampIndex !== null,            'Снимка на вещта до бележка с името ти и датата показва, че е у теб.'],
+            [5,  $this->warranty_until || $this->has_receipt, 'Ако има гаранция или касова бележка, добави ги.'],
+        ];
+
+        if (\App\Support\ItemIdentifier::enabled()) {
+            $checks[] = [5, trim($this->identifier) !== '', 'Серийният номер дава знак „проверен“ и пази от кражба.'];
+        }
+
+        $total  = array_sum(array_column($checks, 0));
+        $earned = array_sum(array_map(fn ($c) => $c[1] ? $c[0] : 0, $checks));
+
+        $missing = array_filter($checks, fn ($c) => ! $c[1]);
+        usort($missing, fn ($a, $b) => $b[0] <=> $a[0]);
+
+        $percent = $total > 0 ? (int) round($earned / $total * 100) : 0;
+
+        return [
+            'percent' => $percent,
+            'level'   => match (true) {
+                $percent >= 80 => 'strong',
+                $percent >= 50 => 'good',
+                default        => 'start',
+            },
+            'tips'    => array_map(fn ($c) => $c[2], array_slice($missing, 0, 3)),
+        ];
+    }
+
+    /** The three visible steps over the four internal ones: what / details / price. */
+    public function visibleStep(): int
+    {
+        return match (true) {
+            $this->step <= 2 => 1,
+            $this->step === 3 => 2,
+            default => 3,
+        };
     }
 
     public function partResults()
@@ -831,6 +982,9 @@ class CreateListing extends Component
             'miningUses' => MiningUse::cases(),
             'cities'     => City::orderByDesc('population')->get(),
             'results'    => $this->partResults(),
+            'anyResults' => $this->anyResults(),
+            'progress'   => $this->completeness(),
+            'visible'    => $this->visibleStep(),
             'part'       => $this->selectedPart(),
             'itemSpecs'  => $this->itemSpecs(),
 
