@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Bundle;
 use App\Models\Listing;
 use App\Models\Part;
+use App\Support\Guides;
 use Illuminate\Http\Response;
 
 /**
@@ -54,6 +55,19 @@ class Sitemap
         // употреба", and unlike a listing it does not disappear when the
         // hardware on it sells.
         $urls[] = $this->url(route('build'), now(), 'weekly', '0.8');
+
+        // The buyer's guides: durable pages that answer the questions people
+        // ask before paying, and unlike a listing they do not expire.
+        $urls[] = $this->url(route('guides'), null, 'monthly', '0.7');
+
+        foreach (Guides::all() as $slug => $guide) {
+            $urls[] = $this->url(
+                route('guide', $slug),
+                \Illuminate\Support\Carbon::parse($guide['updated']),
+                'monthly',
+                '0.7',
+            );
+        }
 
         foreach ($this->legalPages() as $name) {
             $urls[] = $this->url(route($name), null, 'yearly', '0.2');

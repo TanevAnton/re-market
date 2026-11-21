@@ -43,6 +43,7 @@ use App\Livewire\ShowListing;
 use App\Http\Controllers\ChangeEmail;
 use App\Http\Controllers\GoogleAuth;
 use App\Http\Controllers\ShareImage;
+use App\Http\Controllers\GuidePage;
 use App\Http\Controllers\Sitemap;
 use App\Http\Controllers\VerifyEmail;
 use App\Livewire\Wanted\BrowseWanted;
@@ -172,6 +173,18 @@ Route::get('/apple', AppleSection::class)->name('apple');
  * - which matters, because this page does not configure anything yet.
  */
 Route::get('/sglobi', BuildGuide::class)->name('build');
+
+/*
+ * The buyer's guides. Static text from config/guides.php, public and
+ * crawlable: each answers a question a buyer asks a group before paying
+ * (how to check a used card, was it mined, what to test on delivery, how cash
+ * on delivery with Econt or Speedy works), and each is a link that can be
+ * pasted back into that group. Listed in the sitemap.
+ */
+Route::get('/rakovodstva', [GuidePage::class, 'index'])->name('guides');
+Route::get('/rakovodstva/{guide}', [GuidePage::class, 'show'])
+    ->where('guide', '[a-z0-9-]+')
+    ->name('guide');
 
 /*
  * Landing pages nobody crawls are worth nothing, so the sitemap ships with

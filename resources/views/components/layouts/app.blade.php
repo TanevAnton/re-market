@@ -706,6 +706,7 @@
                     <a href="{{ route('wanted') }}" wire:navigate class="text-ink-muted transition hover:text-accent">Търсения</a>
                     <a href="{{ route('valuation') }}" wire:navigate class="text-ink-muted transition hover:text-accent">Колко струва техниката ми</a>
                     <a href="{{ route('apple') }}" wire:navigate class="text-ink-muted transition hover:text-accent">Apple втора употреба</a>
+                    <a href="{{ route('guides') }}" wire:navigate class="text-ink-muted transition hover:text-accent">Ръководства за купувача</a>
                 </nav>
             </div>
 
