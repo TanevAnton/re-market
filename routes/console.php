@@ -117,3 +117,16 @@ Schedule::command('remarket:purge-delivery-details')
 Schedule::command('remarket:purge-accounts')
     ->dailyAt('05:10')
     ->withoutOverlapping();
+
+/*
+ * The outside (OLX.bg) price reference behind the seller's price guide.
+ *
+ * Weekly, at night, and it does nothing at all unless MARKET_PRICES_ENABLED is
+ * true. It reads a few pages per chipset with several seconds between requests,
+ * honours the site's robots.txt and stops on the first refusal, so a full run
+ * takes about half an hour by design. See config/market.php.
+ */
+Schedule::command('remarket:refresh-market-prices')
+    ->weeklyOn(0, '03:20')
+    ->withoutOverlapping()
+    ->runInBackground();

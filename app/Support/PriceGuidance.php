@@ -30,6 +30,8 @@ class PriceGuidance
     /**
      * @return array{
      *     band: array{p25: int, median: int, p75: int, at: \Carbon\CarbonInterface},
+     *     source: string,
+     *     sample: ?int,
      *     standing: array{percent: int, position: string}|null,
      *     trend: array<string, mixed>|null,
      *     suggestion: int,
@@ -37,15 +39,43 @@ class PriceGuidance
      */
     public static function for(?Part $part, ?int $priceCents = null): ?array
     {
-        $band = $part?->priceBand();
+        if (! $part) {
+            return null;
+        }
+
+        /*
+         * THE SITE'S OWN BAND FIRST, THE OUTSIDE ONE ONLY AS A FALLBACK.
+         *
+         * RIGO's own listings are what buyers here are actually shown, and
+         * they come with a trend. The OLX.bg reference (see config/market.php)
+         * exists because most models do not yet have enough listings here for
+         * a band at all, which is exactly when a seller guessing a price needs
+         * one most. It is labelled as what it is - asking prices elsewhere, as
+         * of a date - and it carries no trend, because a single weekly figure
+         * is not a history.
+         */
+        $band   = $part->priceBand();
+        $source = 'own';
+        $sample = null;
 
         if (! $band) {
-            return null;
+            $band = $part->marketBand();
+
+            if (! $band) {
+                return null;
+            }
+
+            $source = $band['source'];
+            $sample = $band['sample'];
         }
 
         return [
             'band'     => $band,
-            'standing' => $priceCents ? $part->priceStanding($priceCents) : null,
+            'source'   => $source,
+            'sample'   => $sample,
+            'standing' => $priceCents
+                ? ($source === 'own' ? $part->priceStanding($priceCents) : Part::standingAgainst($band, $priceCents))
+                : null,
 
             /*
              * The direction, when the history is long enough to have one. A
@@ -53,7 +83,7 @@ class PriceGuidance
              * 8% is the single most common way to end up with a listing nobody
              * touches, and it is invisible from a single number.
              */
-            'trend'    => $part->priceTrend(),
+            'trend'    => $source === 'own' ? $part->priceTrend() : null,
 
             // Where we would start. The median rather than the p75: this page
             // exists to get the listing sold, not to talk anybody up.
@@ -79,9 +109,13 @@ class PriceGuidance
 
         $percent = abs($standing['percent']);
 
+        // „В OLX", not „за модела": the figure is asking prices on another
+        // site, and the sentence should not sound like the whole market.
+        $where = ($guidance['source'] ?? 'own') === 'olx' ? 'средното в OLX' : 'средното за модела';
+
         return match ($standing['position']) {
-            'high' => "Около {$percent}% над средното за модела. Възможно е да стои по-дълго.",
-            'low'  => "Около {$percent}% под средното за модела. Ще се продаде бързо — провери дали не подценяваш.",
+            'high' => "Около {$percent}% над {$where}. Възможно е да стои по-дълго.",
+            'low'  => "Около {$percent}% под {$where}. Ще се продаде бързо — провери дали не подценяваш.",
             default => null,
         };
     }

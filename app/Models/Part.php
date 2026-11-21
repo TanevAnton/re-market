@@ -340,8 +340,20 @@ class Part extends Model
      */
     public function priceStanding(int $priceCents): ?array
     {
-        $band = $this->priceBand();
+        return self::standingAgainst($this->priceBand(), $priceCents);
+    }
 
+    /**
+     * The same arithmetic against any band - this model's own, or the outside
+     * reference the seller's price step falls back on. Kept separate from
+     * priceStanding() so the PUBLIC badge can only ever be computed from the
+     * site's own listings.
+     *
+     * @param  array{p25: int, median: int, p75: int}|null  $band
+     * @return array{percent: int, position: string}|null
+     */
+    public static function standingAgainst(?array $band, int $priceCents): ?array
+    {
         if (! $band || $band['median'] <= 0 || $priceCents <= 0) {
             return null;
         }
@@ -353,6 +365,45 @@ class Part extends Model
                 $priceCents >= $band['p75'] => 'high',
                 default                     => 'mid',
             },
+        ];
+    }
+
+    public function marketPrices(): HasMany
+    {
+        return $this->hasMany(PartMarketPrice::class);
+    }
+
+    /**
+     * What this model is asked for on another site, or null when there is no
+     * figure, it is too thin or it is too old.
+     *
+     * PRIVATE ADVICE ONLY. This feeds the seller's price step and nothing
+     * public: it is never used for a badge on a listing or a number on a model
+     * page, because a claim about somebody's listing must rest on the site's
+     * own data.
+     *
+     * @return array{p25: int, median: int, p75: int, at: \Illuminate\Support\Carbon, source: string, sample: int}|null
+     */
+    public function marketBand(string $source = 'olx'): ?array
+    {
+        $row = $this->marketPrices()->where('source', $source)->first();
+
+        if (! $row || ! $row->captured_at) {
+            return null;
+        }
+
+        if ($row->captured_at->lt(now()->subDays((int) config('market.max_age_days', 21)))
+            || $row->sample_size < (int) config('market.min_sample', 8)) {
+            return null;
+        }
+
+        return [
+            'p25'    => (int) $row->p25_cents,
+            'median' => (int) $row->median_cents,
+            'p75'    => (int) $row->p75_cents,
+            'at'     => $row->captured_at,
+            'source' => $source,
+            'sample' => (int) $row->sample_size,
         ];
     }
 

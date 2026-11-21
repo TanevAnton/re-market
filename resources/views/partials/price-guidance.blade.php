@@ -27,6 +27,16 @@
              site cannot support. --}}
         <p class="hint">Това са цени, на които се ПРЕДЛАГА в момента, не на които е продадено.</p>
 
+        {{-- The fallback, when this model has too few listings here for a band
+             of its own: said plainly, with the sample and the date, so nobody
+             reads it as RIGO's own market. See config/market.php. --}}
+        @if (($guidance['source'] ?? 'own') === 'olx')
+            <p class="hint">
+                По обяви в OLX.bg: {{ $guidance['sample'] }} обяви, към
+                {{ $guidance['band']['at']->format('d.m.Y') }}. В RIGO още няма достатъчно обяви за този модел.
+            </p>
+        @endif
+
         @if ($guidance['trend'] && $guidance['trend']['direction'] !== 'flat')
             <p class="mt-2 text-xs leading-relaxed text-ink-muted">
                 За последните {{ $guidance['trend']['days'] }} дни средната цена
