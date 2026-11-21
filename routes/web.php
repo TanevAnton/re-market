@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Admin\Dashboard as AdminDashboard;
+use App\Livewire\CompareParts;
 use App\Livewire\Auth\CompleteGoogleSignup;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
@@ -40,6 +41,7 @@ use App\Livewire\Profile\ShowProfile;
 use App\Livewire\ShowListing;
 use App\Http\Controllers\ChangeEmail;
 use App\Http\Controllers\GoogleAuth;
+use App\Http\Controllers\ShareImage;
 use App\Http\Controllers\Sitemap;
 use App\Http\Controllers\VerifyEmail;
 use App\Livewire\Wanted\BrowseWanted;
@@ -71,6 +73,17 @@ Route::get('/', Home::class)->name('home');
  */
 Route::get('/obiavi', BrowseListings::class)->name('browse');
 Route::get('/obiava/{listing}', ShowListing::class)->name('listing');
+
+/*
+ * The pictures that appear when a link is pasted into Viber, Messenger or
+ * Telegram. Two segments, so none of them can be mistaken for the one-segment
+ * page above. No `.jpg` on the end: a web server commonly answers any
+ * request that ends in an image extension itself, from disk, and a 404 there
+ * never reaches Laravel. The Content-Type says what it is. See
+ * App\Support\ShareCard.
+ */
+Route::get('/obiava/{listing}/snimka', [ShareImage::class, 'listing'])->name('listing.share');
+Route::get('/snimka', [ShareImage::class, 'site'])->name('share.site');
 Route::get('/profil/{username}', ShowProfile::class)->name('profile');
 
 /*
@@ -101,6 +114,15 @@ Route::get('/komplekt/{bundle}', ShowBundle::class)->whereUuid('bundle')->name('
  * and it reads the same in both alphabets.
  */
 Route::get('/model/{part}', ShowPart::class)->name('part');
+Route::get('/model/{part}/snimka', [ShareImage::class, 'part'])->name('part.share');
+
+/*
+ * „Сравни модели" - two or three catalogue models side by side. The address is
+ * the comparison (`?m=slug,slug`), so it can be pasted into a group chat and
+ * means the same thing to whoever opens it. Registered after `/model/{part}`
+ * and with a different first segment, so neither can swallow the other.
+ */
+Route::get('/sravni', CompareParts::class)->name('compare');
 
 /*
  * „Колко струва техниката ми" - the same catalogue data pointed at a seller.

@@ -198,6 +198,17 @@
                 </a>
             </div>
 
+            <div class="card-pad">
+                <h2 class="label">Избираш между модели?</h2>
+                <p class="hint mt-2">
+                    Спецификации, пазарна цена и обяви един до друг — за два или три модела.
+                </p>
+                <a href="{{ route('compare', ['m' => $part->slug]) }}" wire:navigate
+                   class="btn-secondary mt-3 block w-full text-center">
+                    Сравни с друг модел
+                </a>
+            </div>
+
             @if ($related->isNotEmpty())
                 <div class="card-pad">
                     <h2 class="label">Подобни модели</h2>

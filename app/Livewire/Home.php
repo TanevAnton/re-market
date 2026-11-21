@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Enums\DealStatus;
 use App\Enums\ListingStatus;
+use App\Http\Controllers\ShareImage;
 use App\Models\Deal;
 use App\Models\Listing;
 use App\Models\Part;
@@ -237,6 +238,7 @@ class Home extends Component
                 $stats['listings'],
             ),
             'canonical'   => route('home'),
+            'ogImage'     => ShareImage::available() ? ShareImage::siteUrl() : null,
         ]);
     }
 }

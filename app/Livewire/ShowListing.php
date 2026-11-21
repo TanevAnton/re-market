@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Enums\ListingStatus;
 use App\Enums\ModerationTrigger;
 use App\Enums\RejectionReason;
+use App\Http\Controllers\ShareImage;
 use App\Models\Listing;
 use App\Models\ModerationItem;
 use App\Services\Moderation\ModerationService;
@@ -342,6 +343,19 @@ class ShowListing extends Component
      */
     public function ogImage(): ?string
     {
+        /*
+         * A designed card - photo, title and price - rather than the bare
+         * photo. A listing with no photo used to get no preview at all; now
+         * every one gets a picture, and the picture says what it costs.
+         *
+         * The photo itself is the fallback for a server that cannot draw the
+         * card (no FreeType, fonts missing): declaring a card that 404s is
+         * worse than declaring the photo.
+         */
+        if (ShareImage::available()) {
+            return ShareImage::listingUrl($this->listing);
+        }
+
         return $this->listing->coverImage()?->url();
     }
 
@@ -363,7 +377,9 @@ class ShowListing extends Component
             'itemCondition' => 'https://schema.org/UsedCondition',
         ];
 
-        if ($image = $this->ogImage()) {
+        // The real photograph, not the share card: structured data describes
+        // the product, and a card with a price printed on it is not one.
+        if ($image = $this->listing->coverImage()?->url()) {
             $schema['image'] = $image;
         }
 

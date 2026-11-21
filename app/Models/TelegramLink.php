@@ -10,7 +10,13 @@ use Illuminate\Support\Str;
 
 class TelegramLink extends Model
 {
-    protected $fillable = ['user_id', 'nonce', 'telegram_chat_id', 'expires_at'];
+    /** Pressing Start asks for a phone number and verifies it. */
+    public const PURPOSE_VERIFY = 'verify';
+
+    /** Pressing Start only connects the chat, so the site can message it. */
+    public const PURPOSE_ALERTS = 'alerts';
+
+    protected $fillable = ['user_id', 'nonce', 'purpose', 'telegram_chat_id', 'expires_at'];
 
     protected function casts(): array
     {
@@ -33,12 +39,18 @@ class TelegramLink extends Model
      * two stale ones stay valid for as long as their TTL and each is a second
      * way into the same account.
      */
-    public static function issueFor(User $user, int $minutes = 15): self
+    public static function issueFor(User $user, int $minutes = 15, string $purpose = self::PURPOSE_VERIFY): self
     {
-        static::where('user_id', $user->id)->whereNull('consumed_at')->delete();
+        // Superseded per purpose: asking for alerts halfway through a phone
+        // verification must not kill the verification's nonce.
+        static::where('user_id', $user->id)
+            ->where('purpose', $purpose)
+            ->whereNull('consumed_at')
+            ->delete();
 
         return static::create([
             'user_id'    => $user->id,
+            'purpose'    => $purpose,
             // 32 hex chars. This travels in a URL the user may paste anywhere,
             // so it has to be unguessable rather than merely unique.
             'nonce'      => bin2hex(random_bytes(16)),

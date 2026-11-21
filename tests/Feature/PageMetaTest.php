@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\ListingStatus;
+use App\Http\Controllers\ShareImage;
 use App\Livewire\Listings\CreateListing;
 use App\Livewire\ShowListing;
 use App\Models\Listing;
@@ -69,24 +70,38 @@ class PageMetaTest extends TestCase
         $response->assertSee('rel="canonical" href="'.route('listing', $this->listing).'"', false);
     }
 
-    public function test_a_shared_listing_shows_its_photo(): void
+    /**
+     * What is pasted into a group chat is a card with the title and price on
+     * it - see ShareImageTest for the card itself. Where this server cannot
+     * draw one the page falls back to the seller's photo instead, and these
+     * two tests are skipped there rather than failed.
+     */
+    public function test_a_shared_listing_shows_its_share_card(): void
     {
-        $image = $this->withPhoto();
+        if (! ShareImage::available()) {
+            $this->markTestSkipped('GD/FreeType or the bundled fonts are not available here.');
+        }
+
+        $this->withPhoto();
 
         $this->get(route('listing', $this->listing))
-            ->assertSee('property="og:image" content="'.$image->url().'"', false)
+            ->assertSee('property="og:image" content="'.ShareImage::listingUrl($this->listing->fresh(['city', 'images'])).'"', false)
             ->assertSee('name="twitter:card" content="summary_large_image"', false);
     }
 
     /**
-     * A declared og:image that 404s renders as a broken card rather than a
-     * plain one, so a listing with no photo must not declare one at all.
+     * A listing with no photo used to declare no image and be pasted as a bare
+     * link. It now gets a card, because the card does not depend on the photo.
      */
-    public function test_a_listing_with_no_photo_declares_no_image(): void
+    public function test_a_listing_with_no_photo_still_gets_a_share_card(): void
     {
+        if (! ShareImage::available()) {
+            $this->markTestSkipped('GD/FreeType or the bundled fonts are not available here.');
+        }
+
         $this->get(route('listing', $this->listing))
-            ->assertDontSee('property="og:image"', false)
-            ->assertSee('name="twitter:card" content="summary"', false);
+            ->assertSee('property="og:image" content="'.ShareImage::listingUrl($this->listing->fresh(['city', 'images'])).'"', false)
+            ->assertSee('name="twitter:card" content="summary_large_image"', false);
     }
 
     public function test_the_description_leads_with_the_facts_a_buyer_decides_on(): void

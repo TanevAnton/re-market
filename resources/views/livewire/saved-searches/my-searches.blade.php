@@ -5,6 +5,12 @@
         <a href="{{ route('favorites') }}" wire:navigate class="link text-sm">Запазени обяви →</a>
     </div>
 
+    {{-- Renders nothing unless the bot is configured, and collapses to one
+         line once it is connected. --}}
+    <div class="mt-4">
+        @livewire('saved-searches.connect-telegram')
+    </div>
+
     @if (! $rows)
         <div class="card-pad mt-6 text-center">
             <p class="text-sm font-medium">Още нямаш запазени търсения.</p>

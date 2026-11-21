@@ -14,6 +14,10 @@
         <button type="button" wire:click="toggle" class="btn-ghost mt-3 w-full text-sm">
             Спри известията
         </button>
+
+        <div class="mt-3">
+            @livewire('saved-searches.connect-telegram', ['bare' => true])
+        </div>
     @else
         <h2 class="label">Няма подходяща обява?</h2>
         <p class="hint mt-2">

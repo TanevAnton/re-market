@@ -73,6 +73,15 @@
          it without one renders as a broken card rather than a small one. --}}
     @isset($ogImage)
         <meta property="og:image" content="{{ $ogImage }}">
+        {{-- Size and type, for our own share cards only: a preview bot that
+             knows the size lays the card out before it has downloaded it,
+             and Facebook in particular otherwise shows nothing on first share.
+             A seller's raw photo has no size we know, so it gets none. --}}
+        @if (str_contains($ogImage, '/snimka'))
+            <meta property="og:image:width" content="1200">
+            <meta property="og:image:height" content="630">
+            <meta property="og:image:type" content="image/jpeg">
+        @endif
         <meta name="twitter:card" content="summary_large_image">
     @else
         <meta name="twitter:card" content="summary">

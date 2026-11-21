@@ -70,6 +70,12 @@ class TelegramBotVerifier
             return;
         }
 
+        if ($link->purpose === TelegramLink::PURPOSE_ALERTS) {
+            $this->connectForAlerts($link, $chatId);
+
+            return;
+        }
+
         // Remember which chat is answering, so the contact message that follows
         // can be traced back to this user.
         $link->forceFill(['telegram_chat_id' => $chatId])->save();
@@ -77,6 +83,47 @@ class TelegramBotVerifier
         $this->bot->requestContact($chatId,
             'Натисни бутона отдолу, за да споделиш номера си. '
             .'Telegram го е потвърдил при регистрацията ти, така че няма код за въвеждане.');
+    }
+
+    /**
+     * „Пиши ми тук": connect the chat and nothing else.
+     *
+     * No phone number is asked for and none is stored - the person pressed a
+     * button on the site while logged in, then pressed Start in the bot, and
+     * that pair is the whole proof that this chat belongs to this account.
+     * It proves nothing about a phone, so `phone_verified_at` is not touched.
+     *
+     * One chat, one account. A second account claiming a chat that already
+     * receives another account's messages would read that account's offers
+     * and deal details aloud to a stranger, so it is refused rather than
+     * quietly re-pointed.
+     */
+    private function connectForAlerts(TelegramLink $link, int $chatId): void
+    {
+        $taken = User::where('telegram_chat_id', $chatId)
+            ->whereKeyNot($link->user_id)
+            ->exists();
+
+        if ($taken) {
+            $this->bot->say($chatId, 'Този Telegram вече е свързан с друг профил.');
+
+            return;
+        }
+
+        DB::transaction(function () use ($link, $chatId) {
+            $user = $link->user;
+
+            $user->telegram_chat_id = $chatId;
+            $user->notify_telegram  = true;
+            $user->save();
+
+            $link->forceFill(['telegram_chat_id' => $chatId, 'consumed_at' => now()])->save();
+        });
+
+        Log::info('[telegram-bot] connected for alerts', ['user_id' => $link->user_id]);
+
+        $this->bot->say($chatId, 'Готово — известията от сайта ще идват тук. '
+            .'Можеш да ги спреш по всяко време от профила си.');
     }
 
     private function handleContact(int $chatId, array $message): void

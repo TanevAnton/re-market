@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Enums\ListingStatus;
+use App\Http\Controllers\ShareImage;
 use App\Models\Listing;
 use App\Models\Part;
 use Illuminate\Support\Carbon;
@@ -252,6 +253,8 @@ class ShowPart extends Component
             'description' => $this->metaDescription(),
             'canonical'   => route('part', $this->part),
             'ogType'      => 'product',
+            // The price on a picture, for the link pasted into a group chat.
+            'ogImage'     => ShareImage::available() ? ShareImage::partUrl($this->part) : null,
             'jsonLd'      => $this->jsonLd(),
         ]);
     }
