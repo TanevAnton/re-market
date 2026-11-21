@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\Encoders\JpegEncoder;
+use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\ImageManager;
 
 /**
@@ -26,6 +27,7 @@ class ImageProcessor
     private const MAX_EDGE = 1600;   // full view
     private const THUMB    = 480;    // grid card
     private const QUALITY  = 82;
+    private const WEBP_QUALITY = 80;
 
     private ImageManager $manager;
 
@@ -78,6 +80,13 @@ class ImageProcessor
             ->toString();
 
         Storage::disk($this->disk)->put($thumb, $thumbData);
+
+        // Best effort and never fatal: the JPEG pair above is the photograph,
+        // the WebP pair is an optimisation that browsers are offered when it
+        // exists. A server without WebP support, or an encoder that chokes on
+        // one odd file, must not turn into a seller who cannot post.
+        $this->writeWebp($full, $path);
+        $this->writeWebp($thumbData, $thumb);
 
         return [
             'path'   => $path,
@@ -134,9 +143,92 @@ class ImageProcessor
         return substr_count(decbin($a ^ $b), '1');
     }
 
+    /**
+     * Whether this server can write WebP and the site is set to.
+     *
+     * `imagewebp` is the GD function; a PHP build without it would otherwise
+     * fail inside the encoder, once per photo, with a message that says
+     * nothing about WebP.
+     */
+    public static function webpEnabled(): bool
+    {
+        return (bool) config('remarket.images.webp', true)
+            && function_exists('imagewebp');
+    }
+
+    /**
+     * The WebP sibling of a stored JPEG: "<uuid>.jpg" -> "<uuid>.webp" and
+     * "<uuid>_t.jpg" -> "<uuid>_t.webp". Derivable, like the thumbnail, so
+     * there is no column to keep in step with the files.
+     */
+    public static function webpPath(string $jpegPath): string
+    {
+        return preg_replace('/\.jpe?g$/i', '.webp', $jpegPath) ?? $jpegPath;
+    }
+
+    /**
+     * Write the WebP twin of a JPEG that is already stored, from its bytes.
+     *
+     * Public so the backfill command can use the same encoder settings as an
+     * upload does. Returns false instead of throwing.
+     */
+    public function writeWebp(string $jpegBytes, string $jpegPath): bool
+    {
+        if (! self::webpEnabled()) {
+            return false;
+        }
+
+        try {
+            $webp = $this->manager->decodeBinary($jpegBytes)
+                ->encode(new WebpEncoder(quality: self::WEBP_QUALITY))
+                ->toString();
+
+            return Storage::disk($this->disk)->put(self::webpPath($jpegPath), $webp);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return false;
+        }
+    }
+
+    /**
+     * Make the WebP twins of an existing photograph and its thumbnail.
+     *
+     * For the photographs uploaded before WebP existed. Skips what is there
+     * already, so it can be run again after an interruption.
+     *
+     * @return int how many files were written
+     */
+    public function backfillWebp(string $jpegPath): int
+    {
+        $disk    = Storage::disk($this->disk);
+        $written = 0;
+
+        $thumb = preg_replace('/\.jpe?g$/i', '_t.jpg', $jpegPath) ?? $jpegPath;
+
+        foreach (array_unique([$jpegPath, $thumb]) as $path) {
+            if (! $disk->exists($path) || $disk->exists(self::webpPath($path))) {
+                continue;
+            }
+
+            if ($this->writeWebp((string) $disk->get($path), $path)) {
+                $written++;
+            }
+        }
+
+        return $written;
+    }
+
     public function delete(string ...$paths): void
     {
-        Storage::disk($this->disk)->delete(array_filter($paths));
+        $paths = array_filter($paths);
+
+        // Take the WebP twins with them. Leaving them would be harmless to
+        // the site and a slow leak on the disk, and a deleted photograph is
+        // exactly the kind of file somebody expects to be gone.
+        $twins = array_map(fn (string $p) => self::webpPath($p), $paths);
+
+        Storage::disk($this->disk)->delete(array_values(array_unique([...$paths, ...$twins])));
     }
 
     public function url(string $path): string

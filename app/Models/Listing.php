@@ -44,6 +44,7 @@ class Listing extends Model
             'expires_at'           => 'datetime',
             'reserved_until'       => 'datetime',
             'sold_at'              => 'datetime',
+            'retech_tested_at'     => 'datetime',
         ];
     }
 
@@ -57,8 +58,29 @@ class Listing extends Model
         return 'uuid';
     }
 
+    /**
+     * What a RE-Tech test is a statement ABOUT. Change any of these after the
+     * test and the test no longer describes the listing, so the mark goes.
+     * Price, photos and the description are deliberately not here: a seller
+     * fixing a typo should not lose it, and none of them changes which item was
+     * tested.
+     */
+    private const RETECH_TEST_COVERS = ['title', 'part_id', 'category', 'condition', 'specs', 'custom_part'];
+
     protected static function booted(): void
     {
+        static::updating(function (self $listing) {
+            if ($listing->retech_tested_at === null || $listing->isDirty('retech_tested_at')) {
+                return;
+            }
+
+            if ($listing->isDirty(self::RETECH_TEST_COVERS)) {
+                $listing->retech_tested_at = null;
+                $listing->retech_test_note = null;
+                $listing->retech_tested_by = null;
+            }
+        });
+
         static::saving(function (self $listing) {
             if (blank($listing->slug)) {
                 // Str::slug transliterates Cyrillic, so "Видеокарта RTX 4070"
@@ -81,6 +103,12 @@ class Listing extends Model
     public function minOfferEur(): ?float
     {
         return $this->min_offer_cents ? $this->min_offer_cents / 100 : null;
+    }
+
+    /** Whether a person at RE-Tech has tried this unit. See the migration. */
+    public function isRetechTested(): bool
+    {
+        return $this->retech_tested_at !== null;
     }
 
     public function formattedPrice(): string

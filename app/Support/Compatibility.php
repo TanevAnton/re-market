@@ -58,6 +58,27 @@ class Compatibility
     }
 
     /**
+     * How many watts of power supply a graphics card of this draw asks for.
+     *
+     * The rule is the `gpu` -> `psu` edge in config/compatibility.php, run
+     * through the same `resolve()` as the link on the model page. Anything that
+     * wants to say „тази карта иска 600 W" must come through here, so the
+     * sentence and the link beside it are one number and not two.
+     */
+    public static function psuNeededFor(int $gpuWatts): ?int
+    {
+        foreach (config('compatibility.gpu', []) as $rule) {
+            if (($rule['to'] ?? null) === 'psu' && ($rule['facet'] ?? null) === 'wattage') {
+                $needed = self::resolve($gpuWatts, $rule);
+
+                return is_numeric($needed) ? (int) $needed : null;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * The same rules, as raw filters rather than as sentences.
      *
      * `forPart()` answers „what should I link to from this page"; this answers

@@ -17,6 +17,9 @@ class ShowListing extends Component
 {
     public Listing $listing;
 
+    /** The note that goes with a RE-Tech test mark. */
+    public string $retechNote = '';
+
     /** Admin takedown form. */
     public bool $removing = false;
     public string $reason = '';
@@ -159,6 +162,56 @@ class ShowListing extends Component
         return (bool) auth()->user()?->is_admin
             && auth()->id() !== $this->listing->user_id
             && $this->listing->status !== ListingStatus::Removed;
+    }
+
+    /**
+     * Who may say „тествано от RE-Tech".
+     *
+     * Administrators, on a listing the public can see. Own listings included,
+     * unlike a takedown: the test is about the unit, not about the seller, and
+     * RE-Tech sells through this site too - which is exactly why the badge
+     * always carries the sentence saying the two are one company.
+     */
+    public function canMarkTested(): bool
+    {
+        return (bool) auth()->user()?->is_admin
+            && $this->listing->status->isPubliclyVisible();
+    }
+
+    /**
+     * Public methods on a Livewire component are callable from the browser
+     * whether or not the page drew the button, so the check is here and not
+     * only in the view.
+     */
+    public function markRetechTested(): void
+    {
+        abort_unless($this->canMarkTested(), 403);
+
+        $this->validate([
+            'retechNote' => ['nullable', 'string', 'max:160'],
+        ], [
+            'retechNote.max' => 'Бележката е най-много 160 знака.',
+        ]);
+
+        // forceFill, never update(): none of these is fillable, on purpose.
+        $this->listing->forceFill([
+            'retech_tested_at' => now(),
+            'retech_test_note' => trim($this->retechNote) !== '' ? trim($this->retechNote) : null,
+            'retech_tested_by' => auth()->id(),
+        ])->save();
+
+        $this->reset('retechNote');
+    }
+
+    public function clearRetechTested(): void
+    {
+        abort_unless((bool) auth()->user()?->is_admin, 403);
+
+        $this->listing->forceFill([
+            'retech_tested_at' => null,
+            'retech_test_note' => null,
+            'retech_tested_by' => null,
+        ])->save();
     }
 
     public function startRemove(): void

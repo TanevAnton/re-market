@@ -108,98 +108,13 @@
             @endif
         </div>
 
-        {{-- gallery ---------------------------------------------------------
+        {{-- Swipe and pinch-zoom; the behaviour lives in the partial. --}}
+        @include('partials.photo-gallery', ['images' => $listing->images, 'title' => $listing->title])
 
-             Alpine rather than Livewire: switching photo is a client-side
-             concern, and a server round trip per thumbnail makes a gallery feel
-             broken on a phone. Nothing here needs the server.
-
-             wire:ignore so a Livewire re-render (the admin takedown form, for
-             one) cannot reach in and reset which photo is open. --}}
-        @php($images = $listing->images)
-
-        <div class="mt-5 space-y-2" wire:ignore
-             x-data="{
-                 i: 0,
-                 open: false,
-                 urls: {{ Illuminate\Support\Js::from($images->map->url()) }},
-                 next() { this.i = (this.i + 1) % this.urls.length },
-                 prev() { this.i = (this.i - 1 + this.urls.length) % this.urls.length },
-             }"
-             @keydown.window.escape="open = false"
-             @keydown.window.arrow-right="if (open) next()"
-             @keydown.window.arrow-left="if (open) prev()">
-
-            <div class="card overflow-hidden">
-                @if ($images->isNotEmpty())
-                    <img :src="urls[i]" alt="{{ $listing->title }}"
-                         src="{{ $images->first()->url() }}"
-                         @click="open = true"
-                         class="aspect-[4/3] w-full cursor-zoom-in object-cover
-                                transition hover:brightness-105">
-                @else
-                    <div class="grid aspect-[4/3] place-items-center bg-surface-alt text-sm text-ink-faint">
-                        Няма снимки
-                    </div>
-                @endif
-            </div>
-
-            @if ($images->count() > 1)
-                <div class="grid grid-cols-5 gap-2 sm:grid-cols-6">
-                    @foreach ($images as $index => $img)
-                        <button type="button" @click="i = {{ $index }}"
-                                :class="i === {{ $index }} ? 'border-accent' : 'border-line hover:border-ink-faint'"
-                                class="relative overflow-hidden rounded-md border transition"
-                                aria-label="Снимка {{ $index + 1 }}">
-                            <img src="{{ $img->thumbUrl() }}" alt="" loading="lazy"
-                                 class="aspect-[4/3] w-full object-cover">
-                            @if ($img->is_timestamp_photo)
-                                <span class="absolute inset-x-0 bottom-0 bg-accent px-1 py-0.5 text-center
-                                             text-[9px] font-medium text-[var(--accent-ink)]">
-                                    с бележка
-                                </span>
-                            @endif
-                        </button>
-                    @endforeach
-                </div>
-            @endif
-
-            {{-- lightbox --}}
-            @if ($images->isNotEmpty())
-                <div x-show="open" x-cloak x-transition.opacity
-                     @click.self="open = false"
-                     class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
-
-                    <button type="button" @click="open = false" aria-label="Затвори"
-                            class="absolute right-4 top-4 rounded-md px-3 py-1.5 text-2xl leading-none
-                                   text-white/70 transition hover:bg-white/10 hover:text-white">
-                        &times;
-                    </button>
-
-                    @if ($images->count() > 1)
-                        <button type="button" @click="prev()" aria-label="Предишна"
-                                class="absolute left-2 rounded-md px-3 py-6 text-3xl text-white/70
-                                       transition hover:bg-white/10 hover:text-white sm:left-6">
-                            &lsaquo;
-                        </button>
-                        <button type="button" @click="next()" aria-label="Следваща"
-                                class="absolute right-2 rounded-md px-3 py-6 text-3xl text-white/70
-                                       transition hover:bg-white/10 hover:text-white sm:right-6">
-                            &rsaquo;
-                        </button>
-                    @endif
-
-                    <img :src="urls[i]" alt="{{ $listing->title }}"
-                         class="max-h-[88vh] max-w-full rounded-md object-contain">
-
-                    @if ($images->count() > 1)
-                        <p class="absolute bottom-4 font-mono text-xs text-white/60">
-                            <span x-text="i + 1"></span> / {{ $images->count() }}
-                        </p>
-                    @endif
-                </div>
-            @endif
-        </div>
+        {{-- Draws nothing unless a person at the shop has marked this unit; and
+             when it does, it says in the same breath that shop and site are one
+             company. --}}
+        @include('partials.retech-tested', ['listing' => $listing, 'variant' => 'panel'])
 
         {{-- the spec sheet: the thing OLX cannot render --}}
         @if ($rows = $this->specRows())
@@ -432,6 +347,13 @@
             'links' => \App\Support\Compatibility::forListing($listing),
         ])
 
+        {{-- The other direction: not what this part needs, but whether it fits
+             the buyer's own machine. Model-level for the same reason as the
+             links above, and not on a tombstone - nobody can buy it. --}}
+        @unless ($this->isTombstone())
+            @include('partials.fit-check', ['part' => $listing->part, 'class' => 'mt-6'])
+        @endunless
+
         @if ($listing->delivery_options)
             <div class="card-pad">
                 <h2 class="label">Доставка</h2>
@@ -517,6 +439,35 @@
                         </div>
                     </div>
                 @endunless
+            </div>
+        @endif
+
+        {{-- The RE-Tech test mark. Administrators only; see canMarkTested(). --}}
+        @if ($this->canMarkTested())
+            <div class="card-pad">
+                <h2 class="label">Тест от {{ \App\Support\RetechOffer::name() }}</h2>
+
+                @if ($listing->isRetechTested())
+                    <p class="hint mt-2">
+                        Отбелязано {{ $listing->retech_tested_at->format('d.m.Y') }}.
+                        Отпада само, ако продавачът промени заглавието, модела, състоянието или спецификациите.
+                    </p>
+                    <button type="button" wire:click="clearRetechTested"
+                            class="btn-secondary mt-3 w-full">Махни отметката</button>
+                @else
+                    <label class="label mt-3" for="retech-note">Какво е изпробвано (по желание)</label>
+                    <input id="retech-note" type="text" maxlength="160" wire:model="retechNote"
+                           placeholder="напр. 3DMark 20 мин, 68 °C" class="mt-1 w-full">
+                    @error('retechNote') <p class="error mt-1">{{ $message }}</p> @enderror
+
+                    <p class="hint">
+                        Публично е, с името на {{ \App\Support\RetechOffer::name() }} и изречението,
+                        че е същата фирма като сайта. Отбелязвай само каквото е изпробвано на този екземпляр.
+                    </p>
+
+                    <button type="button" wire:click="markRetechTested"
+                            class="btn-primary mt-3 w-full">Отбележи като тествано</button>
+                @endif
             </div>
         @endif
     </aside>

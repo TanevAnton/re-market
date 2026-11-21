@@ -108,6 +108,11 @@ green "==> Storage"
 # Without it every image on the site 404s while the files sit there untouched.
 [ -L public/storage ] || php artisan storage:link
 
+# WebP copies of photographs uploaded before WebP existed. It skips what is
+# already there, so after the first run it is a quick check. A failure here must
+# not fail the deploy: the site then serves the JPEGs exactly as it did.
+php artisan images:webp || warn "WebP backfill skipped - see the message above. Photos are served as JPEG."
+
 green "==> Caches"
 # optimize:clear first: a cached config written before .env changed is the
 # classic "why is it still using the old database".

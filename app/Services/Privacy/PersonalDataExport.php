@@ -160,6 +160,7 @@ class PersonalDataExport
                 'телефон_потвърден'   => $this->when($user->phone_verified_at),
                 'продава_като'        => $user->seller_type->label(),
                 'данни_за_фирма'      => $user->trader_details,
+                'моят_компютър'       => $user->my_pc,
                 'статус_на_проверка'  => $user->traderStatusLabel(),
                 'регистриран_на'      => $this->when($user->created_at),
                 'завършени_сделки'    => $user->deals_completed,

@@ -35,9 +35,12 @@
         {{-- The photograph is what people actually scan. It gets the room. --}}
         <div class="relative aspect-[4/3] overflow-hidden bg-surface-alt">
             @if ($img = $listing->coverImage())
-                <img src="{{ $img->thumbUrl() }}" alt="{{ $listing->title }}" loading="lazy"
-                     class="h-full w-full object-cover transition-transform duration-300
-                            group-hover:scale-[1.03]">
+                @include('partials.photo', [
+                    'image' => $img,
+                    'thumb' => true,
+                    'alt'   => $listing->title,
+                    'class' => 'h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]',
+                ])
             @else
                 <div class="grid h-full place-items-center text-xs text-ink-faint">без снимка</div>
             @endif
@@ -63,6 +66,8 @@
                 @if (\App\Support\AppleLock::isLocked($listing))
                     <span class="badge-warn backdrop-blur">заключен за Apple ID</span>
                 @endif
+
+                @include('partials.retech-tested', ['listing' => $listing, 'variant' => 'chip'])
 
                 @if ($listing->mining_use === \App\Enums\MiningUse::Yes)
                     <span class="badge-warn backdrop-blur">копала {{ $listing->mining_months }} мес.</span>

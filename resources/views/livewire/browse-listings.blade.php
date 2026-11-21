@@ -490,6 +490,21 @@
             </div>
         @endif
 
+        {{-- Slow updates show placeholders rather than a faded grid.
+
+             `delay.short` (200 ms) keeps them off a fast response: a filter
+             that answers at once only fades, as before, and nothing flashes.
+             wire:target lists the things that change the RESULTS - saving a
+             search or toggling a heart must not blank the grid. --}}
+        <div class="relative">
+            <div wire:loading.delay.short
+                 wire:target="q,category,city,priceMin,priceMax,condition,specs,sort,gotoPage,nextPage,previousPage,setPage"
+                 class="absolute inset-0 z-10 bg-canvas" role="status" aria-label="Зареждане на обявите">
+                <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    @include('partials.skeleton-cards', ['count' => 6])
+                </div>
+            </div>
+
         <div wire:loading.class="opacity-40" class="transition-opacity">
 
             {{-- The paid slots.
@@ -624,6 +639,7 @@
                 </p>
             @endif
         </div>
+        </div>{{-- /relative: the skeleton overlay's frame --}}
     </section>
 </div>
 

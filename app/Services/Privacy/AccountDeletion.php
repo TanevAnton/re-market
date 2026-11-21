@@ -163,6 +163,7 @@ class AccountDeletion
                 'avatar_path'     => null,
                 'city_id'         => null,
                 'trader_details'  => null,
+                'my_pc'           => null,
                 'telegram_chat_id' => null,
                 'notify_email'    => false,
                 'notify_telegram' => false,

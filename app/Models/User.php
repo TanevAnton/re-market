@@ -92,6 +92,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'last_seen_at'      => 'datetime',
             'password'          => 'hashed',
             'trader_details'     => 'array',
+            'my_pc'              => 'array',
             'seller_type'        => SellerType::class,
             'trader_verified_at' => 'datetime',
             'deletion_requested_at' => 'datetime',

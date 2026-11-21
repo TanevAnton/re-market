@@ -2,6 +2,7 @@
 
 use App\Livewire\Admin\Dashboard as AdminDashboard;
 use App\Livewire\CompareParts;
+use App\Livewire\MyComputer;
 use App\Livewire\Auth\CompleteGoogleSignup;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
@@ -123,6 +124,7 @@ Route::get('/model/{part}/snimka', [ShareImage::class, 'part'])->name('part.shar
  * and with a different first segment, so neither can swallow the other.
  */
 Route::get('/sravni', CompareParts::class)->name('compare');
+Route::get('/moy-kompyutar', MyComputer::class)->name('my-pc');
 
 /*
  * „Колко струва техниката ми" - the same catalogue data pointed at a seller.

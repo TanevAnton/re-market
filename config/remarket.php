@@ -542,6 +542,20 @@ return [
         'buyback_categories' => ['gpu'],
     ],
 
+    /*
+     * Listing photographs.
+     *
+     * `webp` writes a WebP copy next to every JPEG at upload, and the pages
+     * offer it to browsers through <picture>. The JPEG stays: it is the
+     * fallback, the og:image Viber and Facebook read, and the original of
+     * record. Roughly a quarter to a third smaller on a photo of a circuit
+     * board, which is most of the weight of a listings grid on a phone.
+     * Switch it off here if a server's GD has no WebP support.
+     */
+    'images' => [
+        'webp' => (bool) env('IMAGES_WEBP', true),
+    ],
+
     'demo' => [
         'per_category' => (int) env('DEMO_PER_CATEGORY', 10),
 

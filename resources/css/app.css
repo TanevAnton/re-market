@@ -317,6 +317,28 @@ html[data-theme='dark']   .theme-icon-dark { display: block; }
     .hint  { @apply mt-1.5 text-xs leading-relaxed text-ink-faint; }
     .error { @apply mt-1.5 text-sm text-bad; }
 
+    /* Loading placeholders. A grey block with a slow highlight sweeping across
+       it: it says "this is coming" and holds the space, so the page does not
+       jump when the real cards arrive. The sweep stops for anyone whose system
+       asks for less motion - the block alone still does the job. */
+    .skeleton {
+        @apply relative overflow-hidden rounded-md bg-surface-alt;
+    }
+    .skeleton::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--ink) 8%, transparent), transparent);
+        animation: skeleton-sweep 1.4s ease-in-out infinite;
+    }
+    @keyframes skeleton-sweep {
+        to { transform: translateX(100%); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .skeleton::after { animation: none; }
+    }
+
     /* Badges are pills now, and the accent one is SOLID while good is soft.
        That treatment split is what distinguishes them, because since the accent
        became emerald they share a hue. */

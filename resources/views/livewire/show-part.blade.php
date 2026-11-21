@@ -186,6 +186,11 @@
                 @livewire('saved-searches.part-alert', ['part' => $part], key('alert-'.$part->id))
             @endif
 
+            {{-- Above the „sell yours" card: it answers the question the buyer
+                 on this page actually has. Draws nothing for a category with
+                 nothing to check. --}}
+            @include('partials.fit-check', ['part' => $part])
+
             <div class="card-pad">
                 <h2 class="label">Продаваш такъв?</h2>
                 <p class="hint mt-2">

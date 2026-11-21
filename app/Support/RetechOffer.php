@@ -41,6 +41,18 @@ class RetechOffer
     }
 
     /**
+     * The sentence that has to sit beside every placement of RE-Tech's name.
+     *
+     * Built here for the places that are not the buyback partial - the tested
+     * badge - so that it reads the same wherever it appears. The partial builds
+     * the same sentence from the same three settings.
+     */
+    public static function disclosure(): string
+    {
+        return self::name().' и '.config('app.name').' са на една и съща фирма — '.config('legal.entity.name').'.';
+    }
+
+    /**
      * Whether the offer belongs beside this category.
      *
      * Graphics cards only, today, because that is what is being bought. The
