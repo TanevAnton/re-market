@@ -11,7 +11,8 @@ use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
- * „Моят компютър" on the home page, and the shop's banner moved up beside it.
+ * „Моят компютър" on the home page - first under the search - and the shop's
+ * banner moved up right beneath it.
  */
 class MyPcHomeTest extends TestCase
 {
@@ -114,20 +115,21 @@ class MyPcHomeTest extends TestCase
         Livewire::test(MyPcHome::class)->assertSee('За по-точен отговор липсва');
     }
 
-    public function test_the_shop_banner_comes_before_the_categories_and_the_fit_check_after_them(): void
+    public function test_the_fit_check_is_first_then_the_shop_banner_then_the_categories(): void
     {
         config(['remarket.retech.buyback_url' => 'https://example.test/buyback']);
 
         $html = $this->get(route('home'))->assertOk()->getContent();
 
+        $fit        = strpos($html, 'data-my-pc-home');
         $banner     = strpos($html, 'data-retech-offer="home"');
         $categories = strpos($html, 'font-medium text-accent">//</span>Категории');
-        $fit        = strpos($html, 'data-my-pc-home');
         $sell       = strpos($html, 'Имаш видеокарта, която събира прах?');
 
+        $this->assertNotFalse($fit);
         $this->assertNotFalse($banner);
+        $this->assertLessThan($banner, $fit);
         $this->assertLessThan($categories, $banner);
-        $this->assertLessThan($fit, $categories);
-        $this->assertLessThan($sell, $fit);
+        $this->assertLessThan($sell, $categories);
     }
 }

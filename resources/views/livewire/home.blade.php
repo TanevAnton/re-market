@@ -105,7 +105,16 @@
 
     <div class="mx-auto max-w-7xl px-4">
 
-        {{-- ── The shop's offer, straight under the search ───────────────────
+        {{-- ── „Моят компютър", first thing under the search ────────────────
+             The fit check is what makes the rest of the page useful to a
+             buyer, so it is the first thing they meet rather than something
+             below the categories. Its own spacing is the caller's business
+             (see MyPcHome), which is why the wrapper is here. --}}
+        <div class="pt-8 sm:pt-10">
+            @livewire('my-pc-home')
+        </div>
+
+        {{-- ── The shop's offer, right under it ──────────────────────────────
              Moved up from below the sell strip: the person it is for is the
              one with a card in a drawer, who has just read the headline and is
              deciding what to do about it - not somebody who has scrolled past
@@ -113,7 +122,7 @@
              and the banner carries the sentence that says so. Absent until the
              offer has an address; see RetechOffer. --}}
         @if (\App\Support\RetechOffer::enabled())
-            <section class="pt-8 sm:pt-10">
+            <section class="pt-4">
                 @include('partials.retech-buyback', [
                     'placement' => 'home',
                     'variant'   => 'hero',
@@ -227,11 +236,6 @@
                 @endif
             </div>
         </section>
-
-        {{-- ── „Моят компютър" ───────────────────────────────────────────────
-             Between the categories and the sell strip: a buyer who has just
-             picked what they are shopping for is the one the fit check helps. --}}
-        @livewire('my-pc-home')
 
         {{-- ── Sell, and ask ─────────────────────────────────────────────────
              One strip, and ABOVE the listings rather than below them. Supply is

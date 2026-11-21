@@ -19,7 +19,7 @@
     ];
 @endphp
 
-<section class="pb-12 sm:pb-14" data-my-pc-home>
+<section data-my-pc-home>
     <div class="overflow-hidden rounded-xl border border-line border-l-2 border-l-accent bg-surface">
 
         @if ($filled === 0)
