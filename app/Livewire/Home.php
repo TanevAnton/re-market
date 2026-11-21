@@ -75,7 +75,7 @@ class Home extends Component
     public function newest()
     {
         return Listing::visible()
-            ->with(['images', 'city', 'part', ...\App\Support\Boosted::eagerLoad()])
+            ->with(['images', 'city', 'part', 'user', ...\App\Support\Boosted::eagerLoad()])
             ->latest('published_at')
             ->limit(self::RAIL)
             ->get();
@@ -107,7 +107,7 @@ class Home extends Component
         }
 
         return Listing::visible()
-            ->with(['images', 'city', 'part', ...\App\Support\Boosted::eagerLoad()])
+            ->with(['images', 'city', 'part', 'user', ...\App\Support\Boosted::eagerLoad()])
             ->whereHas('boosts', fn ($b) => $b->running()->front())
             ->inRandomOrder()
             ->limit($max)
@@ -129,7 +129,7 @@ class Home extends Component
     public function mostViewed()
     {
         return Listing::visible()
-            ->with(['images', 'city', 'part', ...\App\Support\Boosted::eagerLoad()])
+            ->with(['images', 'city', 'part', 'user', ...\App\Support\Boosted::eagerLoad()])
             ->where('view_count', '>', 0)
             ->orderByDesc('view_count')
             ->limit(self::RAIL)

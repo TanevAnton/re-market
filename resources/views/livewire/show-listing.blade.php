@@ -451,6 +451,10 @@
             <span class="font-mono tabular">{{ $listing->view_count }}</span> преглеждания
         </p>
 
+        {{-- Offered to everyone, the seller included: the person with most
+             reason to pass an ad around is the one selling it. --}}
+        @include('partials.share-buttons', ['url' => route('listing', $listing), 'title' => $listing->title])
+
         {{-- Notice and action, DSA Art. 16. Not behind a login: the person most
              likely to recognise a stolen photograph is the seller it was taken
              from, who has no account here. --}}

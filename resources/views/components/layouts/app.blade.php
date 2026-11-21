@@ -736,6 +736,10 @@
     </div>
 </footer>
 
+{{-- Phone-only bottom bar. Outside the header on purpose: HeaderTest scopes to
+     the header element, and a second nav inside it would double its counts. --}}
+@include('partials.mobile-nav')
+
 {{--
     TURNSTILE'S SCRIPT LOADS HERE, NOT FROM THE WIDGET COMPONENT.
 

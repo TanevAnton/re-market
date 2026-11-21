@@ -79,12 +79,18 @@
                 {{ $listing->title }}
             </h3>
 
-            @if ($listing->part)
-                <p class="mt-1.5 font-mono text-[11px] leading-relaxed text-ink-muted">
-                    @foreach (array_slice($listing->part->specs, 0, 3) as $v)
-                        <span class="whitespace-nowrap">{{ \App\Models\Part::specLabel($v) }}</span>@if (! $loop->last) <span class="text-ink-faint">·</span> @endif
+            {{-- The three numbers that decide „is this the one, and does it fit",
+                 with their units - 12 GB, 285 мм, 200 W - rather than the first
+                 three values the part happens to store. Which three, and how
+                 they are written, is CardSpecs' business; a listing with
+                 nothing to show gets no row at all rather than an empty one. --}}
+            @if ($chips = \App\Support\CardSpecs::for($listing))
+                <ul class="mt-2 flex flex-wrap gap-1" aria-label="Основни параметри">
+                    @foreach ($chips as $chip)
+                        <li class="whitespace-nowrap rounded-md border border-line bg-surface-alt px-1.5 py-0.5
+                                   font-mono text-[11px] leading-none text-ink-muted">{{ $chip }}</li>
                     @endforeach
-                </p>
+                </ul>
             @endif
 
             <div class="mt-2.5">
@@ -112,6 +118,33 @@
                     <p class="mt-1.5 text-xs text-ink-muted">
                         {{ $listing->city?->name() }}
                     </p>
+
+                    {{-- What the seller has earned, when they have earned
+                         anything: a checked company, a record of completed
+                         deals. relationLoaded() and not a plain ->user, on
+                         purpose - a page that has not eager-loaded the seller
+                         simply shows no signal, instead of quietly running one
+                         query per card, which is the failure
+                         BoostEagerLoadTest exists to catch. One-sided: a seller
+                         with nothing to show gets no row, never an empty one.
+                         See SellerSignals. --}}
+                    @if ($listing->relationLoaded('user') && $listing->user && ($signals = \App\Support\SellerSignals::for($listing->user)))
+                        <p class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] font-medium text-ink-muted">
+                            @foreach ($signals as $signal)
+                                <span title="{{ $signal['title'] }}" class="inline-flex items-center gap-1">
+                                    @if ($signal['kind'] === 'verified')
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"
+                                             class="h-3.5 w-3.5 shrink-0 text-accent">
+                                            <path d="M12 3 5 6v5c0 4.4 2.9 8.3 7 10 4.1-1.7 7-5.6 7-10V6l-7-3Z"/>
+                                            <path d="m9 12 2 2 4-4"/>
+                                        </svg>
+                                    @endif
+                                    {{ $signal['label'] }}
+                                </span>
+                            @endforeach
+                        </p>
+                    @endif
                 </div>
 
                 @if ($listing->offers_enabled)

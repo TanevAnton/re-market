@@ -63,7 +63,7 @@ class ShowPart extends Component
     public function listings()
     {
         return Listing::visible()
-            ->with(['images', 'city', 'part', ...\App\Support\Boosted::eagerLoad()])
+            ->with(['images', 'city', 'part', 'user', ...\App\Support\Boosted::eagerLoad()])
             ->where('part_id', $this->part->id)
             ->orderByDesc('bumped_at')
             ->limit(24)

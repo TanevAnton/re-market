@@ -97,7 +97,7 @@ class ShowListing extends Component
         $query = Listing::query()
             ->active()
             ->whereKeyNot($this->listing->getKey())
-            ->with(['images', 'city', 'part', ...\App\Support\Boosted::eagerLoad()]);
+            ->with(['images', 'city', 'part', 'user', ...\App\Support\Boosted::eagerLoad()]);
 
         $samePart = $this->listing->part_id
             ? (clone $query)->where('part_id', $this->listing->part_id)->latest('bumped_at')->limit(6)->get()

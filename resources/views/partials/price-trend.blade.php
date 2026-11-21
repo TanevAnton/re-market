@@ -37,22 +37,17 @@
                 </p>
             </div>
 
-            @if ($plot = \App\Support\Sparkline::plot($history))
-                {{-- preserveAspectRatio="none" so the line fills whatever width
-                     the card gives it; a sparkline has no meaningful aspect
-                     ratio, only a shape. --}}
-                <svg viewBox="0 0 240 40" preserveAspectRatio="none" role="img"
-                     aria-label="Движение на средната цена за периода"
-                     class="h-10 min-w-0 flex-1 overflow-visible">
-                    <polyline points="{{ $plot['points'] }}"
-                              fill="none" stroke="currentColor" stroke-width="2"
-                              stroke-linecap="round" stroke-linejoin="round"
-                              class="text-accent" vector-effect="non-scaling-stroke"/>
-                    <circle cx="{{ $plot['last']['x'] }}" cy="{{ $plot['last']['y'] }}" r="3"
-                            fill="currentColor" class="text-accent"/>
-                </svg>
-            @endif
         </div>
+
+        {{-- The chart itself, full width under the headline numbers: it used to
+             be a forty-pixel sparkline beside them, which said which way the
+             price was going and nothing about where it had been. Hover or touch
+             a point for the day's median and its low-to-high range. The
+             assignment inside @if is an expression, not a block - see the note
+             at the top of this file. --}}
+        @if ($plot = \App\Support\PriceChart::plot($history))
+            @include('partials.price-chart', ['plot' => $plot])
+        @endif
 
         <p class="hint mt-4">
             {{-- Parenthesised deliberately: ?? binds looser than ===, so
@@ -69,7 +64,8 @@
                 Изчислено от малко обяви на ден — движението може да е случайно.
             @endif
 
-            Измерва се веднъж дневно; дните без достатъчно обяви липсват в графиката.
+            Измерва се веднъж дневно; дните без достатъчно обяви липсват в графиката,
+            а линията не се свързва през тях. Сенчестата област е разликата между ниска и висока цена.
         </p>
     </section>
 @endif
