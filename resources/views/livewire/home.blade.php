@@ -105,6 +105,22 @@
 
     <div class="mx-auto max-w-7xl px-4">
 
+        {{-- ── The shop's offer, straight under the search ───────────────────
+             Moved up from below the sell strip: the person it is for is the
+             one with a card in a drawer, who has just read the headline and is
+             deciding what to do about it - not somebody who has scrolled past
+             the categories. It is the same company saying so about itself,
+             and the banner carries the sentence that says so. Absent until the
+             offer has an address; see RetechOffer. --}}
+        @if (\App\Support\RetechOffer::enabled())
+            <section class="pt-8 sm:pt-10">
+                @include('partials.retech-buyback', [
+                    'placement' => 'home',
+                    'variant'   => 'hero',
+                ])
+            </section>
+        @endif
+
         {{-- ── Categories ────────────────────────────────────────────────────
              The primary navigation of the whole site. One panel with hairlines
              inside it rather than a card per category: nineteen separate boxes
@@ -212,6 +228,11 @@
             </div>
         </section>
 
+        {{-- ── „Моят компютър" ───────────────────────────────────────────────
+             Between the categories and the sell strip: a buyer who has just
+             picked what they are shopping for is the one the fit check helps. --}}
+        @livewire('my-pc-home')
+
         {{-- ── Sell, and ask ─────────────────────────────────────────────────
              One strip, and ABOVE the listings rather than below them. Supply is
              worth more than demand for the first year, and a visitor who has
@@ -258,20 +279,6 @@
                        class="btn-secondary shrink-0">Пусни „Търся“</a>
                 </div>
             </div>
-
-            {{-- The third way to deal with a card in a drawer: sell it
-                 straight to the shop. Its own banner under the strip, not a
-                 third half of it - listing and asking are what the site is
-                 for, this is the alternative to both, and it is the same
-                 company saying so about itself. Absent until the offer has
-                 an address; see RetechOffer. --}}
-            @if (\App\Support\RetechOffer::enabled())
-                @include('partials.retech-buyback', [
-                    'placement' => 'home',
-                    'variant'   => 'hero',
-                    'class'     => 'mt-4',
-                ])
-            @endif
         </section>
 
         {{-- ── Paid positions ────────────────────────────────────────────────
