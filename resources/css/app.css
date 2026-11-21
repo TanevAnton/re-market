@@ -7,11 +7,10 @@
 /* Manual theme switching. Without this, dark: would follow the OS only and the
    header toggle could not override it.
 
-   Dark is now the DEFAULT, but it is still expressed as the .dark class rather
-   than by inverting :root - because every dark: utility in the views keys off
-   this selector, and flipping the tokens without flipping the variant would
-   put the two silently out of step. The server just renders the class by
-   default instead. */
+   Light is now the DEFAULT and dark is the .dark class on <html>, which is how
+   it always was: every dark: utility in the views keys off this selector, and
+   :root holds the light tokens. Which one a visitor gets is decided by the
+   server from a cookie - see the layout. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ---------------------------------------------------------------------------
@@ -61,8 +60,16 @@
 
 }
 
-/* LIGHT. Still has to be good - plenty of people browse a marketplace in
-   daylight on a phone - but it is no longer the one tuned first. */
+/* LIGHT - the default since 21 Nov. Plenty of people browse a marketplace in
+   daylight on a phone, and a white page is what an ordinary shop looks like.
+
+   THE TWO LINES WERE DARKENED IN THE SAME CHANGE. They were tuned for a page
+   where a hairline only has to separate two near-blacks; on white they came out
+   at about 1.2:1 and 1.5:1, and cards, tables and inputs read as floating text.
+   They are now about 1.5:1 and 2.1:1 against white - still a hairline, no
+   longer a rumour. Everything that draws an outline reads these two variables (cards,
+   inputs, the category grid, spec rows, table rules), so this is the whole
+   change. Dark keeps its own, below. */
 :root {
     --canvas:      #fbfcfb;
     --surface:     #ffffff;
@@ -70,8 +77,8 @@
     --ink:         #0a0f0d;
     --ink-muted:   #55605c;
     --ink-faint:   #8c9a95;
-    --line:        #e3e9e6;
-    --line-strong: #cbd5d0;
+    --line:        #cfd8d3;
+    --line-strong: #a9b6b0;
 
     /* Emerald 400 is unreadable on white - drop to 700 rather than reuse it. */
     --accent:      #047857;
@@ -97,7 +104,7 @@
 }
 
 /*
- * DARK - the default, and the one designed first.
+ * DARK - the one designed first, and now an opt-in from the header toggle.
  *
  * Not pure black: #0a0d0c carries a trace of green, so the emerald accent sits
  * in the same world as the background instead of glowing on top of a neutral
@@ -175,7 +182,7 @@
 .legal td { @apply border-b border-line py-2 align-top text-ink-muted; }
 .legal .callout { @apply mt-4 rounded-lg border border-line bg-surface-alt p-4 text-sm leading-relaxed text-ink; }
 
-/* The theme toggle cycles system -> light -> dark, and shows which one is on.
+/* The theme toggle cycles light -> dark -> system, and shows which one is on.
    Driven by the attribute the SERVER renders, so the right icon is correct in
    the first paint rather than corrected afterwards. */
 .theme-icon { display: none; }

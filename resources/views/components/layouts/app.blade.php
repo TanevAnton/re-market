@@ -5,16 +5,18 @@
      * be read until the page is running - by which point the server has already
      * committed to a guess, and any disagreement shows up as a flip on refresh.
      *
-     * Three states, and DARK IS THE DEFAULT - no cookie means dark, not
-     * "whatever the operating system says". That is a deliberate product
-     * choice rather than a technical one: the palette is designed dark first,
-     * and a first-time visitor should see the site as it was meant to look.
-     * "Follow the system" stays reachable as the third position on the toggle,
-     * so nobody is trapped in a theme they did not pick.
+     * Three states, and LIGHT IS THE DEFAULT - no cookie means light, not
+     * "whatever the operating system says". A deliberate product choice: a
+     * marketplace for the general Bulgarian public is first met in daylight, on
+     * a phone, and a white page reads as an ordinary, trustworthy shop.
+     * Dark and "follow the system" stay on the toggle, so nobody is trapped in
+     * a theme they did not pick - and anybody who already chose dark keeps it,
+     * because their choice is in a cookie and the default only applies to
+     * visitors who have none.
      */
     $theme = in_array($cookie = request()->cookie('theme'), ['dark', 'light', 'system'], true)
         ? $cookie
-        : 'dark';
+        : 'light';
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}"
@@ -105,9 +107,9 @@
 
     {{-- The page background, before any stylesheet has loaded. In dev, Vite
          injects the CSS with JavaScript, so without this the first paint is a
-         bare rectangle no matter what class <html> carries. Dark first, to
+         bare rectangle no matter what class <html> carries. Light first, to
          match the default. --}}
-    <style>html{background:#0a0d0c}html[data-theme="light"]{background:#fbfcfb}</style>
+    <style>html{background:#fbfcfb}html[data-theme="dark"]{background:#0a0d0c}</style>
 
     <script>
         (function () {
@@ -130,17 +132,19 @@
             mq.addEventListener('change', apply);
 
             window.__cycleTheme = function () {
+                // Light first because light is the default: the first click
+                // from a fresh visit goes somewhere visibly different.
                 root.dataset.theme = ({
-                    dark:   'light',
-                    light:  'system',
-                    system: 'dark',
-                })[root.dataset.theme] ?? 'light';
+                    light:  'dark',
+                    dark:   'system',
+                    system: 'light',
+                })[root.dataset.theme] ?? 'dark';
 
                 apply();
 
                 // A cookie, not localStorage: the server has to be able to
                 // read it. "system" is now stored explicitly rather than being
-                // the absence of a cookie, because the absence means dark.
+                // the absence of a cookie, because the absence means light.
                 document.cookie = 'theme=' + root.dataset.theme
                     + '; path=/; max-age=31536000; samesite=lax';
             };
@@ -388,7 +392,7 @@
         <button type="button"
                 onclick="window.__cycleTheme()"
                 aria-label="Смени темата"
-                title="Тема: системна / светла / тъмна"
+                title="Тема: светла / тъмна / системна"
                 class="btn-ghost btn-sm h-8 w-8 shrink-0 px-0!">
             {{-- system: half-filled --}}
             <svg class="theme-icon theme-icon-system h-4 w-4" viewBox="0 0 24 24" fill="none"

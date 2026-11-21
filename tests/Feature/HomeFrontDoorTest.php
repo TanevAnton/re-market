@@ -145,6 +145,44 @@ class HomeFrontDoorTest extends TestCase
         $this->assertSame(route('wanted.create'), $this->stripLink($html, 'Пусни „Търся“'));
     }
 
+    // --- the headline ------------------------------------------------------
+
+    /**
+     * A first visitor has to learn three things from the top of the page without
+     * scrolling: that it is used goods, that you can both buy and sell, and that
+     * it is for Bulgaria. The words are asserted rather than the layout, because
+     * the words are what a rewrite of the band is most likely to lose.
+     */
+    public function test_the_top_of_the_page_says_what_the_site_is_and_who_it_is_for(): void
+    {
+        $this->get(route('home'))
+            ->assertOk()
+            ->assertSee('Купи и продай')
+            ->assertSee('хардуер втора употреба')
+            ->assertSee('в България')
+            ->assertSee('Пазар за втора употреба · България');
+    }
+
+    public function test_the_headline_is_the_one_h1_on_the_page(): void
+    {
+        $html = $this->get(route('home'))->getContent();
+
+        $this->assertSame(1, preg_match_all('/<h1[\s>]/', $html));
+    }
+
+    /** The two things a visitor can do, one tap from the headline. */
+    public function test_the_headline_has_a_sell_button_and_a_browse_button(): void
+    {
+        $guest = $this->get(route('home'))->getContent();
+
+        $this->assertSame(route('register'), $this->stripLink($guest, 'Продай нещо — безплатно'));
+        $this->assertSame(route('browse'), $this->stripLink($guest, 'Разгледай обявите'));
+
+        $member = $this->actingAs($this->verifiedUser())->get(route('home'))->getContent();
+
+        $this->assertSame(route('listing.create'), $this->stripLink($member, 'Продай нещо — безплатно'));
+    }
+
     // --- what buyers are asking for ---------------------------------------
 
     /** A heading over an empty row would only repeat the strip above it. */

@@ -26,17 +26,16 @@ class ThemeTest extends TestCase
     }
 
     /**
-     * Dark is the default, and it is a product decision rather than a technical
-     * one: the palette is designed dark first, so a first-time visitor should
-     * see the site as it was meant to look rather than whatever their laptop
-     * happens to be set to.
+     * Light is the default, and it is a product decision rather than a technical
+     * one: a first-time visitor sees a white page whatever their laptop happens
+     * to be set to. Anybody who chose dark has a cookie, and keeps it.
      */
-    public function test_no_cookie_means_dark(): void
+    public function test_no_cookie_means_light(): void
     {
         $response = $this->get(route('browse'));
 
-        $response->assertSee('data-theme="dark"', false);
-        $response->assertSee('class="h-full dark"', false);
+        $response->assertSee('data-theme="light"', false);
+        $response->assertDontSee('class="h-full dark"', false);
     }
 
     /** Nobody is trapped in a theme they did not pick. */
@@ -76,7 +75,7 @@ class ThemeTest extends TestCase
         $response = $this->withUnencryptedCookie('theme', '" onload="alert(1)')
             ->get(route('browse'));
 
-        $response->assertSee('data-theme="dark"', false);
+        $response->assertSee('data-theme="light"', false);
         $response->assertDontSee('onload=', false);
     }
 }

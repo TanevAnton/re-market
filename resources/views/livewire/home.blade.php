@@ -40,21 +40,51 @@
 
         <div class="relative mx-auto flex max-w-7xl flex-col gap-6 px-4 pt-8 pb-7
                     lg:flex-row lg:items-end lg:justify-between lg:gap-10 lg:pt-11 lg:pb-10">
-            <div>
+            {{-- WHAT THIS PAGE MUST SAY IN FIVE SECONDS: that it is a place to
+                 buy and sell used hardware, and that it is for Bulgaria. It used
+                 to lead with the spec filters, which is what makes the site
+                 different but not what a first-time visitor is asking - they
+                 want to know what kind of site this is before why it is better.
+
+                 Three layers, each readable on its own: the headline names the
+                 thing (used hardware, buy and sell, Bulgaria), the sentence under
+                 it says who it is from and what it costs, and the two buttons
+                 are the two things a visitor can do. The filters live in the four
+                 promises further down, where they are an argument rather than an
+                 introduction.
+
+                 The claims in the sentence are ones the rest of the site already
+                 makes and enforces - a free listing, payment on receipt - so the
+                 top of the page cannot promise more than the pages behind it. --}}
+            <div class="max-w-[640px]">
                 <p class="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-accent">
                     <span class="h-1.5 w-1.5 rounded-full bg-accent"
                           style="box-shadow: 0 0 10px 1px var(--glow);"></span>
-                    Хардуер втора употреба
+                    Пазар за втора употреба · България
                 </p>
 
-                {{-- Still the h1, still the phrase the page should rank for -
-                     just no longer the loudest thing on it. --}}
-                <h1 class="mt-3 max-w-[24ch] text-xl font-semibold leading-snug tracking-tight text-ink-muted sm:text-2xl">
-                    Компютърни части с
-                    <span class="font-bold text-ink">истински спецификации</span>
+                {{-- Still the h1, and now the whole phrase the page should rank
+                     for, with the verbs people search with. Balanced, so a line
+                     break never lands in the middle of the used-goods phrase. --}}
+                <h1 class="mt-3 text-balance text-[26px] font-semibold leading-[1.15] tracking-tight text-ink-muted sm:text-[34px]">
+                    Купи и продай
+                    <span class="font-bold text-ink">хардуер втора употреба</span>
+                    в България
                 </h1>
 
-                <p class="mt-2.5 font-mono text-[10.5px] text-ink-faint sm:text-xs">
+                <p class="mt-3 max-w-[54ch] text-[14px] leading-relaxed text-ink-muted sm:text-[15px]">
+                    Видеокарти, процесори, лаптопи и гейминг техника — от хора в цялата страна.
+                    Обявата е безплатна, а купувачът плаща при получаване.
+                </p>
+
+                <div class="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2.5">
+                    <a href="{{ auth()->check() ? route('listing.create') : route('register') }}" wire:navigate
+                       class="btn-primary">Продай нещо — безплатно</a>
+                    <a href="{{ route('browse') }}" wire:navigate
+                       class="btn-secondary">Разгледай обявите</a>
+                </div>
+
+                <p class="mt-4 font-mono text-[10.5px] text-ink-faint sm:text-xs">
                     преглед преди плащане
                     <span class="mx-1 text-line-strong sm:mx-1.5">/</span> една цена
                     <span class="mx-1 text-line-strong sm:mx-1.5">/</span> само хардуер
